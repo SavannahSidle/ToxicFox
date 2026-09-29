@@ -15,6 +15,7 @@
   let foxLabInvestigation = 0, foxLabIdleTime = 0, foxLabJumpHoldBlend = 0;
   let foxLabStrideLength = 22, foxLabTrotBlend = 0, foxLabRunBlend = 0;
   let foxLabBodyAcceleration = 0, foxLabJumpPending = 0, foxLabJumpAnticipation = 0, foxLabLandingRecovery = 0;
+  let foxLabTailLaunch = 0, foxLabVerticalAcceleration = 0;
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
     {x:190,y:452,w:112,h:14}, {x:302,y:432,w:112,h:14},
@@ -37,7 +38,7 @@
   addEventListener("keyup", event => { keys[event.code] = false; });
 
   function updateFox(dt, now, left, right, up, investigate) {
-    const input=(left?-1:0)+(right?1:0),oldVx=player.vx;
+    const input=(left?-1:0)+(right?1:0),oldVx=player.vx,oldVy=player.vy;
     const speed=Math.abs(player.vx),reversing=input&&speed>8&&Math.sign(player.vx)!==input;
     if(input&&input!==foxLabTurnTo){foxLabTurnFrom=foxLabTurnTo;foxLabTurnTo=input;foxLabTurnProgress=0;foxLabTurnDuration=.21+Math.min(speed,285)*.00032;}
     if(foxLabTurnProgress<1)foxLabTurnProgress=Math.min(1,foxLabTurnProgress+dt/foxLabTurnDuration);
@@ -55,7 +56,7 @@
       foxLabJumpAnticipation=clamp(1-foxLabJumpPending/.075,0,1);
       if(foxLabJumpPending===0&&player.grounded){
         player.vy=-545;player.grounded=false;foxLabTakeoffUntil=now+145;
-        foxLabJumpAnticipation=0;
+        foxLabJumpAnticipation=0;foxLabTailLaunch=1;
       }
     }else foxLabJumpAnticipation*=Math.exp(-9*dt);
 
@@ -77,6 +78,7 @@
         foxLabLandingImpact=Math.min(1,fallSpeed/700);
         foxLabTailVelocities[0]+=Math.min(.8,fallSpeed*.0011);
         foxLabTailVelocities[1]+=Math.min(.34,fallSpeed*.00042);
+        foxLabTailVelocities[2]+=Math.min(.16,fallSpeed*.0002);
         foxLabLandingRecovery=1;
       }
     }
@@ -98,11 +100,14 @@
     foxLabLandingRecovery*=Math.exp(-4.1*dt);
     const acceleration=((player.vx-oldVx)/Math.max(dt,.001))*player.facing;
     foxLabBodyAcceleration+=(acceleration-foxLabBodyAcceleration)*(1-Math.exp(-8*dt));
+    const verticalAcceleration=player.grounded?0:(player.vy-oldVy)/Math.max(dt,.001);
+    foxLabVerticalAcceleration+=(verticalAcceleration-foxLabVerticalAcceleration)*(1-Math.exp(-13*dt));
+    foxLabTailLaunch*=Math.exp(-2.7*dt);
 
     const turnSway=Math.sin(foxLabTurnProgress*Math.PI)*(foxLabTurnTo-foxLabTurnFrom);
     const gaitTail=Math.sin(foxLabStridePhase*2-.8)*(.018+foxLabTrotBlend*.025+foxLabRunBlend*.035);
     const speedTrail=smooth(55,285,currentSpeed)*.055;
-    const tailTarget=clamp(.09+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.00034+turnSway*.13+gaitTail+foxLabInvestigation*.17-foxLabLandingRecovery*.1,-.62,.72);
+    const tailTarget=clamp(.07+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.0004-foxLabVerticalAcceleration*.000009+foxLabTailLaunch*.31+turnSway*.16+gaitTail+foxLabInvestigation*.16-foxLabLandingRecovery*.1,-.68,.78);
     for(let i=0;i<foxLabTailAngles.length;i++){
       const prior=i?foxLabTailAngles[i-1]:tailTarget;
       const target=i?tailTarget+(prior-tailTarget)*.43:tailTarget;
@@ -119,18 +124,18 @@ function drawFox(now){
     const launch=airborne?smooth(0,145,now-(foxLabTakeoffUntil-145)):0;
     const stride=foxLabStrideLength,walkBeat=phase,runBeat=phase*(1.08+run*.12);
     const bodyWave=Math.sin(phase*.5-.4),stepWave=Math.sin(phase*2-.35);
-    const compress=Math.max(0,Math.sin(phase*2+.45))*run;
-    const spineFlex=Math.sin(phase*2-.45)*(.012+trot*.024+run*.052)-compress*.018;
-    const bounce=player.grounded?(Math.sin(phase*2)*move*.7+Math.max(0,stepWave)*run*2.6):0;
-    const shoulderMotion=Math.sin(phase*2+Math.PI*.5)*(move*.75+run*1.8);
-    const hipMotion=Math.sin(phase*2-Math.PI*.25)*(move*.65+run*2.3);
+    const compress=Math.max(0,Math.sin(phase*2+.45))*run*.78;
+    const spineFlex=Math.sin(phase*2-.45)*(.009+trot*.018+run*.063)-compress*.014;
+    const bounce=player.grounded?(Math.sin(phase*2)*move*.42+Math.max(0,stepWave)*run*1.05):0;
+    const shoulderMotion=Math.sin(phase*2+Math.PI*.5)*(move*.48+run*1.15);
+    const hipMotion=Math.sin(phase*2-Math.PI*.25)*(move*.42+run*1.45);
     const accelerationLean=clamp(foxLabBodyAcceleration/1100,-1,1);
     const braking=clamp(-foxLabBodyAcceleration/1000,0,1);
     const anticipation=foxLabJumpAnticipation,recovery=foxLabLandingRecovery;
-    const verticalMotion=stepWave*(trot*.7+run*1.35)-recovery*2.6;
-    const pitch=airborne?clamp(player.vy*.0002,-.19,.19):(-.026*run+bodyWave*.016*trot+accelerationLean*.045-braking*.018-impact*.065+investigate*.018);
+    const verticalMotion=stepWave*(trot*.38+run*.72)-recovery*2.1;
+    const pitch=airborne?clamp(player.vy*.00017,-.16,.16):(-.034*run+bodyWave*.012*trot+accelerationLean*.04-braking*.016-impact*.055+investigate*.018);
     const breathe=player.grounded&&speed<9?Math.sin(now*.0021)*.7:0;
-    const rise=8+compress*1.8+launch*1.8-investigate*1.5+breathe;
+    const rise=8+compress*1.35+launch*1.45-investigate*1.5+breathe;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-anticipation*3+recovery*2.6;
     const facingBlend=smooth(0,1,foxLabTurnProgress);
     const fwd=mix(foxLabTurnFrom,foxLabTurnTo,facingBlend),turnWave=Math.sin(foxLabTurnProgress*Math.PI)*(foxLabTurnTo-foxLabTurnFrom);
@@ -158,15 +163,15 @@ function drawFox(now){
     const limb=(hip,off,front,far,rootY)=>{
       const p=((off%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
-      const travel=stance?.6-1.2*t:-.6+1.2*t,lift=stance?0:Math.sin(t*Math.PI);
-      const pushOff=!front&&stance?smooth(.28,.98,t)*(trot*.5+run*.9):0;
-      let pawX=hip+travel*stride*move,pawY=footLine-lift*(6+run*13)*move;
+      const travel=stance?.585-1.17*t:-.585+1.17*t,lift=stance?0:Math.sin(t*Math.PI);
+      const pushOff=!front&&stance?smooth(.42,.99,t)*(trot*.45+run*.85):0;
+      let pawX=hip+travel*stride*move,pawY=footLine-lift*(5+run*10)*move;
       let jointX,midX,jointY,midY;
       const tuck=airborne?Math.max(launch,.18):impact*.68+anticipation*.55;
       if(airborne){
         const descending=smooth(-80,430,player.vy);
         pawX=hip+(front?13:-12)+(front?descending*(11+run*4):-descending*(8+run*7));
-        pawY=footLine-(1-descending)*(12+launch*3);
+        pawY=footLine-(1-descending)*(front?13+launch*3:10+launch*2)+(front?0:-descending*3);
         jointX=hip+(front?8:12)+(front?turnWave*2:-turnWave*1.5);
         jointY=rootY+17-tuck*6;midX=pawX+(front?-5:-9);midY=footLine-8-tuck*4;
       }else if(front){
@@ -182,41 +187,42 @@ function drawFox(now){
       const color=far?"#87402c":"#a34b2c",alpha=far?.54:1;
       const bone=(ax,ay,bx,by,wide,thin)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-nx*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
       ctx.globalAlpha=alpha;ctx.fillStyle=color;
-      bone(hip,rootY,jointX,jointY,far?3.8:5.6,far?3:4.2);
-      bone(jointX,jointY,midX,midY,far?3:4.1,far?2.25:3.1);
-      bone(midX,midY,pawX,pawY-2,far?2.25:3.1,far?1.5:2.1);
-      ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,far?1.8:2.35,0,Math.PI*2);ctx.arc(midX,midY,far?1.25:1.7,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle="#302622";ctx.lineWidth=far?2.25:2.7;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(pawX-2,pawY-1);ctx.quadraticCurveTo(pawX+2.5,pawY+1,pawX+6.5,pawY);ctx.stroke();ctx.globalAlpha=1;
+      bone(hip,rootY,jointX,jointY,front?(far?2.7:3.5):(far?3.4:4.5),front?(far?2.1:2.7):(far?2.6:3.3));
+      bone(jointX,jointY,midX,midY,far?2.4:3.15,far?1.7:2.25);
+      bone(midX,midY,pawX,pawY-2,far?1.8:2.35,far?1.2:1.65);
+      ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,far?1.45:1.9,0,Math.PI*2);ctx.arc(midX,midY,far?1:1.35,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle="#302622";ctx.lineWidth=far?1.75:(front?2:2.2);ctx.lineCap="round";ctx.beginPath();ctx.moveTo(pawX-2,pawY-1);ctx.quadraticCurveTo(pawX+1.8,pawY+.8,pawX+5.5,pawY);ctx.stroke();ctx.globalAlpha=1;
     };
     // Four-beat walk: each paw lands in sequence. The faster gait blends toward diagonal-pair trot timing.
     limb(-31,gait(Math.PI*1.5,0),false,true,hipMotion);
     limb(24,gait(Math.PI*.5,Math.PI),true,true,shoulderMotion);
 
     const hindDrive=Math.max(0,Math.sin(runBeat+.55));
-    const flex=Math.sin(runBeat-.5)*run*5.2+spineFlex*85-compress*2.2+launch*3-impact*3+anticipation*2;
-    // Lean torso, raised chest, loaded haunches, and a flexible spine.
-    const spineExtend=1+spineFlex+run*.032+Math.sin(runBeat)*run*.045+launch*.035-impact*.035+accelerationLean*.018;
-    const torsoLift=hindDrive*run*2.2-anticipation*2+recovery*1.4;
+    const flex=Math.sin(runBeat-.5)*run*4.2+spineFlex*78-compress*1.8+launch*2-impact*2.4+anticipation*1.6;
+    // A long, narrow trunk with a tucked waist and lean, continuous spine line.
+    const spineExtend=1+spineFlex+run*.038+Math.sin(runBeat)*run*.052+launch*.045-impact*.032+accelerationLean*.016;
+    const torsoLift=hindDrive*run*1.4-anticipation*1.7+recovery*1.1;
     ctx.save();ctx.translate(1,0);ctx.scale(spineExtend,1);ctx.translate(-1,0);
-    ctx.fillStyle="#bb552d";ctx.beginPath();ctx.moveTo(-49,-4+torsoLift);ctx.quadraticCurveTo(-44,-17-torsoLift*.35,-24,-18-flex*.22+torsoLift*.4);ctx.quadraticCurveTo(-4,-21-flex*.2,15,-17-torsoLift*.5);ctx.quadraticCurveTo(37,-14,43,-2);ctx.quadraticCurveTo(33,9,13,12+flex*.16-torsoLift);ctx.lineTo(-18,10+flex*.2-torsoLift*.8);ctx.quadraticCurveTo(-43,10,-49,-4+torsoLift);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#d16a36";ctx.beginPath();ctx.ellipse(-28,-7,18,9,-.04,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(12,-14);ctx.quadraticCurveTo(33,-13,39,-2);ctx.quadraticCurveTo(29,9,14,11);ctx.quadraticCurveTo(8,2,12,-14);ctx.fill();
+    ctx.fillStyle="#bb552d";ctx.beginPath();ctx.moveTo(-49,-3+torsoLift);ctx.quadraticCurveTo(-43,-14-torsoLift*.28,-27,-15-flex*.18+torsoLift*.35);ctx.quadraticCurveTo(-10,-17-flex*.16+torsoLift*.4,7,-14-torsoLift*.35);ctx.quadraticCurveTo(25,-16,39,-7);ctx.quadraticCurveTo(42,-3,39,1);ctx.quadraticCurveTo(34,7,26,7+flex*.1);ctx.quadraticCurveTo(16,7+flex*.12,8,4-torsoLift*.45);ctx.quadraticCurveTo(-10,7+flex*.16,-23,8+flex*.12);ctx.quadraticCurveTo(-42,8,-49,-3+torsoLift);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#d16a36";ctx.beginPath();ctx.ellipse(-29,-6,13,6,-.06,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(22,-12);ctx.quadraticCurveTo(34,-10,39,-4);ctx.quadraticCurveTo(36,2,29,5);ctx.quadraticCurveTo(23,3,20,-3);ctx.closePath();ctx.fill();
     ctx.restore();
     limb(-32,gait(0,Math.PI),false,false,hipMotion);
     limb(23,gait(Math.PI,0),true,false,shoulderMotion);
 
-    // Stable narrow head on a long neck; sniffing lowers the nose and folds ears back.
-    ctx.save();ctx.translate(31+turnWave*2,-15+shoulderMotion*.45);ctx.rotate(-pitch*.78+investigate*.18+Math.max(0,player.vy)*.000045-spineFlex*.35+turnWave*.12);ctx.translate(-31,15);
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(19,-14);ctx.quadraticCurveTo(28,-28,40,-27);ctx.lineTo(51,-16);ctx.lineTo(48,-8);ctx.lineTo(32,-3);ctx.quadraticCurveTo(21,-4,19,-14);ctx.fill();
+    // Slim neck and small alert head keep the fox's line long and deliberate.
+    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(13,-13);ctx.quadraticCurveTo(22,-21,29,-24);ctx.quadraticCurveTo(37,-23,43,-17);ctx.lineTo(38,-8);ctx.quadraticCurveTo(27,-6,17,-5);ctx.closePath();ctx.fill();
+    ctx.save();ctx.translate(34+turnWave*2,-16+shoulderMotion*.35);ctx.rotate(-pitch*.78+investigate*.18+Math.max(0,player.vy)*.000045-spineFlex*.35+turnWave*.12);ctx.translate(-34,16);
+    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.43+run*.045+idleTwitch*.07;
     const ear=(x,len,angle)=>{ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle="#b84d2a";ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8,-len*.58,-1,-len);ctx.quadraticCurveTo(7,-len*.68,8,3);ctx.closePath();ctx.fill();ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.lineTo(-1,-len*.72);ctx.lineTo(4,1);ctx.closePath();ctx.fill();ctx.restore();};
-    ear(27,24,.11-earBack);ear(42,25,-.13-earBack*.82);
-    const noseDrop=investigate*6;
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(38,-17);ctx.quadraticCurveTo(51,-14,65,-7+noseDrop);ctx.lineTo(77,-2+noseDrop);ctx.lineTo(69,2+noseDrop);ctx.lineTo(49,1+noseDrop);ctx.quadraticCurveTo(39,-3,38,-17);ctx.fill();
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(47,-4);ctx.quadraticCurveTo(61,-5,74,-1+noseDrop);ctx.lineTo(68,2+noseDrop);ctx.lineTo(49,1+noseDrop);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(48,-18,2.1,2.4,0,0,Math.PI*2);ctx.arc(77,-2+noseDrop,2.5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(48,-18,1,1.5,0,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle="#5a3024";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(61,2+noseDrop);ctx.quadraticCurveTo(66,5+noseDrop,71,2+noseDrop);ctx.stroke();ctx.restore();
+    ear(29,25,.08-earBack);ear(42,26,-.11-earBack*.82);
+    const noseDrop=investigate*5;
+    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-4);ctx.quadraticCurveTo(62,-4,75,-1+noseDrop);ctx.quadraticCurveTo(69,2+noseDrop,63,1+noseDrop);ctx.lineTo(50,1+noseDrop);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(45,-19,1.8,2.1,0,0,Math.PI*2);ctx.arc(78,-2+noseDrop,2.2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(45,-19,.9,1.3,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#5a3024";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(63,2+noseDrop);ctx.quadraticCurveTo(67,4+noseDrop,71,1+noseDrop);ctx.stroke();ctx.restore();
     ctx.restore();
   }
 

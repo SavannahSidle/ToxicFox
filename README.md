@@ -8,4 +8,4 @@ A standalone, browser-based fox locomotion field test. It isolates Gecko Escapeâ
 - Jump: Space or Up
 - Investigate: hold I while still
 
-The flat test area includes low steps and platforms for checking stride, turning, jumps, and landings. The existing fox design and movement are the baseline; this project adds no locomotion overhaul or larger game content.
+The flat test area includes low steps and platforms for checking stride, turning, jumps, and landings. The fox silhouette stays as the ToxicFox baseline while the gait and body mechanics evolve independently from quests or game content. Tail shape and detailed secondary motion are reserved for a separate pass.

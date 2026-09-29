@@ -9,7 +9,7 @@
   const keys = Object.create(null);
   const player = { x: 150, y: 380, w: 120, h: 100, vx: 0, vy: 0, facing: 1, grounded: false };
   let foxLabStridePhase = 0;
-  const foxLabTailAngles = [0, 0, 0, 0, 0], foxLabTailVelocities = [0, 0, 0, 0, 0];
+  const foxLabTailAngles = Array(8).fill(0), foxLabTailVelocities = Array(8).fill(0);
   let foxLabLandingImpact = 0, foxLabTakeoffUntil = 0;
   let foxLabTurnTo = 1, foxLabTurnFrom = 1, foxLabTurnProgress = 1, foxLabTurnDuration = .21;
   let foxLabInvestigation = 0, foxLabIdleTime = 0, foxLabJumpHoldBlend = 0;
@@ -76,6 +76,7 @@
       if(fallSpeed>35){
         foxLabLandingImpact=Math.min(1,fallSpeed/700);
         foxLabTailVelocities[0]+=Math.min(.8,fallSpeed*.0011);
+        foxLabTailVelocities[1]+=Math.min(.34,fallSpeed*.00042);
         foxLabLandingRecovery=1;
       }
     }
@@ -98,14 +99,17 @@
     const acceleration=((player.vx-oldVx)/Math.max(dt,.001))*player.facing;
     foxLabBodyAcceleration+=(acceleration-foxLabBodyAcceleration)*(1-Math.exp(-8*dt));
 
-    const tailTarget=clamp(.13+acceleration*.00048-player.vy*.0005+foxLabInvestigation*.2+(currentSpeed<12?.07:0),-.72,.78);
+    const turnSway=Math.sin(foxLabTurnProgress*Math.PI)*(foxLabTurnTo-foxLabTurnFrom);
+    const gaitTail=Math.sin(foxLabStridePhase*2-.8)*(.018+foxLabTrotBlend*.025+foxLabRunBlend*.035);
+    const speedTrail=smooth(55,285,currentSpeed)*.055;
+    const tailTarget=clamp(.09+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.00034+turnSway*.13+gaitTail+foxLabInvestigation*.17-foxLabLandingRecovery*.1,-.62,.72);
     for(let i=0;i<foxLabTailAngles.length;i++){
       const prior=i?foxLabTailAngles[i-1]:tailTarget;
-      const bend=i>1?(foxLabTailAngles[i-1]-foxLabTailAngles[i-2])*.36:0;
-      const target=i?prior+bend+.025*i:tailTarget;
-      foxLabTailVelocities[i]+=(target-foxLabTailAngles[i])*(i?23-i*1.15:32)*dt;
-      foxLabTailVelocities[i]*=Math.exp(-(i?4.9:6.8)*dt);
-      foxLabTailAngles[i]=clamp(foxLabTailAngles[i]+foxLabTailVelocities[i]*dt,-.9,.96);
+      const target=i?tailTarget+(prior-tailTarget)*.43:tailTarget;
+      const stiffness=29-i*2.15,damping=5.8-i*.36;
+      foxLabTailVelocities[i]+=(target-foxLabTailAngles[i])*stiffness*dt;
+      foxLabTailVelocities[i]*=Math.exp(-damping*dt);
+      foxLabTailAngles[i]=clamp(foxLabTailAngles[i]+foxLabTailVelocities[i]*dt,-.82,.9);
     }
   }
 
@@ -136,13 +140,15 @@ function drawFox(now){
     ctx.scale(fwd*(1-turnCompress),1-impact*.04+launch*.018-anticipation*.075+recovery*.014);ctx.rotate(pitch+turnLean);
 
     // A weighted brush tail whose bend travels from pelvis to tip.
-    const tailPts=[[-39,0]],tailLens=[16,19,20,19,16];let tx=-39,ty=0;
+    const tailPts=[[-39,0]],tailLens=[13,15,16,16,16,16,15,13];let tx=-39,ty=0;
     for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i];tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
-    const widths=[4,10,14,15,12,7],upper=[],lower=[];
+    const widths=[4,9,14,16,17,16,13,8,3.2],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
-    ctx.fillStyle="#a84727";ctx.beginPath();upper.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));for(let i=lower.length-1;i>=0;i--)ctx.lineTo(...lower[i]);ctx.closePath();ctx.fill();
-    ctx.strokeStyle="rgba(255,218,178,.48)";ctx.lineWidth=2;ctx.beginPath();tailPts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]-2):ctx.moveTo(p[0],p[1]-2));ctx.stroke();
-    const tip=tailPts.at(-1);ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.ellipse(tip[0]+3,tip[1],5,4,foxLabTailAngles.at(-1),0,Math.PI*2);ctx.fill();
+    const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
+    ctx.fillStyle="#a84727";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
+    ctx.strokeStyle="rgba(255,218,178,.48)";ctx.lineWidth=2;ctx.beginPath();traceSmooth(tailPts.map(p=>[p[0],p[1]-2]));ctx.stroke();
+    const tip=tailPts.at(-1),base=tailPts.at(-2),tailDx=tip[0]-base[0],tailDy=tip[1]-base[1],tailSize=Math.hypot(tailDx,tailDy)||1,tailNx=-tailDy/tailSize,tailNy=tailDx/tailSize;
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(tip[0]+tailNx*2.5,tip[1]+tailNy*2.5);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]+tailDx/tailSize*12,tip[1]+tailDy/tailSize*12);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]-tailNx*2.5,tip[1]-tailNy*2.5);ctx.closePath();ctx.fill();
 
     // Muscled, three-part limbs: shoulder/hip, elbow/knee, wrist/hock, then a small planted paw.
     const gait=(walkOffset,trotOffset)=>{

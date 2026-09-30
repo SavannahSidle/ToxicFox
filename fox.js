@@ -24,9 +24,9 @@
   const foxLabLegStates=Array.from({length:4},()=>({ready:false,pawX:0,pawXV:0,pawY:0,pawYV:0}));
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   const foxLabLegConfigs=[
-    {hip:-31,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:26,lower:34,toeX:2.5,toeY:7.5,bend:-1},
+    {hip:-31,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:26,lower:34,toeX:2,toeY:6.5,bend:-1},
     {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:22,lower:32,toeX:2,toeY:6.7,bend:1},
-    {hip:-32,front:false,far:false,walk:0,trot:Math.PI,upper:26,lower:34,toeX:2.5,toeY:7.5,bend:-1},
+    {hip:-32,front:false,far:false,walk:0,trot:Math.PI,upper:26,lower:34,toeX:2,toeY:6.5,bend:-1},
     {hip:23,front:true,far:false,walk:Math.PI,trot:0,upper:22,lower:32,toeX:2,toeY:6.7,bend:1}
   ];
   const foxLabSurfaces = [
@@ -172,17 +172,20 @@
     const turnHead=turnPulse(.02,.73)*turnDelta,turnShoulder=turnPulse(.17,.88)*turnDelta,turnPelvis=turnPulse(.34,1)*turnDelta;
     const jumpStretch=!player.grounded?clamp(-player.vy/545,0,1):0;
     const jumpDescend=!player.grounded?smooth(35,470,player.vy):0;
+    const jumpAge=!player.grounded?Math.max(0,now-(foxLabTakeoffUntil-145)):0;
+    const jumpDrive=!player.grounded?smooth(0,65,jumpAge)*(1-smooth(175,315,jumpAge)):0;
+    const jumpApex=!player.grounded?clamp(1-Math.abs(player.vy)/125,0,1):0;
     const support=(cfg)=>{const p=((gaitPhase(cfg.walk,cfg.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),u=p/(Math.PI*2);return smooth(0,.035,u)*(1-smooth(.565,.61,u));};
     const hindSupport=(support(foxLabLegConfigs[0])+support(foxLabLegConfigs[2]))*.5;
     const foreSupport=(support(foxLabLegConfigs[1])+support(foxLabLegConfigs[3]))*.5;
-    const pelvisY=hindDrive*(.12+trot*.48+run*1.42)*moveBlend+hindSupport*run*.38+foxLabJumpAnticipation*1.25-jumpStretch*.72+jumpDescend*.46+foxLabLandingImpact*1.45;
-    const ribY=foreLoad*(.14+trot*.42+run*1.04)*moveBlend+foreSupport*run*.24+foxLabJumpAnticipation*.38-jumpStretch*.48+jumpDescend*.24+foxLabLandingImpact*1.02;
-    const pelvisAngle=hindDrive*(trot*.024+run*.082)+clamp(foxLabBodyAcceleration/1100,-1,1)*.038+turnPelvis*.072-jumpStretch*.052+jumpDescend*.036+foxLabLandingImpact*.032;
-    const ribAngle=foreLoad*(trot*.018+run*.061)+clamp(foxLabBodyAcceleration/1100,-1,1)*.02+turnShoulder*.082-jumpStretch*.067+jumpDescend*.046+foxLabLandingImpact*.038;
-    const pelvisX=hindDrive*(trot*.48+run*2.45)+clamp(foxLabBodyAcceleration/1100,-1,1)*.68+turnPelvis*.68-jumpStretch*.4+jumpDescend*.28;
-    const ribX=foreLoad*(trot*.34+run*1.56)+turnShoulder*1.05-clamp(foxLabBodyAcceleration/1100,-1,1)*.32+jumpStretch*.45-jumpDescend*.22;
-    const waistY=(ribY-pelvisY)*.38+lumbarWave*(trot*.58+run*2.05)*moveBlend+foxLabJumpAnticipation*.72-jumpStretch*1.55+jumpDescend*.78+foxLabLandingImpact*.94;
-    const waistAngle=(ribAngle-pelvisAngle)*.5+lumbarWave*(trot*.017+run*.071)*moveBlend+foxLabJumpAnticipation*.038-jumpStretch*.078+jumpDescend*.057+foxLabLandingImpact*.041;
+    const pelvisY=hindDrive*(.12+trot*.48+run*1.42)*moveBlend+hindSupport*run*.38+foxLabJumpAnticipation*1.25-jumpStretch*1.15-jumpDrive*.95+jumpApex*.3+jumpDescend*.72+foxLabLandingImpact*1.45;
+    const ribY=foreLoad*(.14+trot*.42+run*1.04)*moveBlend+foreSupport*run*.24+foxLabJumpAnticipation*.38-jumpStretch*.78-jumpDrive*.58-jumpApex*.42+jumpDescend*.4+foxLabLandingImpact*1.02;
+    const pelvisAngle=hindDrive*(trot*.024+run*.082)+clamp(foxLabBodyAcceleration/1100,-1,1)*.038+turnPelvis*.072-jumpStretch*.075-jumpDrive*.05+jumpApex*.03+jumpDescend*.055+foxLabLandingImpact*.032;
+    const ribAngle=foreLoad*(trot*.018+run*.061)+clamp(foxLabBodyAcceleration/1100,-1,1)*.02+turnShoulder*.082-jumpStretch*.095-jumpDrive*.05+jumpApex*.04+jumpDescend*.065+foxLabLandingImpact*.038;
+    const pelvisX=hindDrive*(trot*.48+run*2.45)+clamp(foxLabBodyAcceleration/1100,-1,1)*.68+turnPelvis*.68-jumpStretch*.55+jumpDrive*1.6+jumpApex*.3+jumpDescend*.45;
+    const ribX=foreLoad*(trot*.34+run*1.56)+turnShoulder*1.05-clamp(foxLabBodyAcceleration/1100,-1,1)*.32+jumpStretch*.6+jumpDrive*1.9+jumpApex*.4-jumpDescend*.35;
+    const waistY=(ribY-pelvisY)*.38+lumbarWave*(trot*.58+run*2.05)*moveBlend+foxLabJumpAnticipation*.72-jumpStretch*2.1-jumpDrive*1.1+jumpApex*.85+jumpDescend*1.15+foxLabLandingImpact*.94;
+    const waistAngle=(ribAngle-pelvisAngle)*.5+lumbarWave*(trot*.017+run*.071)*moveBlend+foxLabJumpAnticipation*.038-jumpStretch*.11-jumpDrive*.045+jumpApex*.065+jumpDescend*.08+foxLabLandingImpact*.041;
     springTo(foxLabSpine,"pelvisX",pelvisX,12,.88,dt);springTo(foxLabSpine,"pelvisY",pelvisY,13,.9,dt);springTo(foxLabSpine,"pelvisAngle",pelvisAngle,11,.9,dt);
     springTo(foxLabSpine,"ribX",ribX,10,.92,dt);springTo(foxLabSpine,"ribY",ribY,11,.95,dt);springTo(foxLabSpine,"ribAngle",ribAngle,10,.92,dt);
     springTo(foxLabSpine,"waistY",waistY,8.5,.92,dt);springTo(foxLabSpine,"waistAngle",waistAngle,8.5,.94,dt);
@@ -190,13 +193,14 @@
     springTo(foxLabSpine,"headY",-foxLabSpine.ribY*.7-foxLabSpine.pelvisY*.08+foreLoad*moveBlend*.1,13,1,dt);
 
     const turnSway=turnPulse(.2,.98)*turnDelta;
-    const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.03,.05,.01,-.02,-.045,-.01,.02])*(.55+foxLabTrotBlend+foxLabRunBlend);
+    const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.34,.085,tailActivity);
+    const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.03,.05,.01,-.02,-.045,-.01,.02])*tailActivity*(.55+foxLabTrotBlend+foxLabRunBlend);
     const speedTrail=smooth(55,285,currentSpeed)*.055;
     const airborne=player.grounded?0:1,ballistic=clamp(Math.max(airborne,foxLabLandingRecovery),0,1);
     const jumpVelocity=airborne*clamp(-player.vy/545,-1,1)*.58;
     const jumpAcceleration=airborne*clamp(-foxLabVerticalAcceleration/2400,-1,1)*.24;
     const bodyFollow=-(foxLabSpine.pelvisAngleV*.06+foxLabSpine.waistAngleV*.035)*(1+airborne*1.5);
-    const tailTarget=clamp(.07+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.0004-foxLabVerticalAcceleration*.000009
+    const tailTarget=clamp(idleTailAngle+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.0004-foxLabVerticalAcceleration*.000009
       +foxLabTailLaunch*(airborne?.65:.31)+jumpVelocity+jumpAcceleration+foxLabJumpAnticipation*.18
       +turnSway*.16+bodyFollow+gaitTail+foxLabInvestigation*.16-foxLabLandingRecovery*.24,-1.05,1.18);
     for(let i=0;i<foxLabTailAngles.length;i++){
@@ -245,6 +249,13 @@ function drawFox(now,dt=1/60){
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#a84727";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
+    // The white brush starts on the distal tail itself so it follows every segment bend.
+    const whiteStart=6;ctx.fillStyle="#f0dfc5";ctx.beginPath();
+    ctx.moveTo(...upper[whiteStart]);
+    for(let i=whiteStart;i<upper.length-1;i++){const a=upper[i],b=upper[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
+    ctx.lineTo(...upper.at(-1));
+    for(let i=lower.length-1;i>whiteStart;i--){const a=lower[i],b=lower[i-1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
+    ctx.lineTo(...lower[whiteStart]);ctx.closePath();ctx.fill();
     ctx.strokeStyle="rgba(255,218,178,.48)";ctx.lineWidth=2;ctx.beginPath();traceSmooth(tailPts.map(p=>[p[0],p[1]-2]));ctx.stroke();
     const tip=tailPts.at(-1),base=tailPts.at(-2),tailDx=tip[0]-base[0],tailDy=tip[1]-base[1],tailSize=Math.hypot(tailDx,tailDy)||1,tailNx=-tailDy/tailSize,tailNy=tailDx/tailSize;
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(tip[0]+tailNx*2.5,tip[1]+tailNy*2.5);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]+tailDx/tailSize*12,tip[1]+tailDy/tailSize*12);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]-tailNx*2.5,tip[1]-tailNy*2.5);ctx.closePath();ctx.fill();
@@ -322,7 +333,7 @@ function drawFox(now,dt=1/60){
     const neckBase=spinePoint(24,-8),neckTop=spinePoint(37,-19),neckLower=spinePoint(28,-4);
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(13,-13));ctx.quadraticCurveTo(...spinePoint(21,-21),...neckTop);ctx.quadraticCurveTo(...spinePoint(41,-19),...spinePoint(43,-13));ctx.lineTo(...neckBase);ctx.quadraticCurveTo(...neckLower,...spinePoint(17,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
-    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.43+run*.035+idleTwitch*.07+clamp(foxLabVerticalAcceleration/10000,-.04,.04);
+    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+clamp(foxLabVerticalAcceleration/10000,-.04,.04);
     const ear=(x,len,angle,{inner=false,outer="#b84d2a"}={})=>{ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8,-len*.58,-1,-len);ctx.quadraticCurveTo(7,-len*.68,8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.quadraticCurveTo(-3,-len*.48,-1,-len*.72);ctx.quadraticCurveTo(3,-len*.55,4,1);ctx.closePath();ctx.fill();}ctx.restore();};
     // The far ear is behind the head and shows only its darker outer surface.
     ear(38,22,-.14-earBack*.68,{outer:"#8f3c27"});
@@ -334,7 +345,7 @@ function drawFox(now,dt=1/60){
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-4);ctx.quadraticCurveTo(62,-4,75,-1+noseDrop);ctx.quadraticCurveTo(69,2+noseDrop,63,1+noseDrop);ctx.lineTo(50,1+noseDrop);ctx.closePath();ctx.fill();
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(45,-19,1.8,2.1,0,0,Math.PI*2);ctx.arc(78,-2+noseDrop,2.2,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(45,-19,.9,1.3,0,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle="#5a3024";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(63,2+noseDrop);ctx.quadraticCurveTo(67,4+noseDrop,71,1+noseDrop);ctx.stroke();ctx.restore();
+    ctx.restore();
     ctx.restore();
   }
 

@@ -181,12 +181,12 @@
     const foreSupport=(support(foxLabLegConfigs[1])+support(foxLabLegConfigs[3]))*.5;
     const pelvisY=hindDrive*(.12+trot*.48+run*1.42)*moveBlend+hindSupport*run*.38+foxLabJumpAnticipation*1.25-jumpStretch*1.15-jumpDrive*.95+jumpApex*.3+jumpDescend*.72+foxLabLandingImpact*1.45;
     const ribY=foreLoad*(.14+trot*.42+run*1.04)*moveBlend+foreSupport*run*.24+foxLabJumpAnticipation*.38-jumpStretch*.78-jumpDrive*.58-jumpApex*.42+jumpDescend*.4+foxLabLandingImpact*1.02;
-    const pelvisAngle=hindDrive*(trot*.024+run*.082)+clamp(foxLabBodyAcceleration/1100,-1,1)*.038+turnPelvis*.072-jumpStretch*.075-jumpDrive*.05+jumpApex*.03+jumpDescend*.055+foxLabLandingImpact*.032;
-    const ribAngle=foreLoad*(trot*.018+run*.061)+clamp(foxLabBodyAcceleration/1100,-1,1)*.02+turnShoulder*.082-jumpStretch*.095-jumpDrive*.05+jumpApex*.04+jumpDescend*.065+foxLabLandingImpact*.038;
+    const pelvisAngle=hindDrive*(trot*.024+run*.082)+clamp(foxLabBodyAcceleration/1100,-1,1)*.038+turnPelvis*.072-jumpStretch*.092-jumpDrive*.062+jumpApex*.038+jumpDescend*.067+foxLabLandingImpact*.04;
+    const ribAngle=foreLoad*(trot*.018+run*.061)+clamp(foxLabBodyAcceleration/1100,-1,1)*.02+turnShoulder*.082-jumpStretch*.112-jumpDrive*.062+jumpApex*.048+jumpDescend*.078+foxLabLandingImpact*.047;
     const pelvisX=hindDrive*(trot*.48+run*2.45)+clamp(foxLabBodyAcceleration/1100,-1,1)*.68+turnPelvis*.68-jumpStretch*.55+jumpDrive*1.6+jumpApex*.3+jumpDescend*.45;
     const ribX=foreLoad*(trot*.34+run*1.56)+turnShoulder*1.05-clamp(foxLabBodyAcceleration/1100,-1,1)*.32+jumpStretch*.6+jumpDrive*1.9+jumpApex*.4-jumpDescend*.35;
     const waistY=(ribY-pelvisY)*.38+lumbarWave*(trot*.58+run*2.05)*moveBlend+foxLabJumpAnticipation*.72-jumpStretch*2.1-jumpDrive*1.1+jumpApex*.85+jumpDescend*1.15+foxLabLandingImpact*.94;
-    const waistAngle=(ribAngle-pelvisAngle)*.5+lumbarWave*(trot*.017+run*.071)*moveBlend+foxLabJumpAnticipation*.038-jumpStretch*.11-jumpDrive*.045+jumpApex*.065+jumpDescend*.08+foxLabLandingImpact*.041;
+    const waistAngle=(ribAngle-pelvisAngle)*.5+lumbarWave*(trot*.017+run*.071)*moveBlend+foxLabJumpAnticipation*.038-jumpStretch*.135-jumpDrive*.06+jumpApex*.075+jumpDescend*.095+foxLabLandingImpact*.05;
     springTo(foxLabSpine,"pelvisX",pelvisX,12,.88,dt);springTo(foxLabSpine,"pelvisY",pelvisY,13,.9,dt);springTo(foxLabSpine,"pelvisAngle",pelvisAngle,11,.9,dt);
     springTo(foxLabSpine,"ribX",ribX,10,.92,dt);springTo(foxLabSpine,"ribY",ribY,11,.95,dt);springTo(foxLabSpine,"ribAngle",ribAngle,10,.92,dt);
     springTo(foxLabSpine,"waistY",waistY,8.5,.92,dt);springTo(foxLabSpine,"waistAngle",waistAngle,8.5,.94,dt);
@@ -248,10 +248,10 @@ function drawFox(now,dt=1/60){
     ctx.save();ctx.translate(originX,originY);ctx.scale(scaleX,scaleY);ctx.rotate(bodyAngle);
 
     // A weighted brush tail whose bend travels from pelvis to tip.
-    const tailBaseX=-39+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
+    const tailBaseX=-41+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
     const tailPts=[[tailBaseX,tailBaseY]],tailLens=[13,15,16,16,16,16,15,13];let tx=tailBaseX,ty=tailBaseY;
     for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i]+foxLabSpine.pelvisAngle;tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
-    const widths=[4,9,14,16,17,16,13,8,3.2],upper=[],lower=[];
+    const widths=[6.5,10,14,16,17,16,13,8,3.2],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#a84727";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
@@ -273,7 +273,8 @@ function drawFox(now,dt=1/60){
       const p=((gaitPhase(config.walk,config.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
       const swing=cubic(t),reach=mix(.38,.25,run),travel=stance?reach-2*reach*t:-reach+2*reach*swing,lift=stance?0:2.4*t*(1-t);
-      let pawX=hip+travel*stride*move,pawY=footLine-lift*(5+run*10)*move;
+      const restingOffset=front?(far?-2.2:1.8):(far?2.4:-1.8);
+      let pawX=hip+travel*stride*move+restingOffset*(1-move),pawY=footLine-lift*(5+run*10)*move;
       if(airborne){
         const descending=smooth(-80,430,player.vy);
         pawX=hip+(front?8:-7)+(front?descending*(7+run*2):-descending*(6+run*3));
@@ -307,17 +308,17 @@ function drawFox(now,dt=1/60){
       const color=far?"#87402c":"#a34b2c",alpha=far?.54:1;
       const bone=(ax,ay,bx,by,wide,thin)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-nx*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
       ctx.globalAlpha=alpha;ctx.fillStyle=color;
-      bone(hip,rootY,jointX,jointY,front?(far?2.7:3.5):(far?3.4:4.5),front?(far?2.1:2.7):(far?2.6:3.3));
-      bone(jointX,jointY,midX,midY,far?2.4:3.15,far?1.7:2.25);
+      bone(hip,rootY,jointX,jointY,front?(far?3:4.05):(far?3.4:4.5),front?(far?2.3:3):(far?2.6:3.3));
+      bone(jointX,jointY,midX,midY,front?(far?2.25:2.9):(far?2.4:3.15),front?(far?1.65:2.05):(far?1.7:2.25));
       bone(midX,midY,pawX,pawY,far?1.5:1.8,far?1.1:1.35);
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
-        ctx.save();ctx.translate(hip+thighDx*.42,rootY+thighDy*.42);ctx.rotate(thighAngle);
-        ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-thighLength*.44,0);
-        ctx.quadraticCurveTo(-thighLength*.18,-7.1,thighLength*.12,-6.8);
-        ctx.quadraticCurveTo(thighLength*.38,-4.8,thighLength*.43,0);
-        ctx.quadraticCurveTo(thighLength*.34,4.9,thighLength*.06,6.8);
-        ctx.quadraticCurveTo(-thighLength*.27,5.8,-thighLength*.44,0);ctx.closePath();ctx.fill();ctx.restore();
+        ctx.save();ctx.translate(hip+thighDx*.36,rootY+thighDy*.36);ctx.rotate(thighAngle);
+        ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-thighLength*.39,0);
+        ctx.quadraticCurveTo(-thighLength*.2,-8.3,thighLength*.08,-8.5);
+        ctx.quadraticCurveTo(thighLength*.34,-6.2,thighLength*.4,0);
+        ctx.quadraticCurveTo(thighLength*.29,5.2,thighLength*.05,7.9);
+        ctx.quadraticCurveTo(-thighLength*.24,6.6,-thighLength*.39,0);ctx.closePath();ctx.fill();ctx.restore();
       }
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,far?1.45:1.9,0,Math.PI*2);ctx.arc(midX,midY,far?1:1.35,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.ellipse(pawX+1.4,pawY,3.1,1.65,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
@@ -335,18 +336,16 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-49,-3],[-44,-12],[-27,-15],[-14,-17],[-5,-13],[8,-15],[16,-14],[28,-13],[39,-7],[42,-3],[39,1],[34,5],[26,7],[16,7],[8,4],[-10,7],[-23,8],[-42,8]].map(p=>spinePoint(...p));
+    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-18],[17,-17],[28,-14],[39,-7],[42,-3],[39,2],[34,7],[27,10],[18,11],[9,8],[1,5],[-9,5],[-20,8],[-29,12],[-38,10],[-45,6]].map(p=>spinePoint(...p));
     ctx.fillStyle="#bb552d";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
-    const rump=spinePoint(-29,-6);ctx.save();ctx.translate(...rump);ctx.rotate(foxLabSpine.pelvisAngle*.35);ctx.fillStyle="#d16a36";ctx.beginPath();ctx.ellipse(0,0,12,5.5,-.06,0,Math.PI*2);ctx.fill();ctx.restore();
-    const chestA=spinePoint(21,-12),chestB=spinePoint(35,-9),chestC=spinePoint(37,-2),chestD=spinePoint(28,5),chestE=spinePoint(22,2);
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(...chestA);ctx.quadraticCurveTo(...chestB,...chestC);ctx.quadraticCurveTo(...chestD,...chestE);ctx.closePath();ctx.fill();
+    const chestA=spinePoint(25,-14),chestB=spinePoint(34,-10),chestC=spinePoint(35,-2),chestD=spinePoint(31,5),chestE=spinePoint(25,8),chestF=spinePoint(22,2);
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(...chestA);ctx.quadraticCurveTo(...chestB,...chestC);ctx.quadraticCurveTo(...chestD,...chestE);ctx.quadraticCurveTo(...spinePoint(25,3),...chestF);ctx.closePath();ctx.fill();
     limb(2);
     limb(3);
 
-    // Slim neck and small alert head keep the fox's line long and deliberate.
-    const neckBase=spinePoint(23,-8),neckTop=spinePoint(38,-20),neckLower=spinePoint(27,-4);
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(12,-13));ctx.quadraticCurveTo(...spinePoint(21,-21),...neckTop);ctx.quadraticCurveTo(...spinePoint(42,-19),...spinePoint(44,-13));ctx.lineTo(...neckBase);ctx.quadraticCurveTo(...neckLower,...spinePoint(16,-5));ctx.closePath();ctx.fill();
+    // A broad, tapered neck blends into the scapular mass instead of ending as a narrow connector.
+    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(12,-14));ctx.quadraticCurveTo(...spinePoint(22,-22),...spinePoint(38,-20));ctx.quadraticCurveTo(...spinePoint(45,-19),...spinePoint(47,-13));ctx.quadraticCurveTo(...spinePoint(41,-8),...spinePoint(36,-2));ctx.quadraticCurveTo(...spinePoint(31,3),...spinePoint(24,5));ctx.quadraticCurveTo(...spinePoint(20,-1),...spinePoint(14,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
     const ear=(x,len,angle,{inner=false,outer="#b84d2a"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8+tipLagX*.45,-len*.58,-1+tipLagX,-len);ctx.quadraticCurveTo(7+tipLagX*.8,-len*.68,8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.quadraticCurveTo(-3+tipLagX*.25,-len*.48,-1+tipLagX*.7,-len*.72);ctx.quadraticCurveTo(3+tipLagX*.55,-len*.55,4,1);ctx.closePath();ctx.fill();}ctx.restore();};

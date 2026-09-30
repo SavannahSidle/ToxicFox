@@ -21,13 +21,13 @@
     pelvisX:0,pelvisXV:0,pelvisY:0,pelvisYV:0,pelvisAngle:0,pelvisAngleV:0,
     waistY:0,waistYV:0,waistAngle:0,waistAngleV:0,neckAngle:0,neckAngleV:0,headY:0,headYV:0
   };
-  const foxLabLegStates=Array.from({length:4},()=>({ready:false,elbowX:0,elbowXV:0,elbowY:0,elbowYV:0,wristX:0,wristXV:0,wristY:0,wristYV:0}));
-  const foxLabFootContacts=Array.from({length:4},()=>({planted:false,weight:0,x:0,y:0}));
+  const foxLabLegStates=Array.from({length:4},()=>({ready:false,pawX:0,pawXV:0,pawY:0,pawYV:0}));
+  const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   const foxLabLegConfigs=[
-    {hip:-31,front:false,far:true,walk:Math.PI*1.5,trot:0},
-    {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI},
-    {hip:-32,front:false,far:false,walk:0,trot:Math.PI},
-    {hip:23,front:true,far:false,walk:Math.PI,trot:0}
+    {hip:-31,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:26,lower:34,toeX:2.5,toeY:7.5,bend:1},
+    {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:22,lower:32,toeX:2,toeY:6.7,bend:-1},
+    {hip:-32,front:false,far:false,walk:0,trot:Math.PI,upper:26,lower:34,toeX:2.5,toeY:7.5,bend:1},
+    {hip:23,front:true,far:false,walk:Math.PI,trot:0,upper:22,lower:32,toeX:2,toeY:6.7,bend:-1}
   ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
@@ -220,49 +220,53 @@ function drawFox(now,dt=1/60){
       const hip=config.hip+(front?foxLabSpine.ribX:foxLabSpine.pelvisX),rootY=front?foxLabSpine.ribY:foxLabSpine.pelvisY;
       const p=((gaitPhase(config.walk,config.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
-      const swing=cubic(t),travel=stance?.585-1.17*t:-.585+1.17*swing,lift=stance?0:4*t*(1-t);
-      const pushOff=!front&&stance?smooth(.42,.99,t)*(trot*.45+run*.85):0;
+      const swing=cubic(t),reach=mix(.38,.25,run),travel=stance?reach-2*reach*t:-reach+2*reach*swing,lift=stance?0:2.4*t*(1-t);
       let pawX=hip+travel*stride*move,pawY=footLine-lift*(5+run*10)*move;
-      let jointX,midX,jointY,midY;
-      const tuck=airborne?Math.max(launch,.18):impact*.68+anticipation*.55;
       if(airborne){
         const descending=smooth(-80,430,player.vy);
-        pawX=hip+(front?13:-12)+(front?descending*(11+run*4):-descending*(8+run*7));
+        pawX=hip+(front?8:-7)+(front?descending*(7+run*2):-descending*(6+run*3));
         pawY=footLine-(1-descending)*(front?13+launch*3:10+launch*2)+(front?0:-descending*3);
-        jointX=hip+(front?8:12)+(front?turnWave*2:-turnWave*1.5);
-        jointY=rootY+17-tuck*6;midX=pawX+(front?-5:-9);midY=footLine-8-tuck*4;
-      }else if(front){
-        jointX=hip+(pawX-hip)*.28-5+turnWave*2;
-        jointY=rootY+17+lift*5+impact*5+anticipation*7;
-        midX=pawX-5;midY=footLine-8-lift*3+impact*3;
-      }else{
-        jointX=hip+(pawX-hip)*.36+11+pushOff*stride*.12-turnWave*1.5;
-        jointY=rootY+16+lift*5+impact*4+anticipation*4;
-        midX=pawX-11-pushOff*stride*.12;midY=footLine-8-lift*3+impact*2;
       }
       if(impact&&!airborne)pawY=footLine-impact*2;
-      const contact=foxLabFootContacts[index],canLock=player.grounded&&speed>7&&stance&&Math.abs(scaleX)>.28;
-      if(canLock&&!contact.planted){const anchor=localToWorld(pawX,pawY);contact.x=anchor.x;contact.y=anchor.y;contact.planted=true;}
+      const joints=foxLabLegStates[index];
+      if(!joints.ready){joints.pawX=pawX;joints.pawY=pawY;joints.ready=true;}
+      else{springTo(joints,"pawX",pawX,22,.98,dt);springTo(joints,"pawY",pawY,22,.98,dt);pawX=joints.pawX;pawY=joints.pawY;}
+      const contact=foxLabFootContacts[index],maxReach=config.upper+config.lower-1.2;
+      if(!stance||speed<=7||!player.grounded)contact.released=false;
+      const canLock=player.grounded&&speed>7&&stance&&!contact.released&&Math.abs(scaleX)>.28;
+      if(canLock&&!contact.planted){
+        const anchor=localToWorld(pawX,pawY),local=worldToLocal(anchor.x,anchor.y);
+        if(Math.hypot(local.x-config.toeX-hip,local.y-config.toeY-rootY)<maxReach-1.2){contact.x=anchor.x;contact.y=anchor.y;contact.planted=true;}
+        else contact.released=true;
+      }
       if(!canLock)contact.planted=false;
       if(Math.abs(scaleX)<=.28)contact.weight=0;
       contact.weight+=(Number(canLock&&contact.planted)-contact.weight)*(1-Math.exp(-20*dt));
-      if(contact.weight>.001&&Math.abs(scaleX)>.28){const locked=worldToLocal(contact.x,contact.y);pawX=mix(pawX,locked.x,contact.weight);pawY=mix(pawY,locked.y,contact.weight);}
-      const pawWorld=localToWorld(pawX,pawY);contact.renderX=pawWorld.x;contact.renderY=pawWorld.y;
-      const joints=foxLabLegStates[index];
-      if(!joints.ready){joints.elbowX=jointX;joints.elbowY=jointY;joints.wristX=midX;joints.wristY=midY;joints.ready=true;}
-      else{
-        springTo(joints,"elbowX",jointX,16,.9,dt);springTo(joints,"elbowY",jointY,16,.92,dt);
-        springTo(joints,"wristX",midX,20,.94,dt);springTo(joints,"wristY",midY,20,.96,dt);
+      const freePawX=pawX,freePawY=pawY;
+      if(contact.weight>.001&&Math.abs(scaleX)>.28){
+        const locked=worldToLocal(contact.x,contact.y),reach=Math.hypot(locked.x-config.toeX-hip,locked.y-config.toeY-rootY);
+        if(contact.planted&&reach>maxReach-1.2){contact.planted=false;contact.released=true;contact.weight=0;pawX=freePawX;pawY=freePawY;}
+        else{pawX=mix(pawX,locked.x,contact.weight);pawY=mix(pawY,locked.y,contact.weight);}
       }
-      jointX=joints.elbowX;jointY=joints.elbowY;midX=joints.wristX;midY=joints.wristY;
+      const hockTargetX=pawX-config.toeX,hockTargetY=pawY-config.toeY;
+      const dx=hockTargetX-hip,dy=hockTargetY-rootY,rawDistance=Math.hypot(dx,dy)||.001;
+      const minReach=Math.abs(config.upper-config.lower)+10;
+      const distance=clamp(rawDistance,minReach,maxReach),ux=dx/rawDistance,uy=dy/rawDistance;
+      const hockX=hip+ux*distance,hockY=rootY+uy*distance;
+      pawX=hockX+config.toeX;pawY=hockY+config.toeY;
+      const along=(config.upper*config.upper-config.lower*config.lower+distance*distance)/(2*distance);
+      const height=Math.sqrt(Math.max(.01,config.upper*config.upper-along*along));
+      const jointX=hip+ux*along-uy*height*config.bend,jointY=rootY+uy*along+ux*height*config.bend;
+      const midX=hockX,midY=hockY;
+      const pawWorld=localToWorld(pawX,pawY);contact.renderX=pawWorld.x;contact.renderY=pawWorld.y;
       const color=far?"#87402c":"#a34b2c",alpha=far?.54:1;
       const bone=(ax,ay,bx,by,wide,thin)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-nx*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
       ctx.globalAlpha=alpha;ctx.fillStyle=color;
       bone(hip,rootY,jointX,jointY,front?(far?2.7:3.5):(far?3.4:4.5),front?(far?2.1:2.7):(far?2.6:3.3));
       bone(jointX,jointY,midX,midY,far?2.4:3.15,far?1.7:2.25);
-      bone(midX,midY,pawX,pawY-2,far?1.8:2.35,far?1.2:1.65);
+      bone(midX,midY,pawX,pawY,far?1.5:1.8,far?1.1:1.35);
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,far?1.45:1.9,0,Math.PI*2);ctx.arc(midX,midY,far?1:1.35,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle="#302622";ctx.lineWidth=far?1.75:(front?2:2.2);ctx.lineCap="round";ctx.beginPath();ctx.moveTo(pawX-2,pawY-1);ctx.quadraticCurveTo(pawX+1.8,pawY+.8,pawX+5.5,pawY);ctx.stroke();ctx.globalAlpha=1;
+      ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.ellipse(pawX+1.4,pawY,3.1,1.65,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
     };
     // Four-beat walk: each paw lands in sequence. The faster gait blends toward diagonal-pair trot timing.
     limb(0);

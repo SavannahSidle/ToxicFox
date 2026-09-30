@@ -21,6 +21,7 @@
     pelvisX:0,pelvisXV:0,pelvisY:0,pelvisYV:0,pelvisAngle:0,pelvisAngleV:0,
     waistY:0,waistYV:0,waistAngle:0,waistAngleV:0,neckAngle:0,neckAngleV:0,headY:0,headYV:0
   };
+  const foxLabEar={angle:0,angleV:0},foxLabEarTip={angle:0,angleV:0};
   const foxLabLegStates=Array.from({length:4},()=>({ready:false,pawX:0,pawXV:0,pawY:0,pawYV:0}));
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   const foxLabLegConfigs=[
@@ -191,6 +192,11 @@
     springTo(foxLabSpine,"waistY",waistY,8.5,.92,dt);springTo(foxLabSpine,"waistAngle",waistAngle,8.5,.94,dt);
     springTo(foxLabSpine,"neckAngle",-ribAngle*.62-waistAngle*.28+turnHead*.055+clamp(foxLabBodyAcceleration/1100,-1,1)*.012,12,.98,dt);
     springTo(foxLabSpine,"headY",-foxLabSpine.ribY*.7-foxLabSpine.pelvisY*.08+foreLoad*moveBlend*.1,13,1,dt);
+    const earForce=clamp(foxLabBodyAcceleration/1000,-1,1)*.075+clamp(-foxLabVerticalAcceleration/5000,0,1)*.1
+      +jumpDrive*.06+jumpStretch*.045+jumpDescend*.04+foxLabLandingImpact*.14+foxLabJumpAnticipation*.024
+      +clamp(-foxLabSpine.neckAngleV*.015,-.025,.025);
+    springTo(foxLabEar,"angle",clamp(earForce,-.08,.22),15,.94,dt);
+    springTo(foxLabEarTip,"angle",foxLabEar.angle,9,.98,dt);
 
     const turnSway=turnPulse(.2,.98)*turnDelta;
     const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.34,.085,tailActivity);
@@ -304,6 +310,15 @@ function drawFox(now,dt=1/60){
       bone(hip,rootY,jointX,jointY,front?(far?2.7:3.5):(far?3.4:4.5),front?(far?2.1:2.7):(far?2.6:3.3));
       bone(jointX,jointY,midX,midY,far?2.4:3.15,far?1.7:2.25);
       bone(midX,midY,pawX,pawY,far?1.5:1.8,far?1.1:1.35);
+      if(!front){
+        const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
+        ctx.save();ctx.translate(hip+thighDx*.42,rootY+thighDy*.42);ctx.rotate(thighAngle);
+        ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-thighLength*.44,0);
+        ctx.quadraticCurveTo(-thighLength*.18,-7.1,thighLength*.12,-6.8);
+        ctx.quadraticCurveTo(thighLength*.38,-4.8,thighLength*.43,0);
+        ctx.quadraticCurveTo(thighLength*.34,4.9,thighLength*.06,6.8);
+        ctx.quadraticCurveTo(-thighLength*.27,5.8,-thighLength*.44,0);ctx.closePath();ctx.fill();ctx.restore();
+      }
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,far?1.45:1.9,0,Math.PI*2);ctx.arc(midX,midY,far?1:1.35,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.ellipse(pawX+1.4,pawY,3.1,1.65,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
     };
@@ -330,11 +345,11 @@ function drawFox(now,dt=1/60){
     limb(3);
 
     // Slim neck and small alert head keep the fox's line long and deliberate.
-    const neckBase=spinePoint(24,-8),neckTop=spinePoint(37,-19),neckLower=spinePoint(28,-4);
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(13,-13));ctx.quadraticCurveTo(...spinePoint(21,-21),...neckTop);ctx.quadraticCurveTo(...spinePoint(41,-19),...spinePoint(43,-13));ctx.lineTo(...neckBase);ctx.quadraticCurveTo(...neckLower,...spinePoint(17,-5));ctx.closePath();ctx.fill();
+    const neckBase=spinePoint(23,-8),neckTop=spinePoint(38,-20),neckLower=spinePoint(27,-4);
+    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(12,-13));ctx.quadraticCurveTo(...spinePoint(21,-21),...neckTop);ctx.quadraticCurveTo(...spinePoint(42,-19),...spinePoint(44,-13));ctx.lineTo(...neckBase);ctx.quadraticCurveTo(...neckLower,...spinePoint(16,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
-    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+clamp(foxLabVerticalAcceleration/10000,-.04,.04);
-    const ear=(x,len,angle,{inner=false,outer="#b84d2a"}={})=>{ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8,-len*.58,-1,-len);ctx.quadraticCurveTo(7,-len*.68,8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.quadraticCurveTo(-3,-len*.48,-1,-len*.72);ctx.quadraticCurveTo(3,-len*.55,4,1);ctx.closePath();ctx.fill();}ctx.restore();};
+    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
+    const ear=(x,len,angle,{inner=false,outer="#b84d2a"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8+tipLagX*.45,-len*.58,-1+tipLagX,-len);ctx.quadraticCurveTo(7+tipLagX*.8,-len*.68,8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.quadraticCurveTo(-3+tipLagX*.25,-len*.48,-1+tipLagX*.7,-len*.72);ctx.quadraticCurveTo(3+tipLagX*.55,-len*.55,4,1);ctx.closePath();ctx.fill();}ctx.restore();};
     // The far ear is behind the head and shows only its darker outer surface.
     ear(38,22,-.14-earBack*.68,{outer:"#8f3c27"});
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
@@ -343,7 +358,8 @@ function drawFox(now,dt=1/60){
     const noseDrop=investigate*5;
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-4);ctx.quadraticCurveTo(62,-4,75,-1+noseDrop);ctx.quadraticCurveTo(69,2+noseDrop,63,1+noseDrop);ctx.lineTo(50,1+noseDrop);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(45,-19,1.8,2.1,0,0,Math.PI*2);ctx.arc(78,-2+noseDrop,2.2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(45,-19,1.8,2.1,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(75,-4+noseDrop);ctx.quadraticCurveTo(79,-5+noseDrop,80,-2+noseDrop);ctx.quadraticCurveTo(79,1+noseDrop,76,0+noseDrop);ctx.quadraticCurveTo(74,-1+noseDrop,75,-4+noseDrop);ctx.closePath();ctx.fill();
     ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(45,-19,.9,1.3,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
     ctx.restore();

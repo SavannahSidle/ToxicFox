@@ -24,10 +24,10 @@
   const foxLabLegStates=Array.from({length:4},()=>({ready:false,pawX:0,pawXV:0,pawY:0,pawYV:0}));
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   const foxLabLegConfigs=[
-    {hip:-31,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:26,lower:34,toeX:2.5,toeY:7.5,bend:1},
-    {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:22,lower:32,toeX:2,toeY:6.7,bend:-1},
-    {hip:-32,front:false,far:false,walk:0,trot:Math.PI,upper:26,lower:34,toeX:2.5,toeY:7.5,bend:1},
-    {hip:23,front:true,far:false,walk:Math.PI,trot:0,upper:22,lower:32,toeX:2,toeY:6.7,bend:-1}
+    {hip:-31,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:26,lower:34,toeX:2.5,toeY:7.5,bend:-1},
+    {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:22,lower:32,toeX:2,toeY:6.7,bend:1},
+    {hip:-32,front:false,far:false,walk:0,trot:Math.PI,upper:26,lower:34,toeX:2.5,toeY:7.5,bend:-1},
+    {hip:23,front:true,far:false,walk:Math.PI,trot:0,upper:22,lower:32,toeX:2,toeY:6.7,bend:1}
   ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
@@ -56,6 +56,33 @@
   }
   function turnPulse(start,end){
     return smooth(start,Math.min(start+.14,end),foxLabTurnProgress)*(1-smooth(Math.max(start+.14,end-.14),end,foxLabTurnProgress));
+  }
+  function solveFixedLimb(rootX,rootY,pawX,pawY,config,keepGround){
+    const {upper,lower,toeX,toeY,bend}=config;
+    const minReach=Math.abs(upper-lower)+10;
+    const extensionReserve=Math.max(2.5,Math.min(upper,lower)*.1);
+    const maxReach=upper+lower-extensionReserve;
+    let dx=pawX-toeX-rootX,dy=pawY-toeY-rootY;
+    const rawDistance=Math.hypot(dx,dy);
+    let distance=rawDistance;
+    if(keepGround&&Math.abs(dy)<maxReach&&rawDistance>maxReach){
+      const maxHorizontal=Math.sqrt(maxReach*maxReach-dy*dy);
+      dx=clamp(dx,-maxHorizontal,maxHorizontal);
+      distance=Math.hypot(dx,dy);
+    }else if(rawDistance>maxReach){
+      const ratio=maxReach/rawDistance;dx*=ratio;dy*=ratio;distance=maxReach;
+    }
+    if(distance<minReach){
+      if(distance<.001){dx=0;dy=minReach;}
+      else{const ratio=minReach/distance;dx*=ratio;dy*=ratio;}
+      distance=minReach;
+    }
+    const ux=dx/distance,uy=dy/distance;
+    const hockX=rootX+dx,hockY=rootY+dy;
+    const along=(upper*upper-lower*lower+distance*distance)/(2*distance);
+    const height=Math.sqrt(Math.max(0,upper*upper-along*along));
+    const kneeX=rootX+ux*along-uy*height*bend,kneeY=rootY+uy*along+ux*height*bend;
+    return {kneeX,kneeY,hockX,hockY,pawX:hockX+toeX,pawY:hockY+toeY,upper,lower,toeX,toeY,minReach,maxReach,distance};
   }
 
   addEventListener("keydown", event => {
@@ -108,9 +135,10 @@
       player.y=landing.y-player.h;player.vy=0;player.grounded=true;foxLabJumpHoldBlend=0;
       if(fallSpeed>35){
         foxLabLandingImpact=Math.min(1,fallSpeed/700);
-        foxLabTailVelocities[0]+=Math.min(.8,fallSpeed*.0011);
-        foxLabTailVelocities[1]+=Math.min(.34,fallSpeed*.00042);
-        foxLabTailVelocities[2]+=Math.min(.16,fallSpeed*.0002);
+        foxLabTailVelocities[0]+=Math.min(1.15,fallSpeed*.0021);
+        foxLabTailVelocities[1]+=Math.min(.72,fallSpeed*.0013);
+        foxLabTailVelocities[2]+=Math.min(.42,fallSpeed*.00075);
+        foxLabTailVelocities[3]+=Math.min(.2,fallSpeed*.00035);
         foxLabLandingRecovery=1;
       }
     }
@@ -164,11 +192,17 @@
     const turnSway=turnPulse(.2,.98)*turnDelta;
     const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.03,.05,.01,-.02,-.045,-.01,.02])*(.55+foxLabTrotBlend+foxLabRunBlend);
     const speedTrail=smooth(55,285,currentSpeed)*.055;
-    const tailTarget=clamp(.07+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.0004-foxLabVerticalAcceleration*.000009+foxLabTailLaunch*.31+turnSway*.16-foxLabSpine.pelvisAngleV*.06-foxLabSpine.waistAngleV*.035+gaitTail+foxLabInvestigation*.16-foxLabLandingRecovery*.1,-.68,.78);
+    const airborne=player.grounded?0:1,ballistic=clamp(Math.max(airborne,foxLabLandingRecovery),0,1);
+    const jumpVelocity=airborne*clamp(-player.vy/545,-1,1)*.58;
+    const jumpAcceleration=airborne*clamp(-foxLabVerticalAcceleration/2400,-1,1)*.24;
+    const bodyFollow=-(foxLabSpine.pelvisAngleV*.06+foxLabSpine.waistAngleV*.035)*(1+airborne*1.5);
+    const tailTarget=clamp(.07+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.0004-foxLabVerticalAcceleration*.000009
+      +foxLabTailLaunch*(airborne?.65:.31)+jumpVelocity+jumpAcceleration+foxLabJumpAnticipation*.18
+      +turnSway*.16+bodyFollow+gaitTail+foxLabInvestigation*.16-foxLabLandingRecovery*.24,-1.05,1.18);
     for(let i=0;i<foxLabTailAngles.length;i++){
       const prior=i?foxLabTailAngles[i-1]:tailTarget;
-      const target=i?tailTarget+(prior-tailTarget)*.43:tailTarget;
-      const stiffness=29-i*2.15,damping=5.8-i*.36;
+      const target=i?tailTarget+(prior-tailTarget)*mix(.43,.58,ballistic):tailTarget;
+      const stiffness=29-i*2.15,damping=(5.8-i*.36)*(1-.28*ballistic);
       foxLabTailVelocities[i]+=(target-foxLabTailAngles[i])*stiffness*dt;
       foxLabTailVelocities[i]*=Math.exp(-damping*dt);
       foxLabTailAngles[i]=clamp(foxLabTailAngles[i]+foxLabTailVelocities[i]*dt,-.82,.9);
@@ -192,12 +226,13 @@ function drawFox(now,dt=1/60){
     const breathe=player.grounded&&speed<9?Math.sin(now*.0021)*.35:0;
     const rise=8+compress*.8+launch*1.2-investigate*1.5+breathe;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-anticipation*3+recovery*2.6;
-    const facingBlend=smooth(0,1,foxLabTurnProgress);
     const turnDelta=foxLabTurnTo-foxLabTurnFrom,turnWave=turnPulse(.03,.98)*turnDelta;
-    const fwd=mix(foxLabTurnFrom,foxLabTurnTo,facingBlend),turnCompress=turnPulse(.18,.82)*.1;
+    // A 2D mirror is discrete. Interpolating its scale through zero collapses every bone mid-turn.
+    const fwd=player.facing;
     const turnLean=turnPulse(.18,.84)*turnDelta*.052;
     const originX=player.x+player.w/2,originY=player.y+player.h/2+bounce+impact*5+verticalMotion+anticipation*3-recovery*2.6-rise;
-    const scaleX=fwd*(1-turnCompress),scaleY=1-impact*.025+launch*.012-anticipation*.05+recovery*.01,bodyAngle=pitch*.34+turnLean*.5;
+    // Flipping and rotation preserve segment lengths; gait squash must not scale the skeleton.
+    const scaleX=fwd,scaleY=1,bodyAngle=pitch*.34+turnLean*.5;
     const localToWorld=(x,y)=>({x:originX+scaleX*(x*Math.cos(bodyAngle)-y*Math.sin(bodyAngle)),y:originY+scaleY*(x*Math.sin(bodyAngle)+y*Math.cos(bodyAngle))});
     const worldToLocal=(x,y)=>{const dx=(x-originX)/scaleX,dy=(y-originY)/scaleY;return{x:dx*Math.cos(bodyAngle)+dy*Math.sin(bodyAngle),y:-dx*Math.sin(bodyAngle)+dy*Math.cos(bodyAngle)};};
     ctx.save();ctx.translate(originX,originY);ctx.scale(scaleX,scaleY);ctx.rotate(bodyAngle);
@@ -231,7 +266,7 @@ function drawFox(now,dt=1/60){
       const joints=foxLabLegStates[index];
       if(!joints.ready){joints.pawX=pawX;joints.pawY=pawY;joints.ready=true;}
       else{springTo(joints,"pawX",pawX,22,.98,dt);springTo(joints,"pawY",pawY,22,.98,dt);pawX=joints.pawX;pawY=joints.pawY;}
-      const contact=foxLabFootContacts[index],maxReach=config.upper+config.lower-1.2;
+      const contact=foxLabFootContacts[index],maxReach=config.upper+config.lower-Math.max(2.5,Math.min(config.upper,config.lower)*.1);
       if(!stance||speed<=7||!player.grounded)contact.released=false;
       const canLock=player.grounded&&speed>7&&stance&&!contact.released&&Math.abs(scaleX)>.28;
       if(canLock&&!contact.planted){
@@ -248,16 +283,9 @@ function drawFox(now,dt=1/60){
         if(contact.planted&&reach>maxReach-1.2){contact.planted=false;contact.released=true;contact.weight=0;pawX=freePawX;pawY=freePawY;}
         else{pawX=mix(pawX,locked.x,contact.weight);pawY=mix(pawY,locked.y,contact.weight);}
       }
-      const hockTargetX=pawX-config.toeX,hockTargetY=pawY-config.toeY;
-      const dx=hockTargetX-hip,dy=hockTargetY-rootY,rawDistance=Math.hypot(dx,dy)||.001;
-      const minReach=Math.abs(config.upper-config.lower)+10;
-      const distance=clamp(rawDistance,minReach,maxReach),ux=dx/rawDistance,uy=dy/rawDistance;
-      const hockX=hip+ux*distance,hockY=rootY+uy*distance;
-      pawX=hockX+config.toeX;pawY=hockY+config.toeY;
-      const along=(config.upper*config.upper-config.lower*config.lower+distance*distance)/(2*distance);
-      const height=Math.sqrt(Math.max(.01,config.upper*config.upper-along*along));
-      const jointX=hip+ux*along-uy*height*config.bend,jointY=rootY+uy*along+ux*height*config.bend;
-      const midX=hockX,midY=hockY;
+      const solved=solveFixedLimb(hip,rootY,pawX,pawY,config,player.grounded&&stance);
+      pawX=solved.pawX;pawY=solved.pawY;
+      const jointX=solved.kneeX,jointY=solved.kneeY,midX=solved.hockX,midY=solved.hockY;
       const pawWorld=localToWorld(pawX,pawY);contact.renderX=pawWorld.x;contact.renderY=pawWorld.y;
       const color=far?"#87402c":"#a34b2c",alpha=far?.54:1;
       const bone=(ax,ay,bx,by,wide,thin)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-nx*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
@@ -294,10 +322,13 @@ function drawFox(now,dt=1/60){
     const neckBase=spinePoint(24,-8),neckTop=spinePoint(37,-19),neckLower=spinePoint(28,-4);
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(13,-13));ctx.quadraticCurveTo(...spinePoint(21,-21),...neckTop);ctx.quadraticCurveTo(...spinePoint(41,-19),...spinePoint(43,-13));ctx.lineTo(...neckBase);ctx.quadraticCurveTo(...neckLower,...spinePoint(17,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.43+run*.035+idleTwitch*.07+clamp(foxLabVerticalAcceleration/10000,-.04,.04);
-    const ear=(x,len,angle)=>{ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle="#b84d2a";ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8,-len*.58,-1,-len);ctx.quadraticCurveTo(7,-len*.68,8,3);ctx.closePath();ctx.fill();ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.lineTo(-1,-len*.72);ctx.lineTo(4,1);ctx.closePath();ctx.fill();ctx.restore();};
-    ear(29,25,.08-earBack);ear(42,26,-.11-earBack*.82);
+    const ear=(x,len,angle,{inner=false,outer="#b84d2a"}={})=>{ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8,-len*.58,-1,-len);ctx.quadraticCurveTo(7,-len*.68,8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.quadraticCurveTo(-3,-len*.48,-1,-len*.72);ctx.quadraticCurveTo(3,-len*.55,4,1);ctx.closePath();ctx.fill();}ctx.restore();};
+    // The far ear is behind the head and shows only its darker outer surface.
+    ear(38,22,-.14-earBack*.68,{outer:"#8f3c27"});
+    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
+    // The near ear stays forward and keeps the visible inner surface.
+    ear(29,25,.08-earBack,{inner:true});
     const noseDrop=investigate*5;
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-4);ctx.quadraticCurveTo(62,-4,75,-1+noseDrop);ctx.quadraticCurveTo(69,2+noseDrop,63,1+noseDrop);ctx.lineTo(50,1+noseDrop);ctx.closePath();ctx.fill();

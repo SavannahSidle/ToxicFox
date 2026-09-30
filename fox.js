@@ -313,12 +313,12 @@ function drawFox(now,dt=1/60){
       bone(midX,midY,pawX,pawY,far?1.5:1.8,far?1.1:1.35);
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
-        ctx.save();ctx.translate(hip+thighDx*.36,rootY+thighDy*.36);ctx.rotate(thighAngle);
-        ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-thighLength*.39,0);
-        ctx.quadraticCurveTo(-thighLength*.2,-8.3,thighLength*.08,-8.5);
-        ctx.quadraticCurveTo(thighLength*.34,-6.2,thighLength*.4,0);
-        ctx.quadraticCurveTo(thighLength*.29,5.2,thighLength*.05,7.9);
-        ctx.quadraticCurveTo(-thighLength*.24,6.6,-thighLength*.39,0);ctx.closePath();ctx.fill();ctx.restore();
+        ctx.save();ctx.translate(hip+thighDx*.3,rootY+thighDy*.3);ctx.rotate(thighAngle);
+        ctx.fillStyle=far?"#87402c":"#bb552d";ctx.beginPath();ctx.moveTo(-thighLength*.44,0);
+        ctx.quadraticCurveTo(-thighLength*.24,-9.2,-thighLength*.02,-9.6);
+        ctx.quadraticCurveTo(thighLength*.3,-6.2,thighLength*.4,0);
+        ctx.quadraticCurveTo(thighLength*.28,5,thighLength*.05,8.1);
+        ctx.quadraticCurveTo(-thighLength*.29,6.3,-thighLength*.44,0);ctx.closePath();ctx.fill();ctx.restore();
       }
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,far?1.45:1.9,0,Math.PI*2);ctx.arc(midX,midY,far?1:1.35,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.ellipse(pawX+1.4,pawY,3.1,1.65,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
@@ -336,16 +336,16 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-18],[17,-17],[28,-14],[39,-7],[42,-3],[39,2],[34,7],[27,10],[18,11],[9,8],[1,5],[-9,5],[-20,8],[-29,12],[-38,10],[-45,6]].map(p=>spinePoint(...p));
+    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-18],[17,-17],[28,-14],[39,-7],[42,-3],[39,1],[34,5],[27,8],[18,8],[9,6],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(p=>spinePoint(...p));
     ctx.fillStyle="#bb552d";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
-    const chestA=spinePoint(25,-14),chestB=spinePoint(34,-10),chestC=spinePoint(35,-2),chestD=spinePoint(31,5),chestE=spinePoint(25,8),chestF=spinePoint(22,2);
+    const chestA=spinePoint(27,-13),chestB=spinePoint(34,-9),chestC=spinePoint(34,-2),chestD=spinePoint(30,4),chestE=spinePoint(26,6),chestF=spinePoint(23,2);
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(...chestA);ctx.quadraticCurveTo(...chestB,...chestC);ctx.quadraticCurveTo(...chestD,...chestE);ctx.quadraticCurveTo(...spinePoint(25,3),...chestF);ctx.closePath();ctx.fill();
     limb(2);
     limb(3);
 
-    // A broad, tapered neck blends into the scapular mass instead of ending as a narrow connector.
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(12,-14));ctx.quadraticCurveTo(...spinePoint(22,-22),...spinePoint(38,-20));ctx.quadraticCurveTo(...spinePoint(45,-19),...spinePoint(47,-13));ctx.quadraticCurveTo(...spinePoint(41,-8),...spinePoint(36,-2));ctx.quadraticCurveTo(...spinePoint(31,3),...spinePoint(24,5));ctx.quadraticCurveTo(...spinePoint(20,-1),...spinePoint(14,-5));ctx.closePath();ctx.fill();
+    // The neck tapers from a soft shoulder blend to the refined skull.
+    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(15,-14));ctx.quadraticCurveTo(...spinePoint(23,-21),...spinePoint(38,-20));ctx.quadraticCurveTo(...spinePoint(44,-19),...spinePoint(46,-13));ctx.quadraticCurveTo(...spinePoint(40,-8),...spinePoint(35,-2));ctx.quadraticCurveTo(...spinePoint(30,2),...spinePoint(24,3));ctx.quadraticCurveTo(...spinePoint(20,-2),...spinePoint(15,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
     const ear=(x,len,angle,{inner=false,outer="#b84d2a"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8+tipLagX*.45,-len*.58,-1+tipLagX,-len);ctx.quadraticCurveTo(7+tipLagX*.8,-len*.68,8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.quadraticCurveTo(-3+tipLagX*.25,-len*.48,-1+tipLagX*.7,-len*.72);ctx.quadraticCurveTo(3+tipLagX*.55,-len*.55,4,1);ctx.closePath();ctx.fill();}ctx.restore();};

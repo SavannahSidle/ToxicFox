@@ -16,6 +16,19 @@
   let foxLabStrideLength = 22, foxLabTrotBlend = 0, foxLabRunBlend = 0;
   let foxLabBodyAcceleration = 0, foxLabJumpPending = 0, foxLabJumpAnticipation = 0, foxLabLandingRecovery = 0;
   let foxLabTailLaunch = 0, foxLabVerticalAcceleration = 0;
+  const foxLabSpine = {
+    ribX:0,ribXV:0,ribY:0,ribYV:0,ribAngle:0,ribAngleV:0,
+    pelvisX:0,pelvisXV:0,pelvisY:0,pelvisYV:0,pelvisAngle:0,pelvisAngleV:0,
+    waistY:0,waistYV:0,waistAngle:0,waistAngleV:0,neckAngle:0,neckAngleV:0,headY:0,headYV:0
+  };
+  const foxLabLegStates=Array.from({length:4},()=>({ready:false,elbowX:0,elbowXV:0,elbowY:0,elbowYV:0,wristX:0,wristXV:0,wristY:0,wristYV:0}));
+  const foxLabFootContacts=Array.from({length:4},()=>({planted:false,weight:0,x:0,y:0}));
+  const foxLabLegConfigs=[
+    {hip:-31,front:false,far:true,walk:Math.PI*1.5,trot:0},
+    {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI},
+    {hip:-32,front:false,far:false,walk:0,trot:Math.PI},
+    {hip:23,front:true,far:false,walk:Math.PI,trot:0}
+  ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
     {x:190,y:452,w:112,h:14}, {x:302,y:432,w:112,h:14},
@@ -25,6 +38,25 @@
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const mix = (a, b, t) => a + (b - a) * t;
   const smooth = (a, b, x) => { const t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
+  const cubic = t=>t*t*(3-2*t);
+  function cycleSample(phase,values){
+    const count=values.length,x=((phase/(Math.PI*2)%1)+1)%1*count,index=Math.floor(x),t=x-index;
+    const y0=values[index],y1=values[(index+1)%count],m0=(y1-values[(index+count-1)%count])*.5,m1=(values[(index+2)%count]-y0)*.5;
+    const t2=t*t,t3=t2*t;
+    return (2*t3-3*t2+1)*y0+(t3-2*t2+t)*m0+(-2*t3+3*t2)*y1+(t3-t2)*m1;
+  }
+  function gaitPhase(walkOffset,trotOffset){
+    const walk=foxLabStridePhase+walkOffset,run=foxLabStridePhase+trotOffset;
+    return walk+Math.atan2(Math.sin(run-walk),Math.cos(run-walk))*foxLabTrotBlend;
+  }
+  function springTo(state,valueKey,target,frequency,damping,dt){
+    const velocityKey=valueKey+"V",omega=frequency;
+    state[velocityKey]+=((target-state[valueKey])*omega*omega-2*damping*omega*state[velocityKey])*dt;
+    state[valueKey]+=state[velocityKey]*dt;
+  }
+  function turnPulse(start,end){
+    return smooth(start,Math.min(start+.14,end),foxLabTurnProgress)*(1-smooth(Math.max(start+.14,end-.14),end,foxLabTurnProgress));
+  }
 
   addEventListener("keydown", event => {
     if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space"].includes(event.code)) event.preventDefault();
@@ -104,10 +136,35 @@
     foxLabVerticalAcceleration+=(verticalAcceleration-foxLabVerticalAcceleration)*(1-Math.exp(-13*dt));
     foxLabTailLaunch*=Math.exp(-2.7*dt);
 
-    const turnSway=Math.sin(foxLabTurnProgress*Math.PI)*(foxLabTurnTo-foxLabTurnFrom);
-    const gaitTail=Math.sin(foxLabStridePhase*2-.8)*(.018+foxLabTrotBlend*.025+foxLabRunBlend*.035);
+    const phase=foxLabStridePhase,run=foxLabRunBlend,trot=foxLabTrotBlend,moveBlend=smooth(5,180,currentSpeed);
+    const hindDrive=cycleSample(phase-.13,[.02,.46,.92,.42,-.36,-.82,-.28,.58]);
+    const foreLoad=cycleSample(phase+.27,[.06,.48,.84,.22,-.52,-.76,-.08,.55]);
+    const lumbarWave=cycleSample(phase-.51,[.04,.22,.72,.84,.12,-.69,-.78,-.02]);
+    const turnDelta=foxLabTurnTo-foxLabTurnFrom;
+    const turnHead=turnPulse(.02,.73)*turnDelta,turnShoulder=turnPulse(.17,.88)*turnDelta,turnPelvis=turnPulse(.34,1)*turnDelta;
+    const jumpStretch=!player.grounded?clamp(-player.vy/545,0,1):0;
+    const jumpDescend=!player.grounded?smooth(35,470,player.vy):0;
+    const support=(cfg)=>{const p=((gaitPhase(cfg.walk,cfg.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),u=p/(Math.PI*2);return smooth(0,.035,u)*(1-smooth(.565,.61,u));};
+    const hindSupport=(support(foxLabLegConfigs[0])+support(foxLabLegConfigs[2]))*.5;
+    const foreSupport=(support(foxLabLegConfigs[1])+support(foxLabLegConfigs[3]))*.5;
+    const pelvisY=hindDrive*(.12+trot*.48+run*1.42)*moveBlend+hindSupport*run*.38+foxLabJumpAnticipation*1.25-jumpStretch*.72+jumpDescend*.46+foxLabLandingImpact*1.45;
+    const ribY=foreLoad*(.14+trot*.42+run*1.04)*moveBlend+foreSupport*run*.24+foxLabJumpAnticipation*.38-jumpStretch*.48+jumpDescend*.24+foxLabLandingImpact*1.02;
+    const pelvisAngle=hindDrive*(trot*.024+run*.082)+clamp(foxLabBodyAcceleration/1100,-1,1)*.038+turnPelvis*.072-jumpStretch*.052+jumpDescend*.036+foxLabLandingImpact*.032;
+    const ribAngle=foreLoad*(trot*.018+run*.061)+clamp(foxLabBodyAcceleration/1100,-1,1)*.02+turnShoulder*.082-jumpStretch*.067+jumpDescend*.046+foxLabLandingImpact*.038;
+    const pelvisX=hindDrive*(trot*.48+run*2.45)+clamp(foxLabBodyAcceleration/1100,-1,1)*.68+turnPelvis*.68-jumpStretch*.4+jumpDescend*.28;
+    const ribX=foreLoad*(trot*.34+run*1.56)+turnShoulder*1.05-clamp(foxLabBodyAcceleration/1100,-1,1)*.32+jumpStretch*.45-jumpDescend*.22;
+    const waistY=(ribY-pelvisY)*.38+lumbarWave*(trot*.58+run*2.05)*moveBlend+foxLabJumpAnticipation*.72-jumpStretch*1.55+jumpDescend*.78+foxLabLandingImpact*.94;
+    const waistAngle=(ribAngle-pelvisAngle)*.5+lumbarWave*(trot*.017+run*.071)*moveBlend+foxLabJumpAnticipation*.038-jumpStretch*.078+jumpDescend*.057+foxLabLandingImpact*.041;
+    springTo(foxLabSpine,"pelvisX",pelvisX,12,.88,dt);springTo(foxLabSpine,"pelvisY",pelvisY,13,.9,dt);springTo(foxLabSpine,"pelvisAngle",pelvisAngle,11,.9,dt);
+    springTo(foxLabSpine,"ribX",ribX,10,.92,dt);springTo(foxLabSpine,"ribY",ribY,11,.95,dt);springTo(foxLabSpine,"ribAngle",ribAngle,10,.92,dt);
+    springTo(foxLabSpine,"waistY",waistY,8.5,.92,dt);springTo(foxLabSpine,"waistAngle",waistAngle,8.5,.94,dt);
+    springTo(foxLabSpine,"neckAngle",-ribAngle*.62-waistAngle*.28+turnHead*.055+clamp(foxLabBodyAcceleration/1100,-1,1)*.012,12,.98,dt);
+    springTo(foxLabSpine,"headY",-foxLabSpine.ribY*.7-foxLabSpine.pelvisY*.08+foreLoad*moveBlend*.1,13,1,dt);
+
+    const turnSway=turnPulse(.2,.98)*turnDelta;
+    const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.03,.05,.01,-.02,-.045,-.01,.02])*(.55+foxLabTrotBlend+foxLabRunBlend);
     const speedTrail=smooth(55,285,currentSpeed)*.055;
-    const tailTarget=clamp(.07+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.0004-foxLabVerticalAcceleration*.000009+foxLabTailLaunch*.31+turnSway*.16+gaitTail+foxLabInvestigation*.16-foxLabLandingRecovery*.1,-.68,.78);
+    const tailTarget=clamp(.07+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.0004-foxLabVerticalAcceleration*.000009+foxLabTailLaunch*.31+turnSway*.16-foxLabSpine.pelvisAngleV*.06-foxLabSpine.waistAngleV*.035+gaitTail+foxLabInvestigation*.16-foxLabLandingRecovery*.1,-.68,.78);
     for(let i=0;i<foxLabTailAngles.length;i++){
       const prior=i?foxLabTailAngles[i-1]:tailTarget;
       const target=i?tailTarget+(prior-tailTarget)*.43:tailTarget;
@@ -118,35 +175,37 @@
     }
   }
 
-function drawFox(now){
+function drawFox(now,dt=1/60){
     const speed=Math.abs(player.vx),move=smooth(4,58,speed),trot=foxLabTrotBlend,run=foxLabRunBlend;
     const airborne=!player.grounded,phase=foxLabStridePhase,impact=foxLabLandingImpact,investigate=foxLabInvestigation;
     const launch=airborne?smooth(0,145,now-(foxLabTakeoffUntil-145)):0;
-    const stride=foxLabStrideLength,walkBeat=phase,runBeat=phase*(1.08+run*.12);
-    const bodyWave=Math.sin(phase*.5-.4),stepWave=Math.sin(phase*2-.35);
-    const compress=Math.max(0,Math.sin(phase*2+.45))*run*.78;
-    const spineFlex=Math.sin(phase*2-.45)*(.009+trot*.018+run*.063)-compress*.014;
-    const bounce=player.grounded?(Math.sin(phase*2)*move*.42+Math.max(0,stepWave)*run*1.05):0;
-    const shoulderMotion=Math.sin(phase*2+Math.PI*.5)*(move*.48+run*1.15);
-    const hipMotion=Math.sin(phase*2-Math.PI*.25)*(move*.42+run*1.45);
+    const stride=foxLabStrideLength;
+    const bodyWave=cycleSample(phase-.16,[-.2,.05,.42,.2,-.08,-.46,-.24,.14]),stepWave=cycleSample(phase,[0,.36,.72,.28,-.18,-.64,-.35,.11]);
+    const compress=Math.max(0,cycleSample(phase+.34,[-.1,.22,.82,.48,-.16,-.72,-.4,.09]))*run*.42;
+    const bounce=player.grounded?stepWave*move*(.12+run*.26):0;
+    const shoulderMotion=foxLabSpine.ribY;
     const accelerationLean=clamp(foxLabBodyAcceleration/1100,-1,1);
     const braking=clamp(-foxLabBodyAcceleration/1000,0,1);
     const anticipation=foxLabJumpAnticipation,recovery=foxLabLandingRecovery;
-    const verticalMotion=stepWave*(trot*.38+run*.72)-recovery*2.1;
-    const pitch=airborne?clamp(player.vy*.00017,-.16,.16):(-.034*run+bodyWave*.012*trot+accelerationLean*.04-braking*.016-impact*.055+investigate*.018);
-    const breathe=player.grounded&&speed<9?Math.sin(now*.0021)*.7:0;
-    const rise=8+compress*1.35+launch*1.45-investigate*1.5+breathe;
+    const verticalMotion=stepWave*(trot*.16+run*.3)-recovery*1.4;
+    const pitch=airborne?clamp(player.vy*.00016,-.15,.15):(-.025*run+bodyWave*.008*trot+accelerationLean*.035-braking*.014-impact*.045+investigate*.018);
+    const breathe=player.grounded&&speed<9?Math.sin(now*.0021)*.35:0;
+    const rise=8+compress*.8+launch*1.2-investigate*1.5+breathe;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-anticipation*3+recovery*2.6;
     const facingBlend=smooth(0,1,foxLabTurnProgress);
-    const fwd=mix(foxLabTurnFrom,foxLabTurnTo,facingBlend),turnWave=Math.sin(foxLabTurnProgress*Math.PI)*(foxLabTurnTo-foxLabTurnFrom);
-    const turnCompress=Math.sin(foxLabTurnProgress*Math.PI)*.12;
-    const turnLean=turnWave*.075;
-    ctx.save();ctx.translate(player.x+player.w/2,player.y+player.h/2+bounce+impact*5+verticalMotion+anticipation*3-recovery*2.6-rise);
-    ctx.scale(fwd*(1-turnCompress),1-impact*.04+launch*.018-anticipation*.075+recovery*.014);ctx.rotate(pitch+turnLean);
+    const turnDelta=foxLabTurnTo-foxLabTurnFrom,turnWave=turnPulse(.03,.98)*turnDelta;
+    const fwd=mix(foxLabTurnFrom,foxLabTurnTo,facingBlend),turnCompress=turnPulse(.18,.82)*.1;
+    const turnLean=turnPulse(.18,.84)*turnDelta*.052;
+    const originX=player.x+player.w/2,originY=player.y+player.h/2+bounce+impact*5+verticalMotion+anticipation*3-recovery*2.6-rise;
+    const scaleX=fwd*(1-turnCompress),scaleY=1-impact*.025+launch*.012-anticipation*.05+recovery*.01,bodyAngle=pitch*.34+turnLean*.5;
+    const localToWorld=(x,y)=>({x:originX+scaleX*(x*Math.cos(bodyAngle)-y*Math.sin(bodyAngle)),y:originY+scaleY*(x*Math.sin(bodyAngle)+y*Math.cos(bodyAngle))});
+    const worldToLocal=(x,y)=>{const dx=(x-originX)/scaleX,dy=(y-originY)/scaleY;return{x:dx*Math.cos(bodyAngle)+dy*Math.sin(bodyAngle),y:-dx*Math.sin(bodyAngle)+dy*Math.cos(bodyAngle)};};
+    ctx.save();ctx.translate(originX,originY);ctx.scale(scaleX,scaleY);ctx.rotate(bodyAngle);
 
     // A weighted brush tail whose bend travels from pelvis to tip.
-    const tailPts=[[-39,0]],tailLens=[13,15,16,16,16,16,15,13];let tx=-39,ty=0;
-    for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i];tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
+    const tailBaseX=-39+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
+    const tailPts=[[tailBaseX,tailBaseY]],tailLens=[13,15,16,16,16,16,15,13];let tx=tailBaseX,ty=tailBaseY;
+    for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i]+foxLabSpine.pelvisAngle;tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
     const widths=[4,9,14,16,17,16,13,8,3.2],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
@@ -156,14 +215,12 @@ function drawFox(now){
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(tip[0]+tailNx*2.5,tip[1]+tailNy*2.5);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]+tailDx/tailSize*12,tip[1]+tailDy/tailSize*12);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]-tailNx*2.5,tip[1]-tailNy*2.5);ctx.closePath();ctx.fill();
 
     // Muscled, three-part limbs: shoulder/hip, elbow/knee, wrist/hock, then a small planted paw.
-    const gait=(walkOffset,trotOffset)=>{
-      const walkPhase=walkBeat+walkOffset,runPhase=runBeat+trotOffset;
-      return walkPhase+Math.atan2(Math.sin(runPhase-walkPhase),Math.cos(runPhase-walkPhase))*trot;
-    };
-    const limb=(hip,off,front,far,rootY)=>{
-      const p=((off%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
+    const limb=index=>{
+      const config=foxLabLegConfigs[index],front=config.front,far=config.far;
+      const hip=config.hip+(front?foxLabSpine.ribX:foxLabSpine.pelvisX),rootY=front?foxLabSpine.ribY:foxLabSpine.pelvisY;
+      const p=((gaitPhase(config.walk,config.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
-      const travel=stance?.585-1.17*t:-.585+1.17*t,lift=stance?0:Math.sin(t*Math.PI);
+      const swing=cubic(t),travel=stance?.585-1.17*t:-.585+1.17*swing,lift=stance?0:4*t*(1-t);
       const pushOff=!front&&stance?smooth(.42,.99,t)*(trot*.45+run*.85):0;
       let pawX=hip+travel*stride*move,pawY=footLine-lift*(5+run*10)*move;
       let jointX,midX,jointY,midY;
@@ -184,6 +241,20 @@ function drawFox(now){
         midX=pawX-11-pushOff*stride*.12;midY=footLine-8-lift*3+impact*2;
       }
       if(impact&&!airborne)pawY=footLine-impact*2;
+      const contact=foxLabFootContacts[index],canLock=player.grounded&&speed>7&&stance&&Math.abs(scaleX)>.28;
+      if(canLock&&!contact.planted){const anchor=localToWorld(pawX,pawY);contact.x=anchor.x;contact.y=anchor.y;contact.planted=true;}
+      if(!canLock)contact.planted=false;
+      if(Math.abs(scaleX)<=.28)contact.weight=0;
+      contact.weight+=(Number(canLock&&contact.planted)-contact.weight)*(1-Math.exp(-20*dt));
+      if(contact.weight>.001&&Math.abs(scaleX)>.28){const locked=worldToLocal(contact.x,contact.y);pawX=mix(pawX,locked.x,contact.weight);pawY=mix(pawY,locked.y,contact.weight);}
+      const pawWorld=localToWorld(pawX,pawY);contact.renderX=pawWorld.x;contact.renderY=pawWorld.y;
+      const joints=foxLabLegStates[index];
+      if(!joints.ready){joints.elbowX=jointX;joints.elbowY=jointY;joints.wristX=midX;joints.wristY=midY;joints.ready=true;}
+      else{
+        springTo(joints,"elbowX",jointX,16,.9,dt);springTo(joints,"elbowY",jointY,16,.92,dt);
+        springTo(joints,"wristX",midX,20,.94,dt);springTo(joints,"wristY",midY,20,.96,dt);
+      }
+      jointX=joints.elbowX;jointY=joints.elbowY;midX=joints.wristX;midY=joints.wristY;
       const color=far?"#87402c":"#a34b2c",alpha=far?.54:1;
       const bone=(ax,ay,bx,by,wide,thin)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-nx*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
       ctx.globalAlpha=alpha;ctx.fillStyle=color;
@@ -194,27 +265,33 @@ function drawFox(now){
       ctx.strokeStyle="#302622";ctx.lineWidth=far?1.75:(front?2:2.2);ctx.lineCap="round";ctx.beginPath();ctx.moveTo(pawX-2,pawY-1);ctx.quadraticCurveTo(pawX+1.8,pawY+.8,pawX+5.5,pawY);ctx.stroke();ctx.globalAlpha=1;
     };
     // Four-beat walk: each paw lands in sequence. The faster gait blends toward diagonal-pair trot timing.
-    limb(-31,gait(Math.PI*1.5,0),false,true,hipMotion);
-    limb(24,gait(Math.PI*.5,Math.PI),true,true,shoulderMotion);
+    limb(0);
+    limb(1);
 
-    const hindDrive=Math.max(0,Math.sin(runBeat+.55));
-    const flex=Math.sin(runBeat-.5)*run*4.2+spineFlex*78-compress*1.8+launch*2-impact*2.4+anticipation*1.6;
-    // A long, narrow trunk with a tucked waist and lean, continuous spine line.
-    const spineExtend=1+spineFlex+run*.038+Math.sin(runBeat)*run*.052+launch*.045-impact*.032+accelerationLean*.016;
-    const torsoLift=hindDrive*run*1.4-anticipation*1.7+recovery*1.1;
-    ctx.save();ctx.translate(1,0);ctx.scale(spineExtend,1);ctx.translate(-1,0);
-    ctx.fillStyle="#bb552d";ctx.beginPath();ctx.moveTo(-49,-3+torsoLift);ctx.quadraticCurveTo(-43,-14-torsoLift*.28,-27,-15-flex*.18+torsoLift*.35);ctx.quadraticCurveTo(-10,-17-flex*.16+torsoLift*.4,7,-14-torsoLift*.35);ctx.quadraticCurveTo(25,-16,39,-7);ctx.quadraticCurveTo(42,-3,39,1);ctx.quadraticCurveTo(34,7,26,7+flex*.1);ctx.quadraticCurveTo(16,7+flex*.12,8,4-torsoLift*.45);ctx.quadraticCurveTo(-10,7+flex*.16,-23,8+flex*.12);ctx.quadraticCurveTo(-42,8,-49,-3+torsoLift);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#d16a36";ctx.beginPath();ctx.ellipse(-29,-6,13,6,-.06,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(22,-12);ctx.quadraticCurveTo(34,-10,39,-4);ctx.quadraticCurveTo(36,2,29,5);ctx.quadraticCurveTo(23,3,20,-3);ctx.closePath();ctx.fill();
-    ctx.restore();
-    limb(-32,gait(0,Math.PI),false,false,hipMotion);
-    limb(23,gait(Math.PI,0),true,false,shoulderMotion);
+    // Deform each trunk region around its own delayed anchor so the back line bends continuously.
+    const spinePoint=(x,y)=>{
+      const transform=(pivotX,shiftX,shiftY,angle)=>{const dx=x-pivotX,dy=y,c=Math.cos(angle),s=Math.sin(angle);return[pivotX+shiftX+dx*c-dy*s,shiftY+dx*s+dy*c];};
+      const pelvis=transform(-29,foxLabSpine.pelvisX,foxLabSpine.pelvisY,foxLabSpine.pelvisAngle);
+      const waist=transform(-4,(foxLabSpine.pelvisX+foxLabSpine.ribX)*.18,foxLabSpine.waistY,foxLabSpine.waistAngle);
+      const rib=transform(20,foxLabSpine.ribX,foxLabSpine.ribY,foxLabSpine.ribAngle);
+      const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
+      return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
+    };
+    const spineOutline=[[-49,-3],[-44,-12],[-27,-15],[-14,-17],[-5,-13],[8,-15],[16,-14],[28,-13],[39,-7],[42,-3],[39,1],[34,5],[26,7],[16,7],[8,4],[-10,7],[-23,8],[-42,8]].map(p=>spinePoint(...p));
+    ctx.fillStyle="#bb552d";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
+    for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
+    const rump=spinePoint(-29,-6);ctx.save();ctx.translate(...rump);ctx.rotate(foxLabSpine.pelvisAngle*.35);ctx.fillStyle="#d16a36";ctx.beginPath();ctx.ellipse(0,0,12,5.5,-.06,0,Math.PI*2);ctx.fill();ctx.restore();
+    const chestA=spinePoint(21,-12),chestB=spinePoint(35,-9),chestC=spinePoint(37,-2),chestD=spinePoint(28,5),chestE=spinePoint(22,2);
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(...chestA);ctx.quadraticCurveTo(...chestB,...chestC);ctx.quadraticCurveTo(...chestD,...chestE);ctx.closePath();ctx.fill();
+    limb(2);
+    limb(3);
 
     // Slim neck and small alert head keep the fox's line long and deliberate.
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(13,-13);ctx.quadraticCurveTo(22,-21,29,-24);ctx.quadraticCurveTo(37,-23,43,-17);ctx.lineTo(38,-8);ctx.quadraticCurveTo(27,-6,17,-5);ctx.closePath();ctx.fill();
-    ctx.save();ctx.translate(34+turnWave*2,-16+shoulderMotion*.35);ctx.rotate(-pitch*.78+investigate*.18+Math.max(0,player.vy)*.000045-spineFlex*.35+turnWave*.12);ctx.translate(-34,16);
+    const neckBase=spinePoint(24,-8),neckTop=spinePoint(37,-19),neckLower=spinePoint(28,-4);
+    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(13,-13));ctx.quadraticCurveTo(...spinePoint(21,-21),...neckTop);ctx.quadraticCurveTo(...spinePoint(41,-19),...spinePoint(43,-13));ctx.lineTo(...neckBase);ctx.quadraticCurveTo(...neckLower,...spinePoint(17,-5));ctx.closePath();ctx.fill();
+    ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
-    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.43+run*.045+idleTwitch*.07;
+    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.43+run*.035+idleTwitch*.07+clamp(foxLabVerticalAcceleration/10000,-.04,.04);
     const ear=(x,len,angle)=>{ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle="#b84d2a";ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8,-len*.58,-1,-len);ctx.quadraticCurveTo(7,-len*.68,8,3);ctx.closePath();ctx.fill();ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.lineTo(-1,-len*.72);ctx.lineTo(4,1);ctx.closePath();ctx.fill();ctx.restore();};
     ear(29,25,.08-earBack);ear(42,26,-.11-earBack*.82);
     const noseDrop=investigate*5;
@@ -245,7 +322,7 @@ function drawFoxLabArena(){
     status.textContent = `${motion} · ${player.grounded ? "GROUNDED" : "AIRBORNE"}`;
     speedReadout.textContent = `${Math.round(velocity)} px/s`;
     drawFoxLabArena();
-    drawFox(now);
+    drawFox(now,dt);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

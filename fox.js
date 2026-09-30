@@ -307,20 +307,22 @@ function drawFox(now,dt=1/60){
       const pawWorld=localToWorld(pawX,pawY);contact.renderX=pawWorld.x;contact.renderY=pawWorld.y;
       const color=far?"#87402c":"#a34b2c",alpha=far?.54:1;
       const bone=(ax,ay,bx,by,wide,thin)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-nx*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
-      ctx.globalAlpha=alpha;ctx.fillStyle=color;
-      bone(hip,rootY,jointX,jointY,front?(far?3:4.05):(far?3.4:4.5),front?(far?2.3:3):(far?2.6:3.3));
+      ctx.globalAlpha=alpha;ctx.fillStyle=!front?(far?"#87402c":"#bb552d"):color;
+      bone(hip,rootY,jointX,jointY,front?(far?3:4.05):(far?4.2:5.4),front?(far?2.3:3):(far?3.1:4.1));
+      ctx.fillStyle=color;
       bone(jointX,jointY,midX,midY,front?(far?2.25:2.9):(far?2.4:3.15),front?(far?1.65:2.05):(far?1.7:2.25));
       bone(midX,midY,pawX,pawY,far?1.5:1.8,far?1.1:1.35);
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
-        ctx.save();ctx.translate(hip+thighDx*.3,rootY+thighDy*.3);ctx.rotate(thighAngle);
-        ctx.fillStyle=far?"#87402c":"#bb552d";ctx.beginPath();ctx.moveTo(-thighLength*.44,0);
-        ctx.quadraticCurveTo(-thighLength*.24,-9.2,-thighLength*.02,-9.6);
-        ctx.quadraticCurveTo(thighLength*.3,-6.2,thighLength*.4,0);
-        ctx.quadraticCurveTo(thighLength*.28,5,thighLength*.05,8.1);
-        ctx.quadraticCurveTo(-thighLength*.29,6.3,-thighLength*.44,0);ctx.closePath();ctx.fill();ctx.restore();
+        ctx.save();ctx.translate(hip+thighDx*.24,rootY+thighDy*.24);ctx.rotate(thighAngle);
+        ctx.fillStyle=far?"#87402c":"#bb552d";ctx.beginPath();ctx.moveTo(-thighLength*.52,0);
+        ctx.quadraticCurveTo(-thighLength*.34,-12.8,-thighLength*.08,-14.2);
+        ctx.quadraticCurveTo(thighLength*.18,-15.2,thighLength*.4,-8.4);
+        ctx.quadraticCurveTo(thighLength*.5,-3.2,thighLength*.43,0);
+        ctx.quadraticCurveTo(thighLength*.31,6.4,thighLength*.06,12.4);
+        ctx.quadraticCurveTo(-thighLength*.28,9.2,-thighLength*.52,0);ctx.closePath();ctx.fill();ctx.restore();
       }
-      ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,far?1.45:1.9,0,Math.PI*2);ctx.arc(midX,midY,far?1:1.35,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,front?(far?1.8:2.25):(far?2.1:2.7),0,Math.PI*2);ctx.arc(midX,midY,far?1.2:1.55,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.ellipse(pawX+1.4,pawY,3.1,1.65,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
     };
     // Four-beat walk: each paw lands in sequence. The faster gait blends toward diagonal-pair trot timing.
@@ -348,12 +350,12 @@ function drawFox(now,dt=1/60){
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(15,-14));ctx.quadraticCurveTo(...spinePoint(23,-21),...spinePoint(38,-20));ctx.quadraticCurveTo(...spinePoint(44,-19),...spinePoint(46,-13));ctx.quadraticCurveTo(...spinePoint(40,-8),...spinePoint(35,-2));ctx.quadraticCurveTo(...spinePoint(30,2),...spinePoint(24,3));ctx.quadraticCurveTo(...spinePoint(20,-2),...spinePoint(15,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
-    const ear=(x,len,angle,{inner=false,outer="#b84d2a"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-6,3);ctx.quadraticCurveTo(-8+tipLagX*.45,-len*.58,-1+tipLagX,-len);ctx.quadraticCurveTo(7+tipLagX*.8,-len*.68,8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#61352b";ctx.beginPath();ctx.moveTo(-2,0);ctx.quadraticCurveTo(-3+tipLagX*.25,-len*.48,-1+tipLagX*.7,-len*.72);ctx.quadraticCurveTo(3+tipLagX*.55,-len*.55,4,1);ctx.closePath();ctx.fill();}ctx.restore();};
+    const ear=(x,len,angle,{inner=false,outer="#b84d2a"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // The far ear is behind the head and shows only its darker outer surface.
-    ear(38,22,-.14-earBack*.68,{outer:"#8f3c27"});
+    ear(25,24,-.18-earBack*.68,{outer:"#8f3c27"});
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
     // The near ear stays forward and keeps the visible inner surface.
-    ear(29,25,.08-earBack,{inner:true});
+    ear(31,29,.15-earBack,{inner:true});
     const noseDrop=investigate*5;
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-4);ctx.quadraticCurveTo(62,-4,75,-1+noseDrop);ctx.quadraticCurveTo(69,2+noseDrop,63,1+noseDrop);ctx.lineTo(50,1+noseDrop);ctx.closePath();ctx.fill();

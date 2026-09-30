@@ -357,9 +357,13 @@ function drawFox(now,dt=1/60){
     const noseDrop=investigate*5;
     ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-4);ctx.quadraticCurveTo(62,-4,75,-1+noseDrop);ctx.quadraticCurveTo(69,2+noseDrop,63,1+noseDrop);ctx.lineTo(50,1+noseDrop);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(45,-19,1.8,2.1,0,0,Math.PI*2);ctx.fill();
+    // A soft almond eye and a light lash give her a clear, expressive cartoon-feminine read.
+    ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(39.8,-19.3);ctx.quadraticCurveTo(44.2,-23.8,49.5,-20.5);ctx.quadraticCurveTo(50.2,-18.7,47.4,-16.3);ctx.quadraticCurveTo(42.7,-15.5,40,-17.8);ctx.closePath();ctx.fill();
+    ctx.strokeStyle="#40221d";ctx.lineWidth=1;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(40.4,-20.5);ctx.quadraticCurveTo(44.8,-23.7,49.4,-20.8);ctx.moveTo(40.4,-21);ctx.lineTo(38.9,-22.2);ctx.moveTo(41.9,-22);ctx.lineTo(41.1,-23.4);ctx.stroke();
     ctx.beginPath();ctx.moveTo(75,-4+noseDrop);ctx.quadraticCurveTo(79,-5+noseDrop,80,-2+noseDrop);ctx.quadraticCurveTo(79,1+noseDrop,76,0+noseDrop);ctx.quadraticCurveTo(74,-1+noseDrop,75,-4+noseDrop);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(45,-19,.9,1.3,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(45.9,-19,2.45,2.75,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(46.45,-19,.92,1.75,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#fff1d3";ctx.beginPath();ctx.ellipse(44.45,-20.2,.82,.95,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
     ctx.restore();
   }

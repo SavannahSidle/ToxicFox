@@ -31,9 +31,9 @@
   const foxLabLegStates=Array.from({length:4},()=>({ready:false,pawX:0,pawXV:0,pawY:0,pawYV:0}));
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   const foxLabLegConfigs=[
-    {hip:-36,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:32.5,lower:22,toeX:2,toeY:19,bend:-1},
+    {hip:-36,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
     {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:22,lower:32,toeX:2,toeY:8.2,bend:1},
-    {hip:-37,front:false,far:false,walk:0,trot:Math.PI,upper:32.5,lower:22,toeX:2,toeY:19,bend:-1},
+    {hip:-37,front:false,far:false,walk:0,trot:Math.PI,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
     {hip:23,front:true,far:false,walk:Math.PI,trot:0,upper:22,lower:32,toeX:2,toeY:8.2,bend:1}
   ];
   const foxLabSurfaces = [

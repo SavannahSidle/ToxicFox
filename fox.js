@@ -310,7 +310,7 @@ function drawFox(now,dt=1/60){
     const limb=index=>{
       const config=foxLabLegConfigs[index],front=config.front,far=config.far;
       const shoulderGlide=front?(foxLabPose.runContact*.55-foxLabPose.runExtension*.42+foxLabPose.jumpDrive*.38-foxLabPose.jumpLanding*.28):0;
-      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38:foxLabSpine.pelvisY+foxLabPose.runGather*.32;
+      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38:foxLabSpine.pelvisY+foxLabPose.runGather*.32+3.5;
       const p=((gaitPhase(config.walk,config.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
       const swing=cubic(t),reach=mix(.38,.25,run),travel=stance?reach-2*reach*t:-reach+2*reach*swing,lift=stance?0:2.4*t*(1-t);
@@ -355,14 +355,14 @@ function drawFox(now,dt=1/60){
       bone(midX,midY,pawX,pawY,far?1.5:1.8,far?1.1:1.35);
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
-        ctx.save();ctx.translate(hip+thighDx*.24,rootY+thighDy*.24);ctx.rotate(thighAngle);
-        ctx.fillStyle=far?"#964438":"#e16b50";ctx.beginPath();ctx.moveTo(-thighLength*.52,0);
-        // Add volume only over the proximal femur; the lower limb and paw stay unchanged.
-        ctx.quadraticCurveTo(-thighLength*.34,-14.2,-thighLength*.08,-17.1);
-        ctx.quadraticCurveTo(thighLength*.18,-17.1,thighLength*.4,-8.4);
-        ctx.quadraticCurveTo(thighLength*.5,-3.2,thighLength*.43,0);
-        ctx.quadraticCurveTo(thighLength*.31,6.4,thighLength*.06,13.1);
-        ctx.quadraticCurveTo(-thighLength*.28,9.2,-thighLength*.52,0);ctx.closePath();ctx.fill();ctx.restore();
+        ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
+        ctx.fillStyle=far?"#964438":"#e16b50";ctx.beginPath();ctx.moveTo(-thighLength*.54,0);
+        // Follow the femur farther toward the knee while keeping the fine lower leg and paw unchanged.
+        ctx.quadraticCurveTo(-thighLength*.39,-14.2,-thighLength*.13,-17.1);
+        ctx.quadraticCurveTo(thighLength*.13,-17.1,thighLength*.43,-8.4);
+        ctx.quadraticCurveTo(thighLength*.59,-3.2,thighLength*.58,0);
+        ctx.quadraticCurveTo(thighLength*.43,6.4,thighLength*.17,13.1);
+        ctx.quadraticCurveTo(-thighLength*.28,9.2,-thighLength*.54,0);ctx.closePath();ctx.fill();ctx.restore();
       }
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,front?(far?1.8:2.25):(far?2.1:2.7),0,Math.PI*2);ctx.arc(midX,midY,far?1.2:1.55,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.ellipse(pawX+1.4,pawY,3.1,1.65,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
@@ -391,7 +391,7 @@ function drawFox(now,dt=1/60){
     limb(3);
 
     // The neck tapers from a soft shoulder blend to the refined skull.
-    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(...spinePoint(15,-14));ctx.quadraticCurveTo(...spinePoint(23,-21),...spinePoint(38,-20));ctx.quadraticCurveTo(...spinePoint(44,-19),...spinePoint(46,-13));ctx.quadraticCurveTo(...spinePoint(40,-8),...spinePoint(35,-2));ctx.quadraticCurveTo(...spinePoint(30,2),...spinePoint(24,3));ctx.quadraticCurveTo(...spinePoint(20,-2),...spinePoint(15,-5));ctx.closePath();ctx.fill();
+    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(...spinePoint(13,-14));ctx.quadraticCurveTo(...spinePoint(22,-23),...spinePoint(40,-22));ctx.quadraticCurveTo(...spinePoint(47,-20),...spinePoint(51,-15));ctx.quadraticCurveTo(...spinePoint(46,-9),...spinePoint(39,-1));ctx.quadraticCurveTo(...spinePoint(29,3),...spinePoint(21,2));ctx.quadraticCurveTo(...spinePoint(16,-2),...spinePoint(13,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};

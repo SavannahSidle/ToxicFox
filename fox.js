@@ -32,9 +32,9 @@
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   const foxLabLegConfigs=[
     {hip:-36,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
-    {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:25,lower:29,toeX:1.4,toeY:8.5,bend:1},
+    {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1},
     {hip:-37,front:false,far:false,walk:0,trot:Math.PI,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
-    {hip:23,front:true,far:false,walk:Math.PI,trot:0,upper:25,lower:29,toeX:1.4,toeY:8.5,bend:1}
+    {hip:23,front:true,far:false,walk:Math.PI,trot:0,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1}
   ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
@@ -390,13 +390,13 @@ function drawFox(now,dt=1/60){
     limb(3);
 
     // The neck tapers from a soft shoulder blend to the refined skull.
-    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(...spinePoint(13,-14));ctx.quadraticCurveTo(...spinePoint(22,-23),...spinePoint(40,-22));ctx.quadraticCurveTo(...spinePoint(47,-20),...spinePoint(51,-15));ctx.quadraticCurveTo(...spinePoint(46,-9),...spinePoint(39,-1));ctx.quadraticCurveTo(...spinePoint(29,3),...spinePoint(21,2));ctx.quadraticCurveTo(...spinePoint(16,-2),...spinePoint(13,-5));ctx.closePath();ctx.fill();
+    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(...spinePoint(13,-14));ctx.quadraticCurveTo(...spinePoint(20,-21),...spinePoint(32,-21));ctx.quadraticCurveTo(...spinePoint(38,-20),...spinePoint(42,-16));ctx.quadraticCurveTo(...spinePoint(40,-11),...spinePoint(35,-5));ctx.quadraticCurveTo(...spinePoint(28,2),...spinePoint(21,2));ctx.quadraticCurveTo(...spinePoint(16,-2),...spinePoint(13,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // The far ear is behind the head and shows only its darker outer surface.
     ear(25,24,-.18-earBack*.68,{outer:"#542729"});
-    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(36.2,-16.8);ctx.quadraticCurveTo(36.8,-18.2,38,-18.2);ctx.quadraticCurveTo(39.2,-18,39.8,-17);ctx.quadraticCurveTo(39.2,-16,38,-15.8);ctx.quadraticCurveTo(36.8,-16,36.2,-16.8);ctx.fill();
+    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(41.1,-17.3);ctx.quadraticCurveTo(41.4,-18.1,42,-18.1);ctx.quadraticCurveTo(42.6,-18,42.9,-17.5);ctx.quadraticCurveTo(42.6,-17,42,-16.9);ctx.quadraticCurveTo(41.4,-17,41.1,-17.3);ctx.fill();
     // The near ear stays forward and keeps the visible inner surface.
     ear(31,29,.15-earBack,{inner:true,outer:"#542729"});
     const noseDrop=investigate*5;

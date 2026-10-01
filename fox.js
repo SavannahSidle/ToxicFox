@@ -33,7 +33,7 @@
   const foxLabLegConfigs=[
     {hip:-36,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:30,lower:24.5,toeX:2,toeY:19,bend:-1},
     {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:24,lower:30,toeX:2,toeY:8.2,bend:1},
-    {hip:-37,front:false,far:false,walk:0,trot:Math.PI,upper:30,lower:24.5,toeX:2,toeY:16,bend:-1},
+    {hip:-37,front:false,far:false,walk:0,trot:Math.PI,upper:30,lower:24.5,toeX:2,toeY:19,bend:-1},
     {hip:23,front:true,far:false,walk:Math.PI,trot:0,upper:24,lower:30,toeX:2,toeY:8.2,bend:1}
   ];
   const foxLabSurfaces = [

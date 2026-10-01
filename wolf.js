@@ -77,7 +77,7 @@
     const tw=[7,11,14,16,16,13,9,4],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],a=tailPts[Math.max(i-1,0)],b=tailPts[Math.min(i+1,tailPts.length-1)],dx=b[0]-a[0],dy=b[1]-a[1],n=Math.hypot(dx,dy)||1;upper.push([p[0]-dy/n*tw[i],p[1]+dx/n*tw[i]]);lower.push([p[0]+dy/n*tw[i],p[1]-dx/n*tw[i]]);}
     const tailOutline=upper.concat(lower.slice().reverse());
-    const tg=ctx.createLinearGradient(tailPts[0][0],tailPts[0][1]-10,tailPts.at(-1)[0],tailPts.at(-1)[1]+10);tg.addColorStop(0,"#e9e8e2");tg.addColorStop(.65,"#f4f3ed");tg.addColorStop(1,"#b8c2c5");ctx.fillStyle=tg;ctx.beginPath();smoothPath(tailOutline);ctx.closePath();ctx.fill();
+    const tg=ctx.createLinearGradient(tailPts[0][0],tailPts[0][1]-10,tailPts.at(-1)[0],tailPts.at(-1)[1]+10);tg.addColorStop(0,"#e9e8e2");tg.addColorStop(.48,"#faf9f4");tg.addColorStop(1,"#c4cdd0");ctx.fillStyle=tg;ctx.beginPath();smoothPath(tailOutline);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(66,79,85,.58)";ctx.lineWidth=1.15;ctx.stroke();
     ctx.strokeStyle="rgba(255,255,255,.52)";ctx.lineWidth=1.4;ctx.beginPath();smoothPath(tailPts.map(p=>[p[0],p[1]-2]));ctx.stroke();
 
     const footLine=wolf.y+100-originY-2,bodyTravel=48+speed*.13;
@@ -100,25 +100,25 @@
 
     // One continuous winter body: deep forechest, level back, tucked waist, and joined haunch.
     const outline=[[-91,-4],[-86,-20],[-68,-29],[-45,-31],[-22,-29],[-2,-26],[20,-30],[39,-36],[55,-34],[70,-27],[82,-12],[87,-1],[82,13],[69,21],[51,23],[33,17],[14,11],[-5,12],[-25,16],[-48,16],[-68,10],[-84,4]].map(([x,y])=>spinePoint(x,y));
-    const coat=ctx.createLinearGradient(0,-36,0,20);coat.addColorStop(0,"#faf9f4");coat.addColorStop(.48,"#e8e9e5");coat.addColorStop(1,"#c4ccce");ctx.fillStyle=coat;ctx.beginPath();smoothPath(outline);ctx.closePath();ctx.fill();ctx.strokeStyle="#89969a";ctx.lineWidth=1.2;ctx.stroke();
-    ctx.fillStyle="rgba(161,174,179,.34)";ctx.beginPath();ctx.moveTo(...spinePoint(-63,3));ctx.quadraticCurveTo(...spinePoint(-37,5),...spinePoint(-19,7));ctx.quadraticCurveTo(...spinePoint(-35,13),...spinePoint(-58,9));ctx.closePath();ctx.fill();
-    ctx.fillStyle="rgba(255,255,255,.45)";ctx.beginPath();ctx.moveTo(...spinePoint(-64,-22));ctx.quadraticCurveTo(...spinePoint(-28,-32),...spinePoint(4,-24));ctx.quadraticCurveTo(...spinePoint(-31,-26),...spinePoint(-64,-17));ctx.closePath();ctx.fill();
+    const coat=ctx.createLinearGradient(0,-38,0,24);coat.addColorStop(0,"#fffef9");coat.addColorStop(.4,"#f1f0e9");coat.addColorStop(.78,"#dfe3e2");coat.addColorStop(1,"#c0cbd0");ctx.fillStyle=coat;ctx.beginPath();smoothPath(outline);ctx.closePath();ctx.fill();ctx.strokeStyle="#53636b";ctx.lineWidth=1.45;ctx.lineJoin="round";ctx.stroke();
+    ctx.fillStyle="rgba(113,132,141,.2)";ctx.beginPath();ctx.moveTo(...spinePoint(-69,5));ctx.quadraticCurveTo(...spinePoint(-43,9),...spinePoint(-19,8));ctx.quadraticCurveTo(...spinePoint(-40,17),...spinePoint(-61,11));ctx.closePath();ctx.fill();
+    ctx.fillStyle="rgba(255,255,255,.65)";ctx.beginPath();ctx.moveTo(...spinePoint(-68,-22));ctx.quadraticCurveTo(...spinePoint(-36,-32),...spinePoint(2,-25));ctx.quadraticCurveTo(...spinePoint(-30,-28),...spinePoint(-66,-17));ctx.closePath();ctx.fill();
     ctx.fillStyle="#ecece6";ctx.beginPath();ctx.moveTo(...spinePoint(30,-29));ctx.quadraticCurveTo(...spinePoint(44,-38),...spinePoint(61,-30));ctx.quadraticCurveTo(...spinePoint(69,-19),...spinePoint(68,-7));ctx.quadraticCurveTo(...spinePoint(59,4),...spinePoint(49,13));ctx.quadraticCurveTo(...spinePoint(43,2),...spinePoint(34,-7));ctx.closePath();ctx.fill();
-    ctx.strokeStyle="rgba(255,255,255,.62)";ctx.lineWidth=1;for(const x of [35,43,51]){ctx.beginPath();ctx.moveTo(...spinePoint(x,-25));ctx.quadraticCurveTo(...spinePoint(x+4,-13),...spinePoint(x+1,1));ctx.stroke();}
+    ctx.strokeStyle="rgba(91,111,120,.3)";ctx.lineWidth=1.1;ctx.lineCap="round";for(const x of [34,42,50]){ctx.beginPath();ctx.moveTo(...spinePoint(x,-25));ctx.quadraticCurveTo(...spinePoint(x+6,-15),...spinePoint(x+2,0));ctx.stroke();}
     drawLeg(2);drawLeg(3);
 
     // Broad wolf skull, compact rounded ears, strong tapered muzzle.
     ctx.save();ctx.translate(62+body.ribX*.6,-20+body.ribY*.6);ctx.rotate(body.headA+body.ribA*.22+focus*.025);ctx.translate(-62,20);
-    const drawEar=(x,len,angle,far)=>{ctx.save();ctx.translate(x,-34);ctx.rotate(angle);ctx.fillStyle=far?"#c5cbca":"#f1f0e9";ctx.beginPath();ctx.moveTo(-6,2);ctx.quadraticCurveTo(-7,-len*.6,-2,-len);ctx.quadraticCurveTo(5,-len*.8,7,1);ctx.quadraticCurveTo(1,4,-6,2);ctx.closePath();ctx.fill();if(!far){ctx.fillStyle="#9b7774";ctx.beginPath();ctx.moveTo(-2,-1);ctx.quadraticCurveTo(-3,-len*.53,-1,-len*.76);ctx.quadraticCurveTo(3,-len*.55,4,0);ctx.closePath();ctx.fill();}ctx.restore();};
+    const drawEar=(x,len,angle,far)=>{ctx.save();ctx.translate(x,-34);ctx.rotate(angle);ctx.fillStyle=far?"#cbd2d2":"#f5f3ec";ctx.beginPath();ctx.moveTo(-7,2);ctx.quadraticCurveTo(-8,-len*.56,-2,-len);ctx.quadraticCurveTo(5,-len*.86,8,1);ctx.quadraticCurveTo(1,5,-7,2);ctx.closePath();ctx.fill();ctx.strokeStyle="#53636b";ctx.lineWidth=1.15;ctx.stroke();if(!far){ctx.fillStyle="#a8a4a0";ctx.beginPath();ctx.moveTo(-2,-1);ctx.quadraticCurveTo(-3,-len*.53,-1,-len*.76);ctx.quadraticCurveTo(3,-len*.55,4,0);ctx.closePath();ctx.fill();}ctx.restore();};
     drawEar(75,18,-.23,true);
     // A soft winter ruff joins the skull to the shoulder without a collar-like seam.
     const ruff=ctx.createLinearGradient(52,-41,76,-7);ruff.addColorStop(0,"#f5f4ee");ruff.addColorStop(1,"#d9ddda");ctx.fillStyle=ruff;ctx.beginPath();ctx.moveTo(48,-28);ctx.quadraticCurveTo(54,-41,68,-40);ctx.quadraticCurveTo(84,-37,91,-25);ctx.quadraticCurveTo(91,-14,80,-8);ctx.quadraticCurveTo(67,-8,55,-17);ctx.quadraticCurveTo(48,-21,48,-28);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#f0efe9";ctx.beginPath();ctx.moveTo(49,-27);ctx.quadraticCurveTo(55,-42,72,-43);ctx.quadraticCurveTo(90,-44,101,-31);ctx.quadraticCurveTo(105,-24,100,-16);ctx.quadraticCurveTo(91,-9,77,-12);ctx.quadraticCurveTo(63,-13,53,-18);ctx.closePath();ctx.fill();
+    const skull=ctx.createLinearGradient(58,-46,97,-12);skull.addColorStop(0,"#fffef9");skull.addColorStop(1,"#d7dfe0");ctx.fillStyle=skull;ctx.beginPath();ctx.moveTo(46,-25);ctx.quadraticCurveTo(49,-42,66,-46);ctx.quadraticCurveTo(86,-48,99,-34);ctx.quadraticCurveTo(106,-27,101,-18);ctx.quadraticCurveTo(94,-10,80,-12);ctx.quadraticCurveTo(61,-13,51,-18);ctx.closePath();ctx.fill();ctx.strokeStyle="#53636b";ctx.lineWidth=1.35;ctx.lineJoin="round";ctx.stroke();
     drawEar(63,20,.12,false);
-    ctx.fillStyle="#e5e5df";ctx.beginPath();ctx.moveTo(83,-29);ctx.quadraticCurveTo(99,-28,114,-19);ctx.lineTo(124,-14);ctx.quadraticCurveTo(122,-9,113,-9);ctx.quadraticCurveTo(98,-11,87,-17);ctx.quadraticCurveTo(81,-20,83,-29);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#f8f7f1";ctx.beginPath();ctx.moveTo(96,-14);ctx.quadraticCurveTo(109,-12,121,-12);ctx.quadraticCurveTo(118,-8,111,-9);ctx.lineTo(99,-10);ctx.closePath();ctx.fill();
+    const muzzle=ctx.createLinearGradient(86,-30,116,-8);muzzle.addColorStop(0,"#f5f4ee");muzzle.addColorStop(1,"#cbd4d6");ctx.fillStyle=muzzle;ctx.beginPath();ctx.moveTo(82,-29);ctx.quadraticCurveTo(99,-31,114,-20);ctx.quadraticCurveTo(124,-16,128,-13);ctx.quadraticCurveTo(127,-8,117,-8);ctx.quadraticCurveTo(99,-10,87,-17);ctx.quadraticCurveTo(81,-21,82,-29);ctx.closePath();ctx.fill();ctx.strokeStyle="#53636b";ctx.lineWidth=1.15;ctx.stroke();
+    ctx.fillStyle="rgba(255,255,255,.78)";ctx.beginPath();ctx.moveTo(96,-14);ctx.quadraticCurveTo(111,-11,123,-12);ctx.quadraticCurveTo(119,-7,111,-8);ctx.lineTo(99,-10);ctx.closePath();ctx.fill();
     ctx.fillStyle="#30393c";ctx.beginPath();ctx.moveTo(77,-28);ctx.quadraticCurveTo(82,-33,89,-29);ctx.quadraticCurveTo(88,-24,82,-23);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#c99c52";ctx.beginPath();ctx.ellipse(83,-27.5,2.1,2.4,-.15,0,Math.PI*2);ctx.fill();ctx.fillStyle="#263033";ctx.beginPath();ctx.ellipse(83.6,-27.5,.8,1.8,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#c99c52";ctx.beginPath();ctx.ellipse(83,-27.5,2.65,2.85,-.15,0,Math.PI*2);ctx.fill();ctx.fillStyle="#263033";ctx.beginPath();ctx.ellipse(83.7,-27.5,.95,2.05,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="rgba(255,255,255,.85)";ctx.beginPath();ctx.arc(82.5,-28.6,.72,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="#222a2c";ctx.beginPath();ctx.ellipse(124,-14,3.8,2.9,-.12,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle="#697579";ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(112,-8.5);ctx.quadraticCurveTo(119,-7.5,124,-10);ctx.stroke();
     ctx.restore();ctx.restore();

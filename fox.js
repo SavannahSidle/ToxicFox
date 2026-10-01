@@ -291,17 +291,17 @@ function drawFox(now,dt=1/60){
     const tailBaseX=-41+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
     const tailPts=[[tailBaseX,tailBaseY]],tailLens=[13,15,16,16,16,16,15,13];let tx=tailBaseX,ty=tailBaseY;
     for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i]+foxLabSpine.pelvisAngle;tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
-    const widths=[6.5,10,14,16,17,16,13,8,3.2],upper=[],lower=[];
+    const widths=[3.8,6,12,18,21,21,18,12,4.5],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#d95e48";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
     // The white brush starts on the distal tail itself so it follows every segment bend.
-    const whiteStart=6;ctx.fillStyle="#f0dfc5";ctx.beginPath();
+    const whiteStart=5;ctx.fillStyle="#f0dfc5";ctx.beginPath();
     ctx.moveTo(...upper[whiteStart]);
     for(let i=whiteStart;i<upper.length-1;i++){const a=upper[i],b=upper[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
     ctx.lineTo(...upper.at(-1));
     for(let i=lower.length-1;i>whiteStart;i--){const a=lower[i],b=lower[i-1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
-    ctx.lineTo(...lower[whiteStart]);ctx.closePath();ctx.fill();
+    ctx.lineTo(...lower[whiteStart]);const edgeBefore=tailPts[whiteStart-1],edgeAfter=tailPts[whiteStart+1],edgeDx=edgeAfter[0]-edgeBefore[0],edgeDy=edgeAfter[1]-edgeBefore[1],edgeLength=Math.hypot(edgeDx,edgeDy)||1,edgeLo=lower[whiteStart],edgeHi=upper[whiteStart];for(const [t,tooth] of [[.2,3.6],[.4,.5],[.62,4.2],[.82,.6]])ctx.lineTo(edgeLo[0]+(edgeHi[0]-edgeLo[0])*t-edgeDx/edgeLength*tooth,edgeLo[1]+(edgeHi[1]-edgeLo[1])*t-edgeDy/edgeLength*tooth);ctx.lineTo(...edgeHi);ctx.closePath();ctx.fill();
     ctx.strokeStyle="rgba(255,218,178,.48)";ctx.lineWidth=2;ctx.beginPath();traceSmooth(tailPts.map(p=>[p[0],p[1]-2]));ctx.stroke();
     const tip=tailPts.at(-1),base=tailPts.at(-2),tailDx=tip[0]-base[0],tailDy=tip[1]-base[1],tailSize=Math.hypot(tailDx,tailDy)||1,tailNx=-tailDy/tailSize,tailNy=tailDx/tailSize;
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(tip[0]+tailNx*2.5,tip[1]+tailNy*2.5);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]+tailDx/tailSize*12,tip[1]+tailDy/tailSize*12);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]-tailNx*2.5,tip[1]-tailNy*2.5);ctx.closePath();ctx.fill();
@@ -346,9 +346,9 @@ function drawFox(now,dt=1/60){
       pawX=solved.pawX;pawY=solved.pawY;
       const jointX=solved.kneeX,jointY=solved.kneeY,midX=solved.hockX,midY=solved.hockY;
       const pawWorld=localToWorld(pawX,pawY);contact.renderX=pawWorld.x;contact.renderY=pawWorld.y;
-      const color=far?"#964438":"#c45a42",alpha=far?.54:1;
+      const color=far?"#71372f":"#ad4935",alpha=far?.54:1;
       const bone=(ax,ay,bx,by,wide,thin)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-nx*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
-      ctx.globalAlpha=alpha;ctx.fillStyle=!front?(far?"#964438":"#e16b50"):color;
+      ctx.globalAlpha=alpha;ctx.fillStyle=!front?(far?"#71372f":"#ad4935"):color;
       bone(hip,rootY,jointX,jointY,front?(far?3:4.05):(far?4.2:5.4),front?(far?2.3:3):(far?3.1:4.1));
       ctx.fillStyle=color;
       bone(jointX,jointY,midX,midY,front?(far?2.25:2.9):(far?2.4:3.15),front?(far?1.65:2.05):(far?1.7:2.25));
@@ -356,7 +356,7 @@ function drawFox(now,dt=1/60){
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
         ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
-        ctx.fillStyle=far?"#964438":"#e16b50";ctx.beginPath();ctx.moveTo(-thighLength*.54,0);
+        ctx.fillStyle=far?"#71372f":"#ad4935";ctx.beginPath();ctx.moveTo(-thighLength*.54,0);
         // A narrow muscular wedge tapers from the hip toward the stifle.
         ctx.quadraticCurveTo(-thighLength*.32,-7.5,-thighLength*.08,-10.5);
         ctx.quadraticCurveTo(thighLength*.24,-8.1,thighLength*.52,-3.4);
@@ -384,8 +384,8 @@ function drawFox(now,dt=1/60){
     const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-18],[17,-17],[28,-14],[39,-7],[42,-3],[39,1],[34,5],[27,8],[18,8],[9,6],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(p=>spinePoint(...p));
     ctx.fillStyle="#e16b50";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
-    const chestA=spinePoint(27,-13),chestB=spinePoint(34,-9),chestC=spinePoint(34,-2),chestD=spinePoint(30,4),chestE=spinePoint(26,6),chestF=spinePoint(23,2);
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(...chestA);ctx.quadraticCurveTo(...chestB,...chestC);ctx.quadraticCurveTo(...chestD,...chestE);ctx.quadraticCurveTo(...spinePoint(25,3),...chestF);ctx.closePath();ctx.fill();
+    const chestA=spinePoint(24,-14),chestB=spinePoint(34,-12),chestC=spinePoint(38,-4),chestD=spinePoint(34,5),chestE=spinePoint(27,8),chestF=spinePoint(22,3);
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(...chestA);ctx.quadraticCurveTo(...chestB,...chestC);ctx.quadraticCurveTo(...spinePoint(38,2),...chestD);ctx.quadraticCurveTo(...chestD,...chestE);ctx.quadraticCurveTo(...spinePoint(24,5),...chestF);ctx.closePath();ctx.fill();
     limb(2);
     limb(3);
 
@@ -395,13 +395,13 @@ function drawFox(now,dt=1/60){
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // The far ear is behind the head and shows only its darker outer surface.
-    ear(25,24,-.18-earBack*.68,{outer:"#953c35"});
+    ear(25,24,-.18-earBack*.68,{outer:"#71352f"});
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
     // The near ear stays forward and keeps the visible inner surface.
-    ear(31,29,.15-earBack,{inner:true});
+    ear(31,29,.15-earBack,{inner:true,outer:"#b84d3a"});
     const noseDrop=investigate*5;
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-4);ctx.quadraticCurveTo(62,-4,75,-1+noseDrop);ctx.quadraticCurveTo(69,2+noseDrop,63,1+noseDrop);ctx.lineTo(50,1+noseDrop);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(43,-5);ctx.quadraticCurveTo(58,-7,75,-1+noseDrop);ctx.quadraticCurveTo(70,4+noseDrop,61,3+noseDrop);ctx.quadraticCurveTo(50,3+noseDrop,43,-1+noseDrop);ctx.closePath();ctx.fill();
     // A soft almond eye and a light lash give her a clear, expressive cartoon-feminine read.
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(39.8,-19.3);ctx.quadraticCurveTo(44.2,-23.8,49.5,-20.5);ctx.quadraticCurveTo(50.2,-18.7,47.4,-16.3);ctx.quadraticCurveTo(42.7,-15.5,40,-17.8);ctx.closePath();ctx.fill();
     ctx.strokeStyle="#40221d";ctx.lineWidth=1;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(40.4,-20.5);ctx.quadraticCurveTo(44.8,-23.7,49.4,-20.8);ctx.moveTo(40.4,-21);ctx.lineTo(38.9,-22.2);ctx.moveTo(41.9,-22);ctx.lineTo(41.1,-23.4);ctx.stroke();

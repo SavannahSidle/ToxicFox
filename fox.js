@@ -234,7 +234,7 @@
     springTo(foxLabEarTip,"angle",foxLabEar.angle,9,.98,dt);
 
     const turnSway=turnPulse(.2,.98)*turnDelta;
-    const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.34,.085,tailActivity);
+    const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.22,.085,tailActivity);
     const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.03,.05,.01,-.02,-.045,-.01,.02])*tailActivity*(.55+foxLabTrotBlend+foxLabRunBlend);
     const speedTrail=smooth(55,285,currentSpeed)*.055;
     const airborne=player.grounded?0:1,ballistic=clamp(Math.max(airborne,foxLabLandingRecovery),0,1);
@@ -245,8 +245,13 @@
       +foxLabTailLaunch*(airborne?.65:.31)+jumpVelocity+jumpAcceleration+foxLabJumpAnticipation*.18
       +turnSway*.16+bodyFollow+gaitTail+foxLabInvestigation*.16-foxLabLandingRecovery*.24,-1.05,1.18);
     for(let i=0;i<foxLabTailAngles.length;i++){
-      const prior=i?foxLabTailAngles[i-1]:tailTarget;
-      const target=i?tailTarget+(prior-tailTarget)*mix(.43,.58,ballistic):tailTarget;
+      const distal=i/(foxLabTailAngles.length-1);
+      // At rest, gravity adds a smooth base-to-tip droop; a rare damped pulse gives the tip life without wagging.
+      const idleTailSag=(1-tailActivity)*(.035+distal*.3);
+      const idleTailTwitch=(1-tailActivity)*(foxLabIdleTime>2.6?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*1.45-i*.18)),18)*.08*distal:0);
+      const segmentTarget=clamp(tailTarget+idleTailSag+idleTailTwitch,-1.05,.9);
+      const prior=i?foxLabTailAngles[i-1]:segmentTarget;
+      const target=i?segmentTarget+(prior-segmentTarget)*mix(.43,.58,ballistic):segmentTarget;
       const stiffness=29-i*2.15,damping=(5.8-i*.36)*(1-.28*ballistic);
       foxLabTailVelocities[i]+=(target-foxLabTailAngles[i])*stiffness*dt;
       foxLabTailVelocities[i]*=Math.exp(-damping*dt);
@@ -289,7 +294,7 @@ function drawFox(now,dt=1/60){
     const widths=[6.5,10,14,16,17,16,13,8,3.2],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
-    ctx.fillStyle="#a84727";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#d95e48";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
     // The white brush starts on the distal tail itself so it follows every segment bend.
     const whiteStart=6;ctx.fillStyle="#f0dfc5";ctx.beginPath();
     ctx.moveTo(...upper[whiteStart]);
@@ -341,9 +346,9 @@ function drawFox(now,dt=1/60){
       pawX=solved.pawX;pawY=solved.pawY;
       const jointX=solved.kneeX,jointY=solved.kneeY,midX=solved.hockX,midY=solved.hockY;
       const pawWorld=localToWorld(pawX,pawY);contact.renderX=pawWorld.x;contact.renderY=pawWorld.y;
-      const color=far?"#87402c":"#a34b2c",alpha=far?.54:1;
+      const color=far?"#964438":"#c45a42",alpha=far?.54:1;
       const bone=(ax,ay,bx,by,wide,thin)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-nx*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
-      ctx.globalAlpha=alpha;ctx.fillStyle=!front?(far?"#87402c":"#bb552d"):color;
+      ctx.globalAlpha=alpha;ctx.fillStyle=!front?(far?"#964438":"#e16b50"):color;
       bone(hip,rootY,jointX,jointY,front?(far?3:4.05):(far?4.2:5.4),front?(far?2.3:3):(far?3.1:4.1));
       ctx.fillStyle=color;
       bone(jointX,jointY,midX,midY,front?(far?2.25:2.9):(far?2.4:3.15),front?(far?1.65:2.05):(far?1.7:2.25));
@@ -351,7 +356,7 @@ function drawFox(now,dt=1/60){
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
         ctx.save();ctx.translate(hip+thighDx*.24,rootY+thighDy*.24);ctx.rotate(thighAngle);
-        ctx.fillStyle=far?"#87402c":"#bb552d";ctx.beginPath();ctx.moveTo(-thighLength*.52,0);
+        ctx.fillStyle=far?"#964438":"#e16b50";ctx.beginPath();ctx.moveTo(-thighLength*.52,0);
         // Add volume only over the proximal femur; the lower limb and paw stay unchanged.
         ctx.quadraticCurveTo(-thighLength*.34,-14.2,-thighLength*.08,-17.1);
         ctx.quadraticCurveTo(thighLength*.18,-17.1,thighLength*.4,-8.4);
@@ -368,6 +373,8 @@ function drawFox(now,dt=1/60){
 
     // Deform each trunk region around its own delayed anchor so the back line bends continuously.
     const spinePoint=(x,y)=>{
+      // A slightly longer visual trunk strengthens the flowing fox silhouette without scaling any bones.
+      x*=1.16;
       const transform=(pivotX,shiftX,shiftY,angle)=>{const dx=x-pivotX,dy=y,c=Math.cos(angle),s=Math.sin(angle);return[pivotX+shiftX+dx*c-dy*s,shiftY+dx*s+dy*c];};
       const pelvis=transform(-29,foxLabSpine.pelvisX,foxLabSpine.pelvisY,foxLabSpine.pelvisAngle);
       const waist=transform(-4,(foxLabSpine.pelvisX+foxLabSpine.ribX)*.18,foxLabSpine.waistY,foxLabSpine.waistAngle);
@@ -376,7 +383,7 @@ function drawFox(now,dt=1/60){
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
     const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-18],[17,-17],[28,-14],[39,-7],[42,-3],[39,1],[34,5],[27,8],[18,8],[9,6],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(p=>spinePoint(...p));
-    ctx.fillStyle="#bb552d";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
+    ctx.fillStyle="#e16b50";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     const chestA=spinePoint(27,-13),chestB=spinePoint(34,-9),chestC=spinePoint(34,-2),chestD=spinePoint(30,4),chestE=spinePoint(26,6),chestF=spinePoint(23,2);
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(...chestA);ctx.quadraticCurveTo(...chestB,...chestC);ctx.quadraticCurveTo(...chestD,...chestE);ctx.quadraticCurveTo(...spinePoint(25,3),...chestF);ctx.closePath();ctx.fill();
@@ -384,17 +391,17 @@ function drawFox(now,dt=1/60){
     limb(3);
 
     // The neck tapers from a soft shoulder blend to the refined skull.
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(...spinePoint(15,-14));ctx.quadraticCurveTo(...spinePoint(23,-21),...spinePoint(38,-20));ctx.quadraticCurveTo(...spinePoint(44,-19),...spinePoint(46,-13));ctx.quadraticCurveTo(...spinePoint(40,-8),...spinePoint(35,-2));ctx.quadraticCurveTo(...spinePoint(30,2),...spinePoint(24,3));ctx.quadraticCurveTo(...spinePoint(20,-2),...spinePoint(15,-5));ctx.closePath();ctx.fill();
+    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(...spinePoint(15,-14));ctx.quadraticCurveTo(...spinePoint(23,-21),...spinePoint(38,-20));ctx.quadraticCurveTo(...spinePoint(44,-19),...spinePoint(46,-13));ctx.quadraticCurveTo(...spinePoint(40,-8),...spinePoint(35,-2));ctx.quadraticCurveTo(...spinePoint(30,2),...spinePoint(24,3));ctx.quadraticCurveTo(...spinePoint(20,-2),...spinePoint(15,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
-    const ear=(x,len,angle,{inner=false,outer="#b84d2a"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
+    const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // The far ear is behind the head and shows only its darker outer surface.
-    ear(25,24,-.18-earBack*.68,{outer:"#8f3c27"});
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
+    ear(25,24,-.18-earBack*.68,{outer:"#953c35"});
+    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
     // The near ear stays forward and keeps the visible inner surface.
     ear(31,29,.15-earBack,{inner:true});
     const noseDrop=investigate*5;
-    ctx.fillStyle="#c76131";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
+    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-4);ctx.quadraticCurveTo(62,-4,75,-1+noseDrop);ctx.quadraticCurveTo(69,2+noseDrop,63,1+noseDrop);ctx.lineTo(50,1+noseDrop);ctx.closePath();ctx.fill();
     // A soft almond eye and a light lash give her a clear, expressive cartoon-feminine read.
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(39.8,-19.3);ctx.quadraticCurveTo(44.2,-23.8,49.5,-20.5);ctx.quadraticCurveTo(50.2,-18.7,47.4,-16.3);ctx.quadraticCurveTo(42.7,-15.5,40,-17.8);ctx.closePath();ctx.fill();

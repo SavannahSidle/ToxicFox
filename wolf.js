@@ -74,7 +74,7 @@
     // A low, heavy winter brush follows the pelvis and continues its motion toward the tip.
     const tailBase=spinePoint(-76,1),tailPts=[tailBase];let tx=tailBase[0],ty=tailBase[1];
     const lengths=[13,15,16,16,15,13,11];for(let i=0;i<lengths.length;i++){const a=tailA[i]+body.pelvisA;tx-=Math.cos(a)*lengths[i];ty+=Math.sin(a)*lengths[i];tailPts.push([tx,ty]);}
-    const tw=[7,11,14,16,16,13,9,4],upper=[],lower=[];
+    const tw=[7,12,16,18,17,13,7,0],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],a=tailPts[Math.max(i-1,0)],b=tailPts[Math.min(i+1,tailPts.length-1)],dx=b[0]-a[0],dy=b[1]-a[1],n=Math.hypot(dx,dy)||1;upper.push([p[0]-dy/n*tw[i],p[1]+dx/n*tw[i]]);lower.push([p[0]+dy/n*tw[i],p[1]-dx/n*tw[i]]);}
     const tailOutline=upper.concat(lower.slice().reverse());
     const tg=ctx.createLinearGradient(tailPts[0][0],tailPts[0][1]-10,tailPts.at(-1)[0],tailPts.at(-1)[1]+10);tg.addColorStop(0,"#e9e8e2");tg.addColorStop(.48,"#faf9f4");tg.addColorStop(1,"#c4cdd0");ctx.fillStyle=tg;ctx.beginPath();smoothPath(tailOutline);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(66,79,85,.58)";ctx.lineWidth=1.15;ctx.stroke();
@@ -107,14 +107,18 @@
     ctx.strokeStyle="rgba(91,111,120,.3)";ctx.lineWidth=1.1;ctx.lineCap="round";for(const x of [34,42,50]){ctx.beginPath();ctx.moveTo(...spinePoint(x,-25));ctx.quadraticCurveTo(...spinePoint(x+6,-15),...spinePoint(x+2,0));ctx.stroke();}
     drawLeg(2);drawLeg(3);
 
-    // Broad wolf skull, compact rounded ears, strong tapered muzzle.
-    ctx.save();ctx.translate(62+body.ribX*.6,-20+body.ribY*.6);ctx.rotate(body.headA+body.ribA*.22+focus*.025);ctx.translate(-62,20);
-    const drawEar=(x,len,angle,far)=>{ctx.save();ctx.translate(x,-34);ctx.rotate(angle);ctx.fillStyle=far?"#cbd2d2":"#f5f3ec";ctx.beginPath();ctx.moveTo(-7,2);ctx.quadraticCurveTo(-8,-len*.56,-2,-len);ctx.quadraticCurveTo(5,-len*.86,8,1);ctx.quadraticCurveTo(1,5,-7,2);ctx.closePath();ctx.fill();ctx.strokeStyle="#53636b";ctx.lineWidth=1.15;ctx.stroke();if(!far){ctx.fillStyle="#a8a4a0";ctx.beginPath();ctx.moveTo(-2,-1);ctx.quadraticCurveTo(-3,-len*.53,-1,-len*.76);ctx.quadraticCurveTo(3,-len*.55,4,0);ctx.closePath();ctx.fill();}ctx.restore();};
-    drawEar(75,18,-.23,true);
+    // Longer sloped nape rises out of the shoulders and tucks under the lifted head.
+    const neck=ctx.createLinearGradient(36,-53,77,-14);neck.addColorStop(0,"#fffef9");neck.addColorStop(.55,"#f0efe8");neck.addColorStop(1,"#cbd4d6");ctx.fillStyle=neck;ctx.beginPath();ctx.moveTo(...spinePoint(19,-18));ctx.bezierCurveTo(...spinePoint(32,-26),...spinePoint(39,-42),...spinePoint(49,-50));ctx.bezierCurveTo(...spinePoint(59,-59),...spinePoint(73,-52),...spinePoint(82,-42));ctx.bezierCurveTo(...spinePoint(87,-35),...spinePoint(82,-27),...spinePoint(76,-21));ctx.bezierCurveTo(...spinePoint(63,-14),...spinePoint(43,-13),...spinePoint(30,-15));ctx.quadraticCurveTo(...spinePoint(22,-16),...spinePoint(19,-18));ctx.closePath();ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,.72)";ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(...spinePoint(42,-38));ctx.quadraticCurveTo(...spinePoint(52,-49),...spinePoint(66,-48));ctx.stroke();
+
+    // Broad wolf skull held high above an elongated, muscular neck.
+    ctx.save();ctx.translate(0,-12);ctx.translate(62+body.ribX*.6,-20+body.ribY*.6);ctx.rotate(body.headA+body.ribA*.22+focus*.025);ctx.translate(-62,20);
+    const drawEar=(x,len,angle,far)=>{ctx.save();ctx.translate(x,-34);ctx.rotate(angle);ctx.fillStyle=far?"#cbd2d2":"#f5f3ec";ctx.beginPath();ctx.moveTo(-8,2);ctx.quadraticCurveTo(-9,-len*.55,-2,-len);ctx.quadraticCurveTo(6,-len*.86,9,1);ctx.quadraticCurveTo(1,5,-8,2);ctx.closePath();ctx.fill();ctx.strokeStyle="#53636b";ctx.lineWidth=1.15;ctx.stroke();if(!far){ctx.fillStyle="#a8a4a0";ctx.beginPath();ctx.moveTo(-3,-1);ctx.quadraticCurveTo(-4,-len*.53,-1,-len*.76);ctx.quadraticCurveTo(4,-len*.55,5,0);ctx.closePath();ctx.fill();}ctx.restore();};
+    drawEar(51,23,-.28,true);
     // A soft winter ruff joins the skull to the shoulder without a collar-like seam.
     const ruff=ctx.createLinearGradient(52,-41,76,-7);ruff.addColorStop(0,"#f5f4ee");ruff.addColorStop(1,"#d9ddda");ctx.fillStyle=ruff;ctx.beginPath();ctx.moveTo(48,-28);ctx.quadraticCurveTo(54,-41,68,-40);ctx.quadraticCurveTo(84,-37,91,-25);ctx.quadraticCurveTo(91,-14,80,-8);ctx.quadraticCurveTo(67,-8,55,-17);ctx.quadraticCurveTo(48,-21,48,-28);ctx.closePath();ctx.fill();
     const skull=ctx.createLinearGradient(58,-46,97,-12);skull.addColorStop(0,"#fffef9");skull.addColorStop(1,"#d7dfe0");ctx.fillStyle=skull;ctx.beginPath();ctx.moveTo(46,-25);ctx.quadraticCurveTo(49,-42,66,-46);ctx.quadraticCurveTo(86,-48,99,-34);ctx.quadraticCurveTo(106,-27,101,-18);ctx.quadraticCurveTo(94,-10,80,-12);ctx.quadraticCurveTo(61,-13,51,-18);ctx.closePath();ctx.fill();ctx.strokeStyle="#53636b";ctx.lineWidth=1.35;ctx.lineJoin="round";ctx.stroke();
-    drawEar(63,20,.12,false);
+    drawEar(67,27,.12,false);
     const muzzle=ctx.createLinearGradient(86,-30,116,-8);muzzle.addColorStop(0,"#f5f4ee");muzzle.addColorStop(1,"#cbd4d6");ctx.fillStyle=muzzle;ctx.beginPath();ctx.moveTo(82,-29);ctx.quadraticCurveTo(99,-31,114,-20);ctx.quadraticCurveTo(124,-16,128,-13);ctx.quadraticCurveTo(127,-8,117,-8);ctx.quadraticCurveTo(99,-10,87,-17);ctx.quadraticCurveTo(81,-21,82,-29);ctx.closePath();ctx.fill();ctx.strokeStyle="#53636b";ctx.lineWidth=1.15;ctx.stroke();
     ctx.fillStyle="rgba(255,255,255,.78)";ctx.beginPath();ctx.moveTo(96,-14);ctx.quadraticCurveTo(111,-11,123,-12);ctx.quadraticCurveTo(119,-7,111,-8);ctx.lineTo(99,-10);ctx.closePath();ctx.fill();
     ctx.fillStyle="#30393c";ctx.beginPath();ctx.moveTo(77,-28);ctx.quadraticCurveTo(82,-33,89,-29);ctx.quadraticCurveTo(88,-24,82,-23);ctx.closePath();ctx.fill();

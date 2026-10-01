@@ -396,7 +396,7 @@ function drawFox(now,dt=1/60){
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // The far ear is behind the head and shows only its darker outer surface.
     ear(25,24,-.18-earBack*.68,{outer:"#542729"});
-    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(29,-16);ctx.quadraticCurveTo(32,-23,38,-23);ctx.quadraticCurveTo(44,-22,47,-17);ctx.quadraticCurveTo(44,-12,38,-11);ctx.quadraticCurveTo(32,-12,29,-16);ctx.fill();
+    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(36.2,-16.8);ctx.quadraticCurveTo(36.8,-18.2,38,-18.2);ctx.quadraticCurveTo(39.2,-18,39.8,-17);ctx.quadraticCurveTo(39.2,-16,38,-15.8);ctx.quadraticCurveTo(36.8,-16,36.2,-16.8);ctx.fill();
     // The near ear stays forward and keeps the visible inner surface.
     ear(31,29,.15-earBack,{inner:true,outer:"#542729"});
     const noseDrop=investigate*5;

@@ -31,7 +31,7 @@
   const foxLabLegStates=Array.from({length:4},()=>({ready:false,pawX:0,pawXV:0,pawY:0,pawYV:0}));
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   const foxLabLegConfigs=[
-    {hip:-36,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:30,lower:24.5,toeX:2,toeY:16,bend:-1},
+    {hip:-36,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:30,lower:24.5,toeX:2,toeY:19,bend:-1},
     {hip:24,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:24,lower:30,toeX:2,toeY:8.2,bend:1},
     {hip:-37,front:false,far:false,walk:0,trot:Math.PI,upper:30,lower:24.5,toeX:2,toeY:16,bend:-1},
     {hip:23,front:true,far:false,walk:Math.PI,trot:0,upper:24,lower:30,toeX:2,toeY:8.2,bend:1}
@@ -350,7 +350,7 @@ function drawFox(now,dt=1/60){
       const bone=(ax,ay,bx,by,wide,thin)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-nx*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
       ctx.globalAlpha=alpha;ctx.fillStyle=!front?(far?"#71372f":"#ad4935"):color;
       bone(hip,rootY,jointX,jointY,front?(far?3:4.05):(far?4.2:5.4),front?(far?2.3:3):(far?3.1:4.1));
-      ctx.fillStyle=color;
+      ctx.fillStyle="#70432f";
       bone(jointX,jointY,midX,midY,front?(far?2.25:2.9):(far?2.4:3.15),front?(far?1.65:2.05):(far?1.7:2.25));
       bone(midX,midY,pawX,pawY,far?1.5:1.8,far?1.1:1.35);
       if(!front){
@@ -395,10 +395,10 @@ function drawFox(now,dt=1/60){
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // The far ear is behind the head and shows only its darker outer surface.
-    ear(25,24,-.18-earBack*.68,{outer:"#71352f"});
+    ear(25,24,-.18-earBack*.68,{outer:"#70432f"});
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(23,-15);ctx.quadraticCurveTo(29,-26,38,-26);ctx.quadraticCurveTo(47,-25,50,-18);ctx.quadraticCurveTo(45,-11,37,-9);ctx.quadraticCurveTo(28,-10,23,-15);ctx.fill();
     // The near ear stays forward and keeps the visible inner surface.
-    ear(31,29,.15-earBack,{inner:true,outer:"#b84d3a"});
+    ear(31,29,.15-earBack,{inner:true,outer:"#70432f"});
     const noseDrop=investigate*5;
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(43,-5);ctx.quadraticCurveTo(58,-7,75,-1+noseDrop);ctx.quadraticCurveTo(70,4+noseDrop,61,3+noseDrop);ctx.quadraticCurveTo(50,3+noseDrop,43,-1+noseDrop);ctx.closePath();ctx.fill();

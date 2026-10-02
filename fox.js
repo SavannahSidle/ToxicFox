@@ -291,7 +291,7 @@ function drawFox(now,dt=1/60){
     const tailBaseX=-41+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
     const tailPts=[[tailBaseX,tailBaseY]],tailLens=[13,15,16,16,16,16,15,13];let tx=tailBaseX,ty=tailBaseY;
     for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i]+foxLabSpine.pelvisAngle;tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
-    const widths=[3.8,6,12,18,21,21,18,12,4.5],upper=[],lower=[];
+    const widths=[2.4,4.8,10.8,17,21,21,18,12,4.5],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#d95e48";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
@@ -310,7 +310,7 @@ function drawFox(now,dt=1/60){
     const limb=index=>{
       const config=foxLabLegConfigs[index],front=config.front,far=config.far;
       const shoulderGlide=front?(foxLabPose.runContact*.55-foxLabPose.runExtension*.42+foxLabPose.jumpDrive*.38-foxLabPose.jumpLanding*.28):0;
-      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38+2:foxLabSpine.pelvisY+foxLabPose.runGather*.32+3.5;
+      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38:foxLabSpine.pelvisY+foxLabPose.runGather*.32+3.5;
       const p=((gaitPhase(config.walk,config.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
       const swing=cubic(t),reach=mix(.38,.25,run)*(front?.94:1),travel=stance?reach-2*reach*t:-reach+2*reach*swing,lift=stance?0:2.4*t*(1-t);
@@ -351,8 +351,8 @@ function drawFox(now,dt=1/60){
       ctx.globalAlpha=alpha;ctx.fillStyle=!front?(far?"#71372f":"#ad4935"):color;
       bone(hip,rootY,jointX,jointY,front?(far?3:4.05):(far?4.2:5.4),front?(far?2.3:3):(far?3.1:4.1));
       ctx.fillStyle="#542729";
-      bone(jointX,jointY,midX,midY,front?(far?2.25:2.9):(far?2.4:3.15),front?(far?1.65:2.05):(far?1.7:2.25));
-      bone(midX,midY,pawX,pawY,far?1.5:1.8,far?1.1:1.35);
+      bone(jointX,jointY,midX,midY,front?(far?2.45:3.2):(far?2.65:3.45),front?(far?1.8:2.25):(far?1.9:2.45));
+      bone(midX,midY,pawX,pawY,far?1.7:2,far?1.3:1.55);
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
         ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
@@ -364,8 +364,8 @@ function drawFox(now,dt=1/60){
         ctx.quadraticCurveTo(thighLength*.40,4.4,thighLength*.08,7.8);
         ctx.quadraticCurveTo(-thighLength*.30,5.4,-thighLength*.54,0);ctx.closePath();ctx.fill();ctx.restore();
       }
-      ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,front?(far?1.8:2.25):(far?2.1:2.7),0,Math.PI*2);ctx.arc(midX,midY,far?1.2:1.55,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.ellipse(pawX+1.4,pawY,3.1,1.65,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+      ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.arc(jointX,jointY,front?(far?1.8:2.25):(far?2.1:2.7),0,Math.PI*2);ctx.arc(midX,midY,far?1.35:1.75,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=far?"#6f3628":"#833d29";ctx.beginPath();ctx.ellipse(pawX+1.5,pawY,3.65,1.95,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
     };
     // Four-beat walk: each paw lands in sequence. The faster gait blends toward diagonal-pair trot timing.
     limb(0);
@@ -393,22 +393,47 @@ function drawFox(now,dt=1/60){
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(...spinePoint(13,-14));ctx.quadraticCurveTo(...spinePoint(20,-21),...spinePoint(32,-21));ctx.quadraticCurveTo(...spinePoint(38,-20),...spinePoint(42,-16));ctx.quadraticCurveTo(...spinePoint(40,-11),...spinePoint(35,-5));ctx.quadraticCurveTo(...spinePoint(28,2),...spinePoint(21,2));ctx.quadraticCurveTo(...spinePoint(16,-2),...spinePoint(13,-5));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-16+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
-    const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-24);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
-    // The far ear is behind the head and shows only its darker outer surface.
-    ear(25,24,-.18-earBack*.68,{outer:"#542729"});
-    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(41.1,-17.3);ctx.quadraticCurveTo(41.4,-18.1,42,-18.1);ctx.quadraticCurveTo(42.6,-18,42.9,-17.5);ctx.quadraticCurveTo(42.6,-17,42,-16.9);ctx.quadraticCurveTo(41.4,-17,41.1,-17.3);ctx.fill();
-    // The near ear stays forward and keeps the visible inner surface.
+    const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
+    // Far ear is drawn first so the raised skull naturally occludes its inner side.
+    ear(24,24,-.18-earBack*.68,{outer:"#542729"});
+    // One compact skull/cheek mass creates a readable facial plane behind the projecting muzzle.
+    ctx.fillStyle="#e27455";ctx.beginPath();
+    ctx.moveTo(25,-18);ctx.quadraticCurveTo(26,-26,34,-29);
+    ctx.quadraticCurveTo(42,-32,49,-27);ctx.quadraticCurveTo(54,-23,53,-18);
+    ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
+    ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
+    // A small tapered coat patch follows cheek into throat; it is not a separate round joint.
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(36,-15);
+    ctx.quadraticCurveTo(41,-14,46,-13);ctx.quadraticCurveTo(44,-10,41,-8);
+    ctx.quadraticCurveTo(38,-9,36,-12);ctx.closePath();ctx.fill();
+    // Near ear sits over the skull and retains the visible inner surface.
     ear(31,29,.15-earBack,{inner:true,outer:"#542729"});
-    const noseDrop=investigate*5;
-    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(40,-18);ctx.quadraticCurveTo(53,-14,67,-7+noseDrop);ctx.lineTo(78,-2+noseDrop);ctx.quadraticCurveTo(71,2+noseDrop,64,1+noseDrop);ctx.lineTo(48,0+noseDrop);ctx.quadraticCurveTo(41,-5,40,-18);ctx.fill();
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(43,-5);ctx.quadraticCurveTo(58,-7,75,-1+noseDrop);ctx.quadraticCurveTo(70,4+noseDrop,61,3+noseDrop);ctx.quadraticCurveTo(50,3+noseDrop,43,-1+noseDrop);ctx.closePath();ctx.fill();
-    // A soft almond eye and a light lash give her a clear, expressive cartoon-feminine read.
-    ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(39.8,-19.3);ctx.quadraticCurveTo(44.2,-23.8,49.5,-20.5);ctx.quadraticCurveTo(50.2,-18.7,47.4,-16.3);ctx.quadraticCurveTo(42.7,-15.5,40,-17.8);ctx.closePath();ctx.fill();
-    ctx.strokeStyle="#40221d";ctx.lineWidth=1;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(40.4,-20.5);ctx.quadraticCurveTo(44.8,-23.7,49.4,-20.8);ctx.moveTo(40.4,-21);ctx.lineTo(38.9,-22.2);ctx.moveTo(41.9,-22);ctx.lineTo(41.1,-23.4);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(75,-4+noseDrop);ctx.quadraticCurveTo(79,-5+noseDrop,80,-2+noseDrop);ctx.quadraticCurveTo(79,1+noseDrop,76,0+noseDrop);ctx.quadraticCurveTo(74,-1+noseDrop,75,-4+noseDrop);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(45.9,-19,2.45,2.75,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(46.45,-19,.92,1.75,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#fff1d3";ctx.beginPath();ctx.ellipse(44.45,-20.2,.82,.95,0,0,Math.PI*2);ctx.fill();
+    const muzzleDip=investigate*3.5;
+    // Raised wedge-shaped muzzle projects forward from, rather than diagonally through, the cheek.
+    ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(43,-22+muzzleDip);
+    ctx.quadraticCurveTo(54,-27+muzzleDip,68,-24+muzzleDip);
+    ctx.lineTo(78,-20+muzzleDip);ctx.quadraticCurveTo(74,-17+muzzleDip,67,-16+muzzleDip);
+    ctx.lineTo(54,-16+muzzleDip);ctx.quadraticCurveTo(47,-16,43,-19);ctx.closePath();ctx.fill();
+    // Cream lower muzzle is a quiet jaw plane with a nearly level edge, not a smile stroke.
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(48,-18+muzzleDip);
+    ctx.quadraticCurveTo(59,-18+muzzleDip,75,-18+muzzleDip);
+    ctx.quadraticCurveTo(71,-15+muzzleDip,62,-15+muzzleDip);
+    ctx.quadraticCurveTo(53,-15+muzzleDip,48,-17+muzzleDip);ctx.closePath();ctx.fill();
+    // Small alert eye sits on the skull plane above the muzzle attachment.
+    ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(40.8,-23.6);
+    ctx.quadraticCurveTo(45.1,-28,50,-24.8);ctx.quadraticCurveTo(50.6,-23,47.8,-20.8);
+    ctx.quadraticCurveTo(43.4,-20,41,-22);ctx.closePath();ctx.fill();
+    ctx.strokeStyle="#40221d";ctx.lineWidth=1;ctx.lineCap="round";ctx.beginPath();
+    ctx.moveTo(41.3,-24.5);ctx.quadraticCurveTo(45.4,-27.8,49.8,-25);
+    ctx.moveTo(41.3,-25);ctx.lineTo(40,-26);ctx.moveTo(42.8,-26);ctx.lineTo(42.2,-27.1);ctx.stroke();
+    // Keep the black nose distinct at the raised muzzle tip; no curved smile mark is drawn.
+    ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(77,-21+muzzleDip);
+    ctx.quadraticCurveTo(81,-22+muzzleDip,82,-19+muzzleDip);
+    ctx.quadraticCurveTo(81,-16+muzzleDip,77,-17+muzzleDip);
+    ctx.quadraticCurveTo(75,-18+muzzleDip,77,-21+muzzleDip);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(46.1,-23.5,2.35,2.65,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(46.65,-23.5,.9,1.68,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#fff1d3";ctx.beginPath();ctx.ellipse(44.7,-24.65,.75,.88,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
     ctx.restore();
   }

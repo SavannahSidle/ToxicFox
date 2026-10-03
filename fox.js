@@ -302,6 +302,10 @@ function drawFox(now,dt=1/60){
     ctx.lineTo(...upper.at(-1));
     for(let i=lower.length-1;i>whiteStart;i--){const a=lower[i],b=lower[i-1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
     ctx.lineTo(...lower[whiteStart]);const edgeBefore=tailPts[whiteStart-1],edgeAfter=tailPts[whiteStart+1],edgeDx=edgeAfter[0]-edgeBefore[0],edgeDy=edgeAfter[1]-edgeBefore[1],edgeLength=Math.hypot(edgeDx,edgeDy)||1,edgeLo=lower[whiteStart],edgeHi=upper[whiteStart];for(const [t,tooth] of [[.2,3.6],[.4,.5],[.62,4.2],[.82,.6]])ctx.lineTo(edgeLo[0]+(edgeHi[0]-edgeLo[0])*t-edgeDx/edgeLength*tooth,edgeLo[1]+(edgeHi[1]-edgeLo[1])*t-edgeDy/edgeLength*tooth);ctx.lineTo(...edgeHi);ctx.closePath();ctx.fill();
+    // Keep the red shaft visually solid and leave the cream distal tip intact.
+    ctx.strokeStyle="#d95e48";ctx.lineWidth=3.2;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(...tailPts[0]);
+    for(let i=0;i<whiteStart;i++){const a=tailPts[i],b=tailPts[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}
+    ctx.lineTo(...tailPts[whiteStart]);ctx.stroke();
     const tip=tailPts.at(-1),base=tailPts.at(-2),tailDx=tip[0]-base[0],tailDy=tip[1]-base[1],tailSize=Math.hypot(tailDx,tailDy)||1,tailNx=-tailDy/tailSize,tailNy=tailDx/tailSize;
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(tip[0]+tailNx*2.5,tip[1]+tailNy*2.5);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]+tailDx/tailSize*12,tip[1]+tailDy/tailSize*12);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]-tailNx*2.5,tip[1]-tailNy*2.5);ctx.closePath();ctx.fill();
 

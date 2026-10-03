@@ -383,8 +383,6 @@ function drawFox(now,dt=1/60){
     const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-18],[17,-17],[28,-14],[39,-7],[42,-3],[39,1],[34,5],[27,8],[18,8],[9,6],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(p=>spinePoint(...p));
     ctx.fillStyle="#e16b50";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
-    const chestA=spinePoint(24,-14),chestB=spinePoint(34,-12),chestC=spinePoint(38,-4),chestD=spinePoint(34,5),chestE=spinePoint(27,8),chestF=spinePoint(22,3);
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(...chestA);ctx.quadraticCurveTo(...chestB,...chestC);ctx.quadraticCurveTo(...spinePoint(38,2),...chestD);ctx.quadraticCurveTo(...chestD,...chestE);ctx.quadraticCurveTo(...spinePoint(24,5),...chestF);ctx.closePath();ctx.fill();
     limb(2);
     limb(3);
 

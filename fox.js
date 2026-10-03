@@ -28,6 +28,7 @@
     jumpApex:0,jumpApexV:0,jumpLanding:0,jumpLandingV:0
   };
   const foxLabEar={angle:0,angleV:0},foxLabEarTip={angle:0,angleV:0};
+  const foxLabRestPose={sit:0,sitV:0,lie:0,lieV:0};let foxLabRestTarget=0;
   const foxLabLegStates=Array.from({length:4},()=>({ready:false,pawX:0,pawXV:0,pawY:0,pawYV:0}));
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   const foxLabLegConfigs=[
@@ -93,10 +94,13 @@
   }
 
   addEventListener("keydown", event => {
-    if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space"].includes(event.code)) event.preventDefault();
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyX", "KeyZ"].includes(event.code)) event.preventDefault();
     if (keys[event.code]) return;
     keys[event.code] = true;
+    if(event.code==="KeyX")foxLabRestTarget=foxLabRestTarget===1?0:1;
+    if(event.code==="KeyZ")foxLabRestTarget=foxLabRestTarget===2?0:2;
     if (["Space", "ArrowUp", "KeyW"].includes(event.code) && player.grounded && foxLabJumpPending <= 0) {
+      foxLabRestTarget=0;
       foxLabJumpPending = .075;
       foxLabJumpAnticipation = 0;
     }
@@ -105,6 +109,7 @@
 
   function updateFox(dt, now, left, right, up, investigate) {
     const input=(left?-1:0)+(right?1:0),oldVx=player.vx,oldVy=player.vy;
+    if(input)foxLabRestTarget=0;
     const speed=Math.abs(player.vx),reversing=input&&speed>8&&Math.sign(player.vx)!==input;
     if(input&&input!==foxLabTurnTo){foxLabTurnFrom=foxLabTurnTo;foxLabTurnTo=input;foxLabTurnProgress=0;foxLabTurnDuration=.21+Math.min(speed,285)*.00032;}
     if(foxLabTurnProgress<1)foxLabTurnProgress=Math.min(1,foxLabTurnProgress+dt/foxLabTurnDuration);
@@ -155,10 +160,13 @@
     const nextTrot=smooth(65,165,currentSpeed),nextRun=smooth(155,285,currentSpeed);
     foxLabTrotBlend+=(nextTrot-foxLabTrotBlend)*(1-Math.exp(-5.5*dt));
     foxLabRunBlend+=(nextRun-foxLabRunBlend)*(1-Math.exp(-4.2*dt));
-    const walkStride=22+currentSpeed*.17;
-    const fasterStride=mix(34+currentSpeed*.18,52+currentSpeed*.15,foxLabRunBlend);
+    const walkStride=28+currentSpeed*.18;
+    const fasterStride=mix(40+currentSpeed*.2,64+currentSpeed*.17,foxLabRunBlend);
     foxLabStrideLength=mix(walkStride,fasterStride,foxLabTrotBlend);
     if(player.grounded&&currentSpeed>1.4)foxLabStridePhase+=currentSpeed*dt*Math.PI/foxLabStrideLength*(1+foxLabRunBlend*.07);
+    const restReady=player.grounded&&currentSpeed<22&&!input&&foxLabJumpPending<=0;
+    springTo(foxLabRestPose,"sit",restReady&&foxLabRestTarget===1?1:0,6.5,.96,dt);
+    springTo(foxLabRestPose,"lie",restReady&&foxLabRestTarget===2?1:0,6.5,.96,dt);
 
     foxLabIdleTime=player.grounded&&currentSpeed<9&&!input?foxLabIdleTime+dt:0;
     const investigateTarget=investigate&&player.grounded&&!input&&currentSpeed<18?1:0;
@@ -207,21 +215,21 @@
     const hindSupport=(support(foxLabLegConfigs[0])+support(foxLabLegConfigs[2]))*.5;
     const foreSupport=(support(foxLabLegConfigs[1])+support(foxLabLegConfigs[3]))*.5;
     const pelvisY=hindDrive*(.12+trot*.48+run*1.42)*moveBlend+hindSupport*run*.38+foxLabJumpAnticipation*1.25-jumpStretch*1.15-jumpDrive*.95+jumpApex*.3+jumpDescend*.72+foxLabLandingImpact*1.45
-      +pose.runGather*2-pose.runDrive*.85-pose.runExtension*.62+pose.jumpLoad*1.6-pose.jumpDrive*.7-pose.jumpExtension*.85+pose.jumpApex*.3+pose.jumpLanding*1;
+      +pose.runGather*2-pose.runDrive*.85-pose.runExtension*.62+pose.jumpLoad*1.6-pose.jumpDrive*.7-pose.jumpExtension*.85+pose.jumpApex*.3+pose.jumpLanding*1+foxLabRestPose.sit*3.5+foxLabRestPose.lie*5;
     const ribY=foreLoad*(.14+trot*.42+run*1.04)*moveBlend+foreSupport*run*.24+foxLabJumpAnticipation*.38-jumpStretch*.78-jumpDrive*.58-jumpApex*.42+jumpDescend*.4+foxLabLandingImpact*1.02
-      +pose.runContact*.75-pose.runExtension*.55-pose.jumpExtension*.7+pose.jumpLanding*.85;
+      +pose.runContact*.75-pose.runExtension*.55-pose.jumpExtension*.7+pose.jumpLanding*.85+foxLabRestPose.sit*.9+foxLabRestPose.lie*4.5;
     const pelvisAngle=hindDrive*(trot*.024+run*.082)+clamp(foxLabBodyAcceleration/1100,-1,1)*.038+turnPelvis*.072-jumpStretch*.092-jumpDrive*.062+jumpApex*.038+jumpDescend*.067+foxLabLandingImpact*.04
-      +pose.runGather*.06-pose.runDrive*.045+pose.jumpLoad*.05-pose.jumpDrive*.04+pose.jumpLanding*.05;
+      +pose.runGather*.06-pose.runDrive*.045+pose.jumpLoad*.05-pose.jumpDrive*.04+pose.jumpLanding*.05-foxLabRestPose.sit*.055+foxLabRestPose.lie*.012;
     const ribAngle=foreLoad*(trot*.018+run*.061)+clamp(foxLabBodyAcceleration/1100,-1,1)*.02+turnShoulder*.082-jumpStretch*.112-jumpDrive*.062+jumpApex*.048+jumpDescend*.078+foxLabLandingImpact*.047
-      +pose.runContact*.032+pose.runExtension*.025-pose.jumpDrive*.04+pose.jumpLanding*.05;
+      +pose.runContact*.032+pose.runExtension*.025-pose.jumpDrive*.04+pose.jumpLanding*.05-foxLabRestPose.sit*.02+foxLabRestPose.lie*.035;
     const pelvisX=hindDrive*(trot*.48+run*2.45)+clamp(foxLabBodyAcceleration/1100,-1,1)*.68+turnPelvis*.68-jumpStretch*.55+jumpDrive*1.6+jumpApex*.3+jumpDescend*.45
       -pose.runGather*.7+pose.runDrive*1.2+pose.runExtension*.5-pose.jumpLoad*.5+pose.jumpDrive*1+pose.jumpExtension*.55;
     const ribX=foreLoad*(trot*.34+run*1.56)+turnShoulder*1.05-clamp(foxLabBodyAcceleration/1100,-1,1)*.32+jumpStretch*.6+jumpDrive*1.9+jumpApex*.4-jumpDescend*.35
       +pose.runContact*.3+pose.runExtension*.8+pose.jumpDrive*.65+pose.jumpExtension*.8-pose.jumpLanding*.45;
     const waistY=(ribY-pelvisY)*.38+lumbarWave*(trot*.58+run*2.05)*moveBlend+foxLabJumpAnticipation*.72-jumpStretch*2.1-jumpDrive*1.1+jumpApex*.85+jumpDescend*1.15+foxLabLandingImpact*.94
-      +pose.runGather*.8-pose.runExtension*.55+pose.jumpLoad*.7-pose.jumpDrive*.45+pose.jumpApex*.3+pose.jumpLanding*.8;
+      +pose.runGather*.8-pose.runExtension*.55+pose.jumpLoad*.7-pose.jumpDrive*.45+pose.jumpApex*.3+pose.jumpLanding*.8+foxLabRestPose.sit*2+foxLabRestPose.lie*4;
     const waistAngle=(ribAngle-pelvisAngle)*.5+lumbarWave*(trot*.017+run*.071)*moveBlend+foxLabJumpAnticipation*.038-jumpStretch*.135-jumpDrive*.06+jumpApex*.075+jumpDescend*.095+foxLabLandingImpact*.05
-      +pose.runGather*.07-pose.runExtension*.085+pose.jumpLoad*.075-pose.jumpDrive*.07+pose.jumpApex*.035+pose.jumpLanding*.07;
+      +pose.runGather*.07-pose.runExtension*.085+pose.jumpLoad*.075-pose.jumpDrive*.07+pose.jumpApex*.035+pose.jumpLanding*.07+foxLabRestPose.sit*.025-foxLabRestPose.lie*.03;
     springTo(foxLabSpine,"pelvisX",pelvisX,12,.88,dt);springTo(foxLabSpine,"pelvisY",pelvisY,13,.9,dt);springTo(foxLabSpine,"pelvisAngle",pelvisAngle,11,.9,dt);
     springTo(foxLabSpine,"ribX",ribX,10,.92,dt);springTo(foxLabSpine,"ribY",ribY,11,.95,dt);springTo(foxLabSpine,"ribAngle",ribAngle,10,.92,dt);
     springTo(foxLabSpine,"waistY",waistY,8.5,.92,dt);springTo(foxLabSpine,"waistAngle",waistAngle,8.5,.94,dt);
@@ -260,7 +268,7 @@
   }
 
 function drawFox(now,dt=1/60){
-    const speed=Math.abs(player.vx),move=smooth(4,58,speed),trot=foxLabTrotBlend,run=foxLabRunBlend;
+    const speed=Math.abs(player.vx),move=smooth(4,58,speed),trot=foxLabTrotBlend,run=foxLabRunBlend,sit=foxLabRestPose.sit,lie=foxLabRestPose.lie;
     const airborne=!player.grounded,phase=foxLabStridePhase,impact=foxLabLandingImpact,investigate=foxLabInvestigation;
     const launch=airborne?smooth(0,145,now-(foxLabTakeoffUntil-145)):0;
     const stride=foxLabStrideLength;
@@ -274,7 +282,7 @@ function drawFox(now,dt=1/60){
     const verticalMotion=stepWave*(trot*.16+run*.3)-recovery*1.4;
     const pitch=airborne?clamp(player.vy*.00016,-.15,.15):(-.025*run+bodyWave*.008*trot+accelerationLean*.035-braking*.014-impact*.045+investigate*.018);
     const breathe=player.grounded&&speed<9?Math.sin(now*.0021)*.35:0;
-    const rise=8+compress*.8+launch*1.2-investigate*1.5+breathe;
+    const rise=8+compress*.8+launch*1.2-investigate*1.5+breathe-sit*4.5-lie*7;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-anticipation*3+recovery*2.6;
     const turnDelta=foxLabTurnTo-foxLabTurnFrom,turnWave=turnPulse(.03,.98)*turnDelta;
     // A 2D mirror is discrete. Interpolating its scale through zero collapses every bone mid-turn.
@@ -282,7 +290,7 @@ function drawFox(now,dt=1/60){
     const turnLean=turnPulse(.18,.84)*turnDelta*.052;
     const originX=player.x+player.w/2,originY=player.y+player.h/2+bounce+impact*5+verticalMotion+anticipation*3-recovery*2.6-rise;
     // Flipping and rotation preserve segment lengths; gait squash must not scale the skeleton.
-    const scaleX=fwd,scaleY=1,bodyAngle=pitch*.34+turnLean*.5;
+    const scaleX=fwd,scaleY=1,bodyAngle=pitch*.34+turnLean*.5-sit*.035+lie*.022;
     const localToWorld=(x,y)=>({x:originX+scaleX*(x*Math.cos(bodyAngle)-y*Math.sin(bodyAngle)),y:originY+scaleY*(x*Math.sin(bodyAngle)+y*Math.cos(bodyAngle))});
     const worldToLocal=(x,y)=>{const dx=(x-originX)/scaleX,dy=(y-originY)/scaleY;return{x:dx*Math.cos(bodyAngle)+dy*Math.sin(bodyAngle),y:-dx*Math.sin(bodyAngle)+dy*Math.cos(bodyAngle)};};
     ctx.save();ctx.translate(originX,originY);ctx.scale(scaleX,scaleY);ctx.rotate(bodyAngle);
@@ -313,12 +321,13 @@ function drawFox(now,dt=1/60){
     const limb=index=>{
       const config=foxLabLegConfigs[index],front=config.front,far=config.far;
       const shoulderGlide=front?(foxLabPose.runContact*.55-foxLabPose.runExtension*.42+foxLabPose.jumpDrive*.38-foxLabPose.jumpLanding*.28):0;
-      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3:foxLabSpine.pelvisY+foxLabPose.runGather*.32+1.1;
+      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3:foxLabSpine.pelvisY+foxLabPose.runGather*.32-.5;
       const p=((gaitPhase(config.walk,config.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
       const swing=cubic(t),reach=mix(.38,.25,run)*(front?.94:1),hindSwing=-reach+2*reach*swing-.2*reach*Math.sin(Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?2.4:2.75)*t*(1-t);
       const restingOffset=front?(far?-2.2:1.8):(far?2.4:-1.8);
       let pawX=hip+travel*stride*move+restingOffset*(1-move),pawY=footLine-lift*(5+run*10)*move;
+      if(!airborne){const restFold=Math.max(sit,lie),foldedX=front?hip+restingOffset:hip+10*sit+7*lie;pawX=mix(pawX,foldedX,restFold);}
       if(airborne){
         const descending=smooth(-80,430,player.vy);
         pawX=hip+(front?8:-7)+(front?descending*(7+run*2):-descending*(6+run*3));
@@ -395,10 +404,11 @@ function drawFox(now,dt=1/60){
     // A small cream bib follows the chest contour and flexes with the ribcage.
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(...spinePoint(20,1));ctx.quadraticCurveTo(...spinePoint(23,1),...spinePoint(25,3));ctx.quadraticCurveTo(...spinePoint(27,5),...spinePoint(27,7));ctx.quadraticCurveTo(...spinePoint(24,6),...spinePoint(22,8));ctx.quadraticCurveTo(...spinePoint(19,7),...spinePoint(18,4));ctx.quadraticCurveTo(...spinePoint(18,2),...spinePoint(20,1));ctx.closePath();ctx.fill();
     ctx.save();ctx.translate(34+foxLabSpine.ribX*.55+turnWave*1.4,-18.5+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
-    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.035+idleTwitch*.07+foxLabEar.angle;
+    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.14+clamp(foxLabBodyAcceleration/1100,0,1)*.035+idleTwitch*.07+foxLabEar.angle;
+    const earFlickFar=foxLabIdleTime>1.2?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*1.1)),8)*.12:0,earFlickNear=foxLabIdleTime>1.6?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.83+1.2)),8)*.1:0;
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#81433b";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // Far ear is drawn first so the raised skull naturally occludes its inner side.
-    ear(24,24,-.18-earBack*.68,{outer:"#542729"});
+    ear(24,24,-.18-earBack*.68-earFlickFar,{outer:"#542729"});
     // One compact skull/cheek mass creates a readable facial plane behind the projecting muzzle.
     ctx.fillStyle="#e27455";ctx.beginPath();
     ctx.moveTo(25,-18);ctx.quadraticCurveTo(26,-26,34,-29);
@@ -406,7 +416,7 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
     ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
     // Near ear sits over the skull and retains the visible inner surface.
-    ear(31,29,.15-earBack,{inner:true,outer:"#542729"});
+    ear(31,29,.15-earBack+earFlickNear,{inner:true,outer:"#542729"});
     const muzzleDip=investigate*3.5;
     // Raised wedge-shaped muzzle projects forward from, rather than diagonally through, the cheek.
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(43,-22+muzzleDip);
@@ -453,7 +463,7 @@ function drawFoxLabArena(){
     updateFox(dt, now, left, right, up, keys.KeyI);
     const velocity = Math.abs(player.vx);
     const motion = !player.grounded ? (player.vy < 0 ? "AIRBORNE · ASCENDING" : "AIRBORNE · DESCENDING")
-      : foxLabInvestigation > .55 ? "INVESTIGATING" : velocity > 175 ? "RUNNING" : velocity > 8 ? "WALKING" : "IDLE";
+      : foxLabRestPose.lie>.55 ? "LYING DOWN" : foxLabRestPose.sit>.55 ? "SITTING" : foxLabInvestigation > .55 ? "INVESTIGATING" : velocity > 175 ? "RUNNING" : velocity > 8 ? "WALKING" : "IDLE";
     status.textContent = `${motion} · ${player.grounded ? "GROUNDED" : "AIRBORNE"}`;
     speedReadout.textContent = `${Math.round(velocity)} px/s`;
     drawFoxLabArena();

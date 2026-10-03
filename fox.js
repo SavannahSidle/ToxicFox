@@ -302,7 +302,6 @@ function drawFox(now,dt=1/60){
     ctx.lineTo(...upper.at(-1));
     for(let i=lower.length-1;i>whiteStart;i--){const a=lower[i],b=lower[i-1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
     ctx.lineTo(...lower[whiteStart]);const edgeBefore=tailPts[whiteStart-1],edgeAfter=tailPts[whiteStart+1],edgeDx=edgeAfter[0]-edgeBefore[0],edgeDy=edgeAfter[1]-edgeBefore[1],edgeLength=Math.hypot(edgeDx,edgeDy)||1,edgeLo=lower[whiteStart],edgeHi=upper[whiteStart];for(const [t,tooth] of [[.2,3.6],[.4,.5],[.62,4.2],[.82,.6]])ctx.lineTo(edgeLo[0]+(edgeHi[0]-edgeLo[0])*t-edgeDx/edgeLength*tooth,edgeLo[1]+(edgeHi[1]-edgeLo[1])*t-edgeDy/edgeLength*tooth);ctx.lineTo(...edgeHi);ctx.closePath();ctx.fill();
-    ctx.strokeStyle="rgba(255,218,178,.48)";ctx.lineWidth=2;ctx.beginPath();traceSmooth(tailPts.map(p=>[p[0],p[1]-2]));ctx.stroke();
     const tip=tailPts.at(-1),base=tailPts.at(-2),tailDx=tip[0]-base[0],tailDy=tip[1]-base[1],tailSize=Math.hypot(tailDx,tailDy)||1,tailNx=-tailDy/tailSize,tailNy=tailDx/tailSize;
     ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(tip[0]+tailNx*2.5,tip[1]+tailNy*2.5);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]+tailDx/tailSize*12,tip[1]+tailDy/tailSize*12);ctx.quadraticCurveTo(tip[0]+tailDx/tailSize*4,tip[1]+tailDy/tailSize*4,tip[0]-tailNx*2.5,tip[1]-tailNy*2.5);ctx.closePath();ctx.fill();
 
@@ -310,7 +309,7 @@ function drawFox(now,dt=1/60){
     const limb=index=>{
       const config=foxLabLegConfigs[index],front=config.front,far=config.far;
       const shoulderGlide=front?(foxLabPose.runContact*.55-foxLabPose.runExtension*.42+foxLabPose.jumpDrive*.38-foxLabPose.jumpLanding*.28):0;
-      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38:foxLabSpine.pelvisY+foxLabPose.runGather*.32+3.5;
+      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3:foxLabSpine.pelvisY+foxLabPose.runGather*.32+2.5;
       const p=((gaitPhase(config.walk,config.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
       const swing=cubic(t),reach=mix(.38,.25,run)*(front?.94:1),travel=stance?reach-2*reach*t:-reach+2*reach*swing,lift=stance?0:2.4*t*(1-t);
@@ -402,10 +401,6 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(42,-32,49,-27);ctx.quadraticCurveTo(54,-23,53,-18);
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
     ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
-    // A small tapered coat patch follows cheek into throat; it is not a separate round joint.
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(36,-15);
-    ctx.quadraticCurveTo(41,-14,46,-13);ctx.quadraticCurveTo(44,-10,41,-8);
-    ctx.quadraticCurveTo(38,-9,36,-12);ctx.closePath();ctx.fill();
     // Near ear sits over the skull and retains the visible inner surface.
     ear(31,29,.15-earBack,{inner:true,outer:"#542729"});
     const muzzleDip=investigate*3.5;
@@ -419,21 +414,22 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(59,-18+muzzleDip,75,-18+muzzleDip);
     ctx.quadraticCurveTo(71,-15+muzzleDip,62,-15+muzzleDip);
     ctx.quadraticCurveTo(53,-15+muzzleDip,48,-17+muzzleDip);ctx.closePath();ctx.fill();
-    // Small alert eye sits on the skull plane above the muzzle attachment.
+    // Small pointed black nose follows the muzzle tip instead of reading as an oval.
+    ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(78,-20.5+muzzleDip);
+    ctx.quadraticCurveTo(80.1,-21.7+muzzleDip,82,-19.8+muzzleDip);
+    ctx.quadraticCurveTo(80.8,-17.4+muzzleDip,77.2,-17.6+muzzleDip);
+    ctx.quadraticCurveTo(78.4,-18.5+muzzleDip,78,-20.5+muzzleDip);ctx.closePath();ctx.fill();
+    // Reduce the eye as one unit around its center; keep its gold iris and remove the lashes.
+    ctx.save();ctx.translate(46.1,-23.5);ctx.scale(.82,.82);ctx.translate(-46.1,23.5);
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(40.8,-23.6);
     ctx.quadraticCurveTo(45.1,-28,50,-24.8);ctx.quadraticCurveTo(50.6,-23,47.8,-20.8);
     ctx.quadraticCurveTo(43.4,-20,41,-22);ctx.closePath();ctx.fill();
     ctx.strokeStyle="#40221d";ctx.lineWidth=1;ctx.lineCap="round";ctx.beginPath();
-    ctx.moveTo(41.3,-24.5);ctx.quadraticCurveTo(45.4,-27.8,49.8,-25);
-    ctx.moveTo(41.3,-25);ctx.lineTo(40,-26);ctx.moveTo(42.8,-26);ctx.lineTo(42.2,-27.1);ctx.stroke();
-    // Keep the black nose distinct at the raised muzzle tip; no curved smile mark is drawn.
-    ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(77,-21+muzzleDip);
-    ctx.quadraticCurveTo(81,-22+muzzleDip,82,-19+muzzleDip);
-    ctx.quadraticCurveTo(81,-16+muzzleDip,77,-17+muzzleDip);
-    ctx.quadraticCurveTo(75,-18+muzzleDip,77,-21+muzzleDip);ctx.closePath();ctx.fill();
+    ctx.moveTo(41.3,-24.5);ctx.quadraticCurveTo(45.4,-27.8,49.8,-25);ctx.stroke();
     ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(46.1,-23.5,2.35,2.65,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(46.65,-23.5,.9,1.68,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="#fff1d3";ctx.beginPath();ctx.ellipse(44.7,-24.65,.75,.88,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
     ctx.restore();
     ctx.restore();
   }

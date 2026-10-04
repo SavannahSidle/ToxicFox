@@ -330,7 +330,7 @@ function drawFox(now,dt=1/60){
       const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3+bodyLift:foxLabSpine.pelvisY+foxLabPose.runGather*.32-6.5+bodyLift;
       const p=((gaitPhase(config.walk,config.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
-      const swing=cubic(t),reach=mix(.38,.25,run)*(front?.94:1),hindSwing=-reach+2*reach*swing-.07*reach*Math.sin(2*Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?2.4:2.75)*t*(1-t);
+      const swing=cubic(t),reach=mix(.38,.25,run)*(front?.94:1.28),hindSwing=-reach+2*reach*swing-.07*reach*Math.sin(2*Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?2.4:2.75)*t*(1-t);
       const restingOffset=front?(far?-2.2:1.8):(far?2.4:-1.8);
       let pawX=hip+travel*stride*move+restingOffset*(1-move),pawY=footLine-lift*(5+run*10)*move;
       if(!airborne){const restFold=Math.max(sit,lie),foldedX=front?hip+restingOffset:hip+10*sit+7*lie;pawX=mix(pawX,foldedX,restFold);}
@@ -401,11 +401,10 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-18],[17,-17],[28,-14],[39,-7],[42,-3],[39,1],[34,5],[27,8],[18,8],[9,6],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(([x,y])=>spinePoint(x*1.18,y*.92));
+    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-16],[17,-16],[28,-13],[39,-6],[42,-2.5],[39,.5],[34,4.5],[27,7.5],[18,7.5],[9,5.5],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(([x,y])=>spinePoint(x*1.18,y*.92));
     ctx.fillStyle="#e16b50";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     limb(2);
-    limb(3);
 
     // The neck rises higher and more vertically from a broader chest connection.
     const neckPath=new Path2D();
@@ -438,6 +437,8 @@ function drawFox(now,dt=1/60){
     throatPatch.quadraticCurveTo(...spinePoint(47,-26),...spinePoint(51,-29+investigate*3.5));
     throatPatch.closePath();
     ctx.save();ctx.clip(coatClip);ctx.fillStyle="#f0dfc5";ctx.fill(throatPatch);ctx.restore();
+    // Draw the near foreleg over the chest coat so its upper arm remains visible.
+    limb(3);
 
         ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-27.5+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.14+clamp(foxLabBodyAcceleration/1100,0,1)*.035+idleTwitch*.09+foxLabEar.angle;

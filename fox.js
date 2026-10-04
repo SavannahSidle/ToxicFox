@@ -403,15 +403,15 @@ function drawFox(now,dt=1/60){
 
     // The neck rises higher and more vertically from a broader chest connection.
     const neckPath=new Path2D();
-    neckPath.moveTo(...spinePoint(8,-12));
-    neckPath.quadraticCurveTo(...spinePoint(14,-29),...spinePoint(25,-41));
-    neckPath.quadraticCurveTo(...spinePoint(33,-49),...spinePoint(42,-44));
-    neckPath.quadraticCurveTo(...spinePoint(50,-39),...spinePoint(52,-30));
-    neckPath.quadraticCurveTo(...spinePoint(55,-23),...spinePoint(51,-15));
-    neckPath.quadraticCurveTo(...spinePoint(47,-6),...spinePoint(40,1));
-    neckPath.quadraticCurveTo(...spinePoint(34,7),...spinePoint(28,6));
-    neckPath.quadraticCurveTo(...spinePoint(18,4),...spinePoint(14,-2));
-    neckPath.quadraticCurveTo(...spinePoint(9,-6),...spinePoint(8,-12));
+    neckPath.moveTo(...spinePoint(12,-11));
+    neckPath.quadraticCurveTo(...spinePoint(18,-28),...spinePoint(26,-40));
+    neckPath.quadraticCurveTo(...spinePoint(32,-47),...spinePoint(39,-43));
+    neckPath.quadraticCurveTo(...spinePoint(45,-39),...spinePoint(47,-31));
+    neckPath.quadraticCurveTo(...spinePoint(49,-23),...spinePoint(46,-15));
+    neckPath.quadraticCurveTo(...spinePoint(44,-7),...spinePoint(39,1));
+    neckPath.quadraticCurveTo(...spinePoint(34,6),...spinePoint(29,6));
+    neckPath.quadraticCurveTo(...spinePoint(22,4),...spinePoint(18,-2));
+    neckPath.quadraticCurveTo(...spinePoint(14,-6),...spinePoint(12,-11));
     neckPath.closePath();
     ctx.fillStyle="#e16b50";ctx.fill(neckPath);
 

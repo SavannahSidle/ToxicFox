@@ -141,3 +141,8 @@ body{min-height:100dvh;padding-left:env(safe-area-inset-left);padding-right:env(
   .jump-action{width:min(22dvh,104px)}
   footer{display:none}
 }
+
+/* Keep game geometry stable while mobile browser chrome expands or collapses on touch. */
+body{min-height:100svh}
+.shell{min-height:100svh}
+@media(max-height:520px) and (orientation:landscape){.stage{max-height:58svh}}

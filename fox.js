@@ -31,11 +31,12 @@
   const foxLabRestPose={sit:0,sitV:0,lie:0,lieV:0};let foxLabRestTarget=0;
   const foxLabLegStates=Array.from({length:4},()=>({ready:false,pawX:0,pawXV:0,pawY:0,pawYV:0}));
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
+  // Walk order: near hind → near fore → far hind → far fore; trot pairs diagonal limbs.
   const foxLabLegConfigs=[
-    {hip:-39,front:false,far:true,walk:Math.PI*1.5,trot:0,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
-    {hip:28,front:true,far:true,walk:Math.PI*.5,trot:Math.PI,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1},
+    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
+    {hip:28,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1},
     {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
-    {hip:27,front:true,far:false,walk:Math.PI,trot:0,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1}
+    {hip:27,front:true,far:false,walk:Math.PI*.5,trot:0,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1}
   ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},

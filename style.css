@@ -4,6 +4,7 @@
 /* Shared responsive shell and touch controls. Gameplay remains in the character scripts. */
 html{overflow-x:hidden}
 body{min-height:100dvh;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.stage{width:min(100%,960px);justify-self:center}
 .stage canvas{touch-action:none}
 .touch-controls{display:none}
 .character-picker{max-width:min(100%,100vw - 32px)}

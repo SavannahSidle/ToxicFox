@@ -265,8 +265,8 @@
       const idleTailTwitch=(1-tailActivity)*(foxLabIdleTime>1.2?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.86-i*.29)),7)*.32*distal:0);
       const segmentTarget=clamp(tailTarget+idleTailSag+idleTailTwitch,-1.05,.9);
       const prior=i?foxLabTailAngles[i-1]:segmentTarget;
-      const target=i?segmentTarget+(prior-segmentTarget)*mix(.43,.58,ballistic):segmentTarget;
-      const stiffness=29-i*2.15,damping=(5.8-i*.36)*(1-.28*ballistic);
+      const target=i?segmentTarget+(prior-segmentTarget)*mix(.43,.72,ballistic):segmentTarget;
+      const stiffness=29-i*2.15,damping=(5.8-i*.36)*(1-.34*ballistic);
       foxLabTailVelocities[i]+=(target-foxLabTailAngles[i])*stiffness*dt;
       foxLabTailVelocities[i]*=Math.exp(-damping*dt);
       foxLabTailAngles[i]=clamp(foxLabTailAngles[i]+foxLabTailVelocities[i]*dt,-.82,.9);
@@ -277,6 +277,7 @@ function drawFox(now,dt=1/60){
     const speed=Math.abs(player.vx),move=smooth(4,58,speed),trot=foxLabTrotBlend,run=foxLabRunBlend,sit=foxLabRestPose.sit,lie=foxLabRestPose.lie;
     const airborne=!player.grounded,phase=foxLabStridePhase,impact=foxLabLandingImpact,investigate=foxLabInvestigation;
     const launch=airborne?smooth(0,145,now-(foxLabTakeoffUntil-145)):0;
+    const jumpHeadPitch=airborne?.035+foxLabPose.jumpDrive*.055+foxLabPose.jumpExtension*.03+foxLabPose.jumpLanding*.03:0;
     const stride=foxLabStrideLength;
     const bodyWave=cycleSample(phase-.16,[-.2,.05,.42,.2,-.08,-.46,-.24,.14]),stepWave=cycleSample(phase,[0,.36,.72,.28,-.18,-.64,-.35,.11]);
     const compress=Math.max(0,cycleSample(phase+.34,[-.1,.22,.82,.48,-.16,-.72,-.4,.09]))*run*.42;
@@ -330,7 +331,7 @@ function drawFox(now,dt=1/60){
       const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3+bodyLift:foxLabSpine.pelvisY+foxLabPose.runGather*.32-6.5+bodyLift;
       const p=((gaitPhase(config.walk,config.trot)%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
-      const swing=cubic(t),reach=mix(.38,.25,run)*(front?.94:1.28),hindSwing=-reach+2*reach*swing-.07*reach*Math.sin(2*Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?2.4:2.75)*t*(1-t);
+      const swing=cubic(t),reach=mix(.38,.25,run)*(front?mix(1.2,1.06,run):1.28),hindSwing=-reach+2*reach*swing-.07*reach*Math.sin(2*Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?2.4:2.75)*t*(1-t);
       const restingOffset=front?(far?-2.2:1.8):(far?2.4:-1.8);
       let pawX=hip+travel*stride*move+restingOffset*(1-move),pawY=footLine-lift*(5+run*10)*move;
       if(!airborne){const restFold=Math.max(sit,lie),foldedX=front?hip+restingOffset:hip+10*sit+7*lie;pawX=mix(pawX,foldedX,restFold);}
@@ -440,8 +441,8 @@ function drawFox(now,dt=1/60){
     // Draw the near foreleg over the chest coat so its upper arm remains visible.
     limb(3);
 
-        ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-27.5+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045);ctx.translate(-34,16);
-    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,earBack=investigate*.75+run*.14+clamp(foxLabBodyAcceleration/1100,0,1)*.035+idleTwitch*.09+foxLabEar.angle;
+        ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-27.5+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch);ctx.translate(-34,16);
+    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+idleTwitch*.09+foxLabEar.angle;
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),7)*.19:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),7)*.16:0;
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // Far ear is drawn first so the raised skull naturally occludes its inner side.

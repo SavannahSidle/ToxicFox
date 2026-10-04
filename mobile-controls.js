@@ -5,6 +5,27 @@
   const canvas = document.querySelector("#field");
   if (!stage || !canvas) return;
 
+  const logicalWidth = Number(canvas.dataset.logicalWidth || canvas.getAttribute("width")) || 960;
+  const logicalHeight = Number(canvas.dataset.logicalHeight || canvas.getAttribute("height")) || 540;
+  canvas.dataset.logicalWidth = String(logicalWidth);
+  canvas.dataset.logicalHeight = String(logicalHeight);
+
+  function scaleCanvasForDisplay() {
+    const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    if (Number(canvas.dataset.pixelRatio) === ratio) return;
+    canvas.width = Math.round(logicalWidth * ratio);
+    canvas.height = Math.round(logicalHeight * ratio);
+    canvas.dataset.pixelRatio = String(ratio);
+    canvas.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
+
+  scaleCanvasForDisplay();
+  let resizeFrame = 0;
+  window.addEventListener("resize", () => {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(scaleCanvasForDisplay);
+  }, { passive: true });
+
   const controls = document.createElement("section");
   controls.className = "touch-controls";
   controls.setAttribute("aria-label", "Touch game controls");

@@ -108,6 +108,7 @@
   addEventListener("keyup", event => { keys[event.code] = false; });
 
   function updateFox(dt, now, left, right, up, investigate) {
+    const walkModifier=keys.ShiftLeft||keys.ShiftRight;
     const input=(left?-1:0)+(right?1:0),oldVx=player.vx,oldVy=player.vy;
     if(input)foxLabRestTarget=0;
     const speed=Math.abs(player.vx),reversing=input&&speed>8&&Math.sign(player.vx)!==input;
@@ -116,9 +117,13 @@
     if(foxLabTurnProgress>=.52&&(Math.abs(player.vx)<34||Math.sign(player.vx)===foxLabTurnTo))player.facing=foxLabTurnTo;
 
     if(input){
-      const accel=player.grounded?(reversing?1040:690):(reversing?410:280);
+      const accel=player.grounded?(reversing?(walkModifier?760:1040):(walkModifier?430:690)):(reversing?410:walkModifier?220:280);
       player.vx+=input*accel*dt;
     }else player.vx*=Math.exp(-(player.grounded?5.4:1.65)*dt);
+    if(walkModifier&&Math.abs(player.vx)>105){
+      const excess=Math.abs(player.vx)-105,brake=Math.min(excess,(input&&Math.sign(player.vx)===input?560:850)*dt);
+      player.vx-=Math.sign(player.vx)*brake;
+    }
     player.vx=clamp(player.vx,-285,285);
     if(Math.abs(player.vx)<1.6&&!input)player.vx=0;
 

@@ -303,7 +303,7 @@ function drawFox(now,dt=1/60){
     ctx.save();ctx.translate(originX,originY);ctx.scale(scaleX,scaleY);ctx.rotate(bodyAngle);
 
     // A weighted brush tail whose bend travels from pelvis to tip.
-    const tailBaseX=-41+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
+    const tailBaseX=-49+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
     const tailPts=[[tailBaseX,tailBaseY]],tailLens=[13,15,16,16,16,16,15,13];let tx=tailBaseX,ty=tailBaseY;
     for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i]+foxLabSpine.pelvisAngle;tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
     const widths=[2.4,4.8,10.8,17,21,21,18,12,.55],upper=[],lower=[];
@@ -401,7 +401,7 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-18],[17,-17],[28,-14],[39,-7],[42,-3],[39,1],[34,5],[27,8],[18,8],[9,6],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(p=>spinePoint(...p));
+    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-18],[17,-17],[28,-14],[39,-7],[42,-3],[39,1],[34,5],[27,8],[18,8],[9,6],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(([x,y])=>spinePoint(x*1.18,y*.92));
     ctx.fillStyle="#e16b50";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     limb(2);
@@ -409,15 +409,15 @@ function drawFox(now,dt=1/60){
 
     // The neck rises higher and more vertically from a broader chest connection.
     const neckPath=new Path2D();
-    neckPath.moveTo(...spinePoint(14,-11));
-    neckPath.quadraticCurveTo(...spinePoint(20,-28),...spinePoint(27,-40));
-    neckPath.quadraticCurveTo(...spinePoint(32,-47),...spinePoint(38,-43));
-    neckPath.quadraticCurveTo(...spinePoint(43,-39),...spinePoint(45,-31));
-    neckPath.quadraticCurveTo(...spinePoint(47,-23),...spinePoint(44,-15));
-    neckPath.quadraticCurveTo(...spinePoint(42,-7),...spinePoint(38,1));
-    neckPath.quadraticCurveTo(...spinePoint(33,6),...spinePoint(29,6));
-    neckPath.quadraticCurveTo(...spinePoint(22,4),...spinePoint(18,-2));
-    neckPath.quadraticCurveTo(...spinePoint(14,-6),...spinePoint(14,-11));
+    neckPath.moveTo(...spinePoint(8,-9));
+    neckPath.quadraticCurveTo(...spinePoint(18,-22),...spinePoint(30,-28));
+    neckPath.quadraticCurveTo(...spinePoint(36,-32),...spinePoint(42,-30));
+    neckPath.quadraticCurveTo(...spinePoint(48,-28),...spinePoint(51,-20));
+    neckPath.quadraticCurveTo(...spinePoint(54,-12),...spinePoint(48,-4));
+    neckPath.quadraticCurveTo(...spinePoint(43,3),...spinePoint(36,5));
+    neckPath.quadraticCurveTo(...spinePoint(29,7),...spinePoint(24,4));
+    neckPath.quadraticCurveTo(...spinePoint(16,1),...spinePoint(12,-4));
+    neckPath.quadraticCurveTo(...spinePoint(9,-7),...spinePoint(8,-9));
     neckPath.closePath();
     ctx.fillStyle="#e16b50";ctx.fill(neckPath);
 
@@ -430,9 +430,9 @@ function drawFox(now,dt=1/60){
     throatPatch.moveTo(...spinePoint(51,-29+investigate*3.5));
     throatPatch.quadraticCurveTo(...spinePoint(48,-22+investigate*2),...spinePoint(44,-17));
     throatPatch.quadraticCurveTo(...spinePoint(40,-10),...spinePoint(40,-2));
-    throatPatch.quadraticCurveTo(...spinePoint(39,7),...spinePoint(34,16));
-    throatPatch.quadraticCurveTo(...spinePoint(31,20),...spinePoint(27,15));
-    throatPatch.quadraticCurveTo(...spinePoint(22,11),...spinePoint(20,4));
+    throatPatch.quadraticCurveTo(...spinePoint(39,3),...spinePoint(32,7));
+    throatPatch.quadraticCurveTo(...spinePoint(26,9),...spinePoint(20,7));
+    throatPatch.quadraticCurveTo(...spinePoint(15,6),...spinePoint(12,3));
     throatPatch.quadraticCurveTo(...spinePoint(18,-3),...spinePoint(23,-10));
     throatPatch.quadraticCurveTo(...spinePoint(31,-18),...spinePoint(40,-22));
     throatPatch.quadraticCurveTo(...spinePoint(47,-26),...spinePoint(51,-29+investigate*3.5));
@@ -444,7 +444,7 @@ function drawFox(now,dt=1/60){
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),7)*.19:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),7)*.16:0;
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // Far ear is drawn first so the raised skull naturally occludes its inner side.
-    ear(24,24,-.18-earBack*.68-earFlickFar,{outer:"#351317"});
+    ear(24,24,-.25-earBack*1.45-earFlickFar,{outer:"#351317"});
     // One compact skull/cheek mass creates a readable facial plane behind the projecting muzzle.
     ctx.fillStyle="#e27455";ctx.beginPath();
     ctx.moveTo(25,-18);ctx.quadraticCurveTo(26,-26,34,-29);
@@ -452,7 +452,7 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
     ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
     // Near ear sits over the skull and retains the visible inner surface.
-    ear(31,29,.15-earBack+earFlickNear,{inner:true,outer:"#4b171b"});
+    ear(31,29,-.04-earBack*1.35+earFlickNear,{inner:true,outer:"#4b171b"});
     const muzzleDip=investigate*3.5;
     // Raised wedge-shaped muzzle projects forward from, rather than diagonally through, the cheek.
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(43,-22+muzzleDip);

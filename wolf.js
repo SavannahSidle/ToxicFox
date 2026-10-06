@@ -88,17 +88,21 @@
       if(!stance)py-=Math.sin(Math.PI*q)*(5+gallop*9)*move;
       if(air){const descending=smooth(-40,420,wolf.vy);px=c.root+(c.front?9:-8)+(c.front?descending*8:-descending*7);py=footLine-(1-descending)*(12+gallop*3)+(c.front?0:-descending*2);}
       const rx=c.root+(c.front?body.ribX:body.pelvisX),ry=(c.front?-8:-4)+(c.front?body.ribY:body.pelvisY),s=solveLeg(rx,ry,px,py,c);
-      const fur=c.far?"#aeb8bb":"#d7d9d5",shadow=c.far?"#727f85":"#89979b";ctx.globalAlpha=c.far?.56:1;
+      const fur=c.far?"#dce2e1":"#fffdf7",shadow=c.far?"#aebdc1":"#d5dedc";ctx.globalAlpha=c.far?.62:1;
       const bone=(ax,ay,bx,by,w0,w1,fill)=>{const dx=bx-ax,dy=by-ay,n=Math.hypot(dx,dy)||1,nx=-dy/n,ny=dx/n;ctx.fillStyle=fill;ctx.beginPath();ctx.moveTo(ax+nx*w0,ay+ny*w0);ctx.quadraticCurveTo((ax+bx)/2+nx*(w0+w1)*.2,(ay+by)/2+ny*(w0+w1)*.2,bx+nx*w1,by+ny*w1);ctx.lineTo(bx-nx*w1,by-ny*w1);ctx.quadraticCurveTo((ax+bx)/2-nx*(w0+w1)*.2,(ay+by)/2-ny*(w0+w1)*.2,ax-nx*w0,ay-ny*w0);ctx.closePath();ctx.fill();};
-      bone(rx,ry,s.kx,s.ky,c.front?5:8,c.front?3.2:4.4,fur);bone(s.kx,s.ky,s.hx,s.hy,3.4,2.5,fur);bone(s.hx,s.hy,s.px,s.py,2,1.5,shadow);
-      ctx.fillStyle=c.far?"rgba(83,99,107,.48)":"rgba(83,99,107,.34)";ctx.beginPath();ctx.arc(s.kx,s.ky,c.front?1.8:2.1,0,Math.PI*2);ctx.arc(s.hx,s.hy,1.45,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=c.far?"#bac2c4":"#e8e7df";ctx.beginPath();ctx.ellipse(s.px+1.4,s.py,5.8,2.8,-.05,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="rgba(91,103,108,.38)";for(let toe=-1;toe<=1;toe++){ctx.beginPath();ctx.ellipse(s.px+4+toe*2,s.py+.7,1.25,.55,0,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
+      // Keep the existing fixed-length joints and add coat volume around the upper limb.
+      bone(rx,ry,s.kx,s.ky,c.front?6.2:9.1,c.front?4.5:5.7,fur);
+      if(!c.front){const dx=s.kx-rx,dy=s.ky-ry,len=Math.hypot(dx,dy)||1;ctx.save();ctx.translate(rx+dx*.34,ry+dy*.34);ctx.rotate(Math.atan2(dy,dx));ctx.fillStyle=c.far?"#d1dada":"#f4f3ec";ctx.beginPath();ctx.moveTo(-len*.48,-2.8);ctx.quadraticCurveTo(-len*.31,-8.1,-len*.08,-8.4);ctx.quadraticCurveTo(len*.18,-6.6,len*.48,-3);ctx.quadraticCurveTo(len*.37,1.2,len*.06,5.2);ctx.quadraticCurveTo(-len*.29,4.1,-len*.48,-2.8);ctx.closePath();ctx.fill();ctx.restore();}
+      bone(s.kx,s.ky,s.hx,s.hy,c.front?4.3:4.8,3.1,fur);
+      bone(s.hx,s.hy,s.px,s.py,2.75,2.0,shadow);
+      ctx.fillStyle=c.far?"rgba(92,111,119,.34)":"rgba(92,111,119,.24)";ctx.beginPath();ctx.arc(s.kx,s.ky,c.front?2:2.35,0,Math.PI*2);ctx.arc(s.hx,s.hy,1.7,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=c.far?"#d2dcdd":"#fffdf7";ctx.beginPath();ctx.ellipse(s.px+1.6,s.py,6.5,3.25,-.05,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="rgba(117,132,137,.34)";for(let toe=-1;toe<=1;toe++){ctx.beginPath();ctx.ellipse(s.px+4.5+toe*2.1,s.py+.8,1.25,.58,0,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
     };
     drawLeg(0);drawLeg(1);
 
     // One continuous winter body: deep forechest, level back, tucked waist, and joined haunch.
-    const outline=[[-95,-2],[-89,-17],[-74,-27],[-54,-30],[-35,-28],[-16,-28],[4,-31],[23,-36],[39,-39],[52,-34],[65,-26],[76,-16],[84,-3],[82,8],[75,15],[62,18],[44,15],[24,11],[2,11],[-22,15],[-46,16],[-66,11],[-84,5]].map(([x,y])=>spinePoint(x,y));
+    const outline=[[-95,-3],[-90,-15],[-80,-24],[-66,-29],[-50,-30],[-34,-28],[-18,-28],[-2,-30],[14,-34],[30,-37],[43,-37],[54,-33],[66,-25],[76,-13],[84,0],[83,9],[76,16],[65,18],[53,15],[40,11],[26,9],[11,9],[-4,11],[-19,15],[-35,17],[-51,16],[-66,12],[-79,7],[-89,3]].map(([x,y])=>spinePoint(x,y));
     const coat=ctx.createLinearGradient(0,-38,0,24);coat.addColorStop(0,"#fffef9");coat.addColorStop(.4,"#f1f0e9");coat.addColorStop(.78,"#dfe3e2");coat.addColorStop(1,"#c0cbd0");ctx.fillStyle=coat;ctx.beginPath();smoothPath(outline);ctx.closePath();ctx.fill();ctx.strokeStyle="#53636b";ctx.lineWidth=1.45;ctx.lineJoin="round";ctx.stroke();
     ctx.fillStyle="rgba(113,132,141,.2)";ctx.beginPath();ctx.moveTo(...spinePoint(-69,5));ctx.quadraticCurveTo(...spinePoint(-43,9),...spinePoint(-19,8));ctx.quadraticCurveTo(...spinePoint(-40,17),...spinePoint(-61,11));ctx.closePath();ctx.fill();
     ctx.fillStyle="rgba(255,255,255,.65)";ctx.beginPath();ctx.moveTo(...spinePoint(-68,-22));ctx.quadraticCurveTo(...spinePoint(-36,-32),...spinePoint(2,-25));ctx.quadraticCurveTo(...spinePoint(-30,-28),...spinePoint(-66,-17));ctx.closePath();ctx.fill();

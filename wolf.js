@@ -34,9 +34,9 @@
   // Walk order: near hind → near fore → far hind → far fore; trot pairs diagonal limbs.
   const foxLabLegConfigs=[
     {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:37,lower:25,toeX:2,toeY:25,bend:-1},
-    {hip:28,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:33,lower:28.5,toeX:1.4,toeY:9.5,bend:1},
+    {hip:28,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:32,lower:27,toeX:1.4,toeY:9.5,bend:.82},
     {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
-    {hip:27,front:true,far:false,walk:Math.PI*.5,trot:0,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1}
+    {hip:27,front:true,far:false,walk:Math.PI*.5,trot:0,upper:28,lower:24,toeX:1.4,toeY:8.5,bend:.82}
   ];
   const foxLabSurfaces = [{x:0,y:480,w:960,h:60,ground:true},{x:320,y:452,w:112,h:14},{x:432,y:432,w:112,h:14},{x:544,y:412,w:112,h:14},{x:656,y:386,w:112,h:14},{x:768,y:430,w:128,h:14},{x:455,y:328,w:118,h:14}];
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -325,7 +325,7 @@ function drawFox(now,dt=1/60){
       const config=foxLabLegConfigs[index],front=config.front,far=config.far;
       const forePhase=gaitPhase(config.walk,config.trot),walkScapula=front?Math.sin(forePhase)*2.4*move*(1-run):0;
       const shoulderGlide=front?(foxLabPose.runContact*.55-foxLabPose.runExtension*.42+foxLabPose.jumpDrive*.38-foxLabPose.jumpLanding*.28+walkScapula):0;
-      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3+bodyLift*.75:foxLabSpine.pelvisY+foxLabPose.runGather*.32-6.5+bodyLift*.75;
+      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-5.2+bodyLift*.75:foxLabSpine.pelvisY+foxLabPose.runGather*.32-6.5+bodyLift*.75;
       const p=((forePhase%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
       const swing=cubic(t),reach=mix(.38,.25,run)*(front?mix(1.2,1.06,run):1.28),hindSwing=-reach+2*reach*swing-.07*reach*Math.sin(2*Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?2.4:2.75)*t*(1-t);
@@ -370,7 +370,7 @@ function drawFox(now,dt=1/60){
       ctx.fillStyle=far?"#c7d0d1":"#edf0ec";
       bone(jointX,jointY,midX,midY,front?(far?3.05:4.05):(far?3.35:4.3),front?(far?2.35:3):(far?2.55:3.1),1.45);
       ctx.fillStyle=far?"#c7d0d1":"#edf0ec";
-      bone(midX,midY,pawX,pawY,far?2.05:2.35,far?1.6:1.85,.95);
+      bone(midX,midY,pawX,pawY,far?2.55:3.25,far?2.05:2.55,1.15);
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
         ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
@@ -382,8 +382,9 @@ function drawFox(now,dt=1/60){
         ctx.quadraticCurveTo(thighLength*.40,4.4,thighLength*.08,9);
         ctx.quadraticCurveTo(-thighLength*.30,5.4,-thighLength*.54,0);ctx.closePath();ctx.fill();ctx.restore();
       }
-      ctx.fillStyle=far?"#879498":"#aab5b8";ctx.beginPath();ctx.arc(jointX,jointY,front?(far?1.8:2.25):(far?2.1:2.7),0,Math.PI*2);ctx.arc(midX,midY,far?1.35:1.75,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=far?"#7d898d":"#aab5b8";ctx.beginPath();ctx.ellipse(pawX+1.5,pawY,3.65,1.95,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+      ctx.fillStyle=far?"#879498":"#aab5b8";ctx.beginPath();ctx.arc(jointX,jointY,front?(far?1.8:2.25):(far?2.1:2.7),0,Math.PI*2);ctx.arc(midX,midY,far?1.7:2.15,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=far?"#7d898d":"#aab5b8";ctx.beginPath();ctx.ellipse(pawX+1.7,pawY,4.9,2.75,0,0,Math.PI*2);ctx.fill();
+      if(!far){ctx.strokeStyle="rgba(74,85,88,.3)";ctx.lineWidth=.55;ctx.beginPath();ctx.moveTo(pawX+3.1,pawY-1.25);ctx.quadraticCurveTo(pawX+4.15,pawY,pawX+3.2,pawY+1.35);ctx.moveTo(pawX+1.25,pawY-1.8);ctx.quadraticCurveTo(pawX+2.25,pawY,pawX+1.3,pawY+1.75);ctx.stroke();}ctx.globalAlpha=1;
     };
     // Four-beat walk: each paw lands in sequence. The faster gait blends toward diagonal-pair trot timing.
     limb(0);

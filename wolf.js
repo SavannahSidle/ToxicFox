@@ -33,8 +33,8 @@
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   // Walk order: near hind → near fore → far hind → far fore; trot pairs diagonal limbs.
   const foxLabLegConfigs=[
-    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
-    {hip:28,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1},
+    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:35.5,lower:24,toeX:2,toeY:24,bend:-1},
+    {hip:28,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:31.5,lower:27,toeX:1.4,toeY:9.2,bend:1},
     {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
     {hip:27,front:true,far:false,walk:Math.PI*.5,trot:0,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1}
   ];
@@ -285,7 +285,7 @@ function drawFox(now,dt=1/60){
     const verticalMotion=stepWave*(trot*.16+run*.3)-recovery*1.4;
     const pitch=airborne?clamp(player.vy*.00016,-.15,.15):(-.025*run+bodyWave*.008*trot+accelerationLean*.035-braking*.014-impact*.045+investigate*.018);
     const breathe=player.grounded&&speed<9?Math.sin(now*.0021)*.35:0;
-    const bodyLift=8;
+    const bodyLift=12;
     const rise=8+bodyLift+compress*.8+launch*1.2-investigate*1.5+breathe-sit*4.5-lie*7;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-anticipation*3+recovery*2.6;
     const turnDelta=foxLabTurnTo-foxLabTurnFrom,turnWave=turnPulse(.03,.98)*turnDelta;
@@ -325,7 +325,7 @@ function drawFox(now,dt=1/60){
       const config=foxLabLegConfigs[index],front=config.front,far=config.far;
       const forePhase=gaitPhase(config.walk,config.trot),walkScapula=front?Math.sin(forePhase)*2.4*move*(1-run):0;
       const shoulderGlide=front?(foxLabPose.runContact*.55-foxLabPose.runExtension*.42+foxLabPose.jumpDrive*.38-foxLabPose.jumpLanding*.28+walkScapula):0;
-      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3+bodyLift:foxLabSpine.pelvisY+foxLabPose.runGather*.32-6.5+bodyLift;
+      const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3+bodyLift*.75:foxLabSpine.pelvisY+foxLabPose.runGather*.32-6.5+bodyLift*.75;
       const p=((forePhase%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stance=p<Math.PI*1.17;
       const t=stance?p/(Math.PI*1.17):(p-Math.PI*1.17)/(.83*Math.PI);
       const swing=cubic(t),reach=mix(.38,.25,run)*(front?mix(1.2,1.06,run):1.28),hindSwing=-reach+2*reach*swing-.07*reach*Math.sin(2*Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?2.4:2.75)*t*(1-t);
@@ -376,8 +376,8 @@ function drawFox(now,dt=1/60){
         ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
         ctx.fillStyle=far?"#cad3d4":"#f3f5f1";ctx.beginPath();ctx.moveTo(-thighLength*.54,0);
         // A narrow muscular wedge tapers from the hip toward the stifle.
-        ctx.quadraticCurveTo(-thighLength*.32,-7.5,-thighLength*.08,-10.5);
-        ctx.quadraticCurveTo(thighLength*.24,-8.1,thighLength*.52,-3.4);
+        ctx.quadraticCurveTo(-thighLength*.32,-7.5,-thighLength*.08,-12);
+        ctx.quadraticCurveTo(thighLength*.24,-9.2,thighLength*.52,-3.4);
         ctx.quadraticCurveTo(thighLength*.63,-1.2,thighLength*.64,0);
         ctx.quadraticCurveTo(thighLength*.40,4.4,thighLength*.08,7.8);
         ctx.quadraticCurveTo(-thighLength*.30,5.4,-thighLength*.54,0);ctx.closePath();ctx.fill();ctx.restore();
@@ -399,7 +399,7 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-16],[17,-16],[28,-13],[39,-6],[42,-2.5],[39,.5],[34,4.5],[27,7.5],[18,7.5],[9,5.5],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(([x,y])=>spinePoint(x*1.18,y*.92));
+    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-16],[17,-16],[28,-13],[39,-6],[42,-2.5],[39,.5],[34,4.5],[27,7.5],[18,7.5],[9,5.5],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(([x,y])=>spinePoint(x*1.18,y*1.0));
     ctx.fillStyle="#fffefa";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     limb(2);
@@ -407,9 +407,9 @@ function drawFox(now,dt=1/60){
     // The neck rises higher and more vertically from a broader chest connection.
     const neckPath=new Path2D();
     neckPath.moveTo(...spinePoint(8,-9));
-    neckPath.quadraticCurveTo(...spinePoint(18,-22),...spinePoint(30,-28));
-    neckPath.quadraticCurveTo(...spinePoint(36,-32),...spinePoint(42,-30));
-    neckPath.quadraticCurveTo(...spinePoint(48,-28),...spinePoint(51,-20));
+    neckPath.quadraticCurveTo(...spinePoint(18,-25),...spinePoint(30,-33));
+    neckPath.quadraticCurveTo(...spinePoint(36,-37),...spinePoint(42,-36));
+    neckPath.quadraticCurveTo(...spinePoint(48,-34),...spinePoint(51,-25));
     neckPath.quadraticCurveTo(...spinePoint(54,-12),...spinePoint(48,-4));
     neckPath.quadraticCurveTo(...spinePoint(43,3),...spinePoint(36,5));
     neckPath.quadraticCurveTo(...spinePoint(29,7),...spinePoint(24,4));
@@ -439,7 +439,7 @@ function drawFox(now,dt=1/60){
     limb(3);
     ctx.save();ctx.clip(coatClip);ctx.fillStyle="#fffefa";ctx.fill(throatPatch);ctx.restore();
 
-        ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-27.5+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch);ctx.translate(-34,16);
+        ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-33+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+idleTwitch*.09+foxLabEar.angle;
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),7)*.19:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),7)*.16:0;
     const ear=(x,len,angle,{inner=false,outer="#f8f9f6"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#b9c3c5";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(255,255,255,.78)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};

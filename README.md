@@ -1,6 +1,6 @@
 # ToxicFox
 
-A standalone browser-based canid locomotion test. `/` contains the preserved ToxicFox fox; `/wolf.html` contains an independent Arctic white wolf with its own renderer and movement controller. Both run without Gecko Escape code, levels, or external assets.
+A standalone browser-based canid locomotion test. `/` contains the preserved ToxicFox fox; `/wolf.html` contains an independent Arctic white wolf with its own renderer and movement controller. `/wolf-2.html` is an independent editable duplicate of the Arctic Wolf. All three run without Gecko Escape code, levels, or external assets.
 
 ## Controls
 

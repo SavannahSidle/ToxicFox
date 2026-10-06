@@ -430,9 +430,9 @@ function drawFox(now,dt=1/60){
     coatClip.closePath();coatClip.addPath(neckPath);
     const throatPatch=new Path2D();
     throatPatch.moveTo(...spinePoint(51,-29+investigate*3.5));
-    throatPatch.quadraticCurveTo(...spinePoint(48,-22+investigate*2),...spinePoint(45,-16));
-    throatPatch.quadraticCurveTo(...spinePoint(44,-9),...spinePoint(42,-3));
-    throatPatch.quadraticCurveTo(...spinePoint(41,2),...spinePoint(38,7));
+    throatPatch.quadraticCurveTo(...spinePoint(51,-22+investigate*2),...spinePoint(49,-16));
+    throatPatch.quadraticCurveTo(...spinePoint(49,-9),...spinePoint(47,-4));
+    throatPatch.quadraticCurveTo(...spinePoint(44,1),...spinePoint(39,7));
     throatPatch.quadraticCurveTo(...spinePoint(34,10),...spinePoint(29,10));
     throatPatch.quadraticCurveTo(...spinePoint(23,9),...spinePoint(18,6));
     throatPatch.quadraticCurveTo(...spinePoint(20,0),...spinePoint(25,-7));

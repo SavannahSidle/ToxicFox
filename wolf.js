@@ -373,19 +373,20 @@ function drawFox(now,dt=1/60){
       bone(midX,midY,pawX,pawY,far?2.55:3.25,far?2.05:2.55,1.15);
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
-        ctx.save();ctx.translate(hip+thighDx*.28,rootY+thighDy*.30);ctx.rotate(thighAngle);
-        // Rounded haunch volume bridges the rump into the upper hind leg without a sharp wedge.
-        ctx.fillStyle=far?"#cbd3d4":"#f3f5f2";ctx.beginPath();ctx.moveTo(-thighLength*.66,0);
-        ctx.quadraticCurveTo(-thighLength*.60,-8.8,-thighLength*.39,-14.1);
-        ctx.quadraticCurveTo(-thighLength*.17,-19.2,thighLength*.02,-16.5);
-        ctx.quadraticCurveTo(thighLength*.35,-12.6,thighLength*.57,-5.6);
-        ctx.quadraticCurveTo(thighLength*.72,-1.5,thighLength*.67,2);
-        ctx.quadraticCurveTo(thighLength*.59,7.2,thighLength*.32,10.2);
-        ctx.quadraticCurveTo(-thighLength*.12,11.6,-thighLength*.66,0);ctx.closePath();ctx.fill();
-        ctx.fillStyle=far?"rgba(96,111,116,.10)":"rgba(96,111,116,.08)";ctx.beginPath();
-        ctx.moveTo(-thighLength*.48,-.5);ctx.quadraticCurveTo(-thighLength*.23,-8.5,thighLength*.02,-11.2);
-        ctx.quadraticCurveTo(thighLength*.29,-8.6,thighLength*.43,-3.1);ctx.quadraticCurveTo(thighLength*.16,.9,-thighLength*.15,3.1);
-        ctx.closePath();ctx.fill();ctx.restore();
+        ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
+        // Keep the full thigh silhouette and let its pale shading flow into the enlarged rump.
+        ctx.beginPath();ctx.moveTo(-thighLength*.58,0);
+        ctx.quadraticCurveTo(-thighLength*.40,-8.5,-thighLength*.22,-14.5);
+        ctx.quadraticCurveTo(-thighLength*.03,-17,thighLength*.17,-13.2);
+        ctx.quadraticCurveTo(thighLength*.43,-8.8,thighLength*.60,-3.4);
+        ctx.quadraticCurveTo(thighLength*.69,-.8,thighLength*.66,1.2);
+        ctx.quadraticCurveTo(thighLength*.57,5.8,thighLength*.31,9.4);
+        ctx.quadraticCurveTo(-thighLength*.08,11,-thighLength*.58,0);ctx.closePath();
+        const thighShade=ctx.createLinearGradient(0,-17,0,11);
+        thighShade.addColorStop(0,far?"#cbd3d4":"#fffefa");
+        thighShade.addColorStop(.62,far?"#c5ced0":"#f8f9f6");
+        thighShade.addColorStop(1,far?"#c5ced0":"#e4e9e7");
+        ctx.fillStyle=thighShade;ctx.fill();ctx.restore();
       }
       ctx.fillStyle=far?"#879498":"#aab5b8";ctx.beginPath();ctx.arc(jointX,jointY,front?(far?1.8:2.25):(far?2.1:2.7),0,Math.PI*2);ctx.arc(midX,midY,far?1.7:2.15,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=far?"#7d898d":"#aab5b8";ctx.beginPath();ctx.ellipse(pawX+1.7,pawY,4.9,2.75,0,0,Math.PI*2);ctx.fill();
@@ -405,7 +406,7 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-16],[17,-16],[28,-13],[39,-6],[42,-2.5],[39,.5],[34,4.5],[27,7.5],[18,7.5],[9,5.5],[1,4],[-9,4],[-20,7],[-29,10],[-38,8],[-45,6]].map(([x,y])=>spinePoint(x*1.18,y*1.20));
+    const spineOutline=[[-49,-3],[-44,-12],[-38,-15],[-29,-17],[-19,-15],[-10,-15],[-4,-17],[8,-16],[17,-16],[28,-13],[39,-6],[42,-2.5],[39,.5],[34,4.5],[27,7.5],[18,7.5],[9,5.5],[1,4],[-9,4],[-20,7],[-29,11],[-36,13],[-42,12],[-47,7]].map(([x,y])=>spinePoint(x*1.18,y*1.20));
     ctx.fillStyle="#fffefa";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     // Cool white-grey modeling defines integrated haunch and shoulder muscle planes.

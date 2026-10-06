@@ -430,18 +430,19 @@ function drawFox(now,dt=1/60){
     coatClip.closePath();coatClip.addPath(neckPath);
     const throatPatch=new Path2D();
     throatPatch.moveTo(...spinePoint(51,-29+investigate*3.5));
-    throatPatch.quadraticCurveTo(...spinePoint(48,-22+investigate*2),...spinePoint(44,-17));
-    throatPatch.quadraticCurveTo(...spinePoint(40,-10),...spinePoint(40,-2));
-    throatPatch.quadraticCurveTo(...spinePoint(39,3),...spinePoint(32,7));
-    throatPatch.quadraticCurveTo(...spinePoint(26,9),...spinePoint(20,7));
-    throatPatch.quadraticCurveTo(...spinePoint(15,6),...spinePoint(12,3));
-    throatPatch.quadraticCurveTo(...spinePoint(18,-3),...spinePoint(23,-10));
-    throatPatch.quadraticCurveTo(...spinePoint(31,-18),...spinePoint(40,-22));
-    throatPatch.quadraticCurveTo(...spinePoint(47,-26),...spinePoint(51,-29+investigate*3.5));
+    throatPatch.quadraticCurveTo(...spinePoint(48,-22+investigate*2),...spinePoint(45,-16));
+    throatPatch.quadraticCurveTo(...spinePoint(44,-9),...spinePoint(42,-3));
+    throatPatch.quadraticCurveTo(...spinePoint(41,2),...spinePoint(38,7));
+    throatPatch.quadraticCurveTo(...spinePoint(34,10),...spinePoint(29,10));
+    throatPatch.quadraticCurveTo(...spinePoint(23,9),...spinePoint(18,6));
+    throatPatch.quadraticCurveTo(...spinePoint(20,0),...spinePoint(25,-7));
+    throatPatch.quadraticCurveTo(...spinePoint(31,-15),...spinePoint(38,-20));
+    throatPatch.quadraticCurveTo(...spinePoint(45,-25),...spinePoint(50,-28));
+    throatPatch.quadraticCurveTo(...spinePoint(51,-29),...spinePoint(51,-29+investigate*3.5));
     throatPatch.closePath();
-    ctx.save();ctx.clip(coatClip);ctx.fillStyle="#f0dfc5";ctx.fill(throatPatch);ctx.restore();
-    // Draw the near foreleg over the chest coat so its upper arm remains visible.
+    // The near foreleg tucks behind the cream bib at the shoulder, removing the orange overlap.
     limb(3);
+    ctx.save();ctx.clip(coatClip);ctx.fillStyle="#f0dfc5";ctx.fill(throatPatch);ctx.restore();
 
         ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-27.5+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+idleTwitch*.09+foxLabEar.angle;

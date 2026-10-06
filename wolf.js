@@ -373,14 +373,19 @@ function drawFox(now,dt=1/60){
       bone(midX,midY,pawX,pawY,far?2.55:3.25,far?2.05:2.55,1.15);
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
-        ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
-        ctx.fillStyle=far?"#cbd3d4":"#e4e9e7";ctx.beginPath();ctx.moveTo(-thighLength*.54,0);
-        // A narrow muscular wedge tapers from the hip toward the stifle.
-        ctx.quadraticCurveTo(-thighLength*.32,-8.1,-thighLength*.08,-14.5);
-        ctx.quadraticCurveTo(thighLength*.24,-9.8,thighLength*.52,-3.8);
-        ctx.quadraticCurveTo(thighLength*.63,-1.2,thighLength*.64,0);
-        ctx.quadraticCurveTo(thighLength*.40,4.4,thighLength*.08,9);
-        ctx.quadraticCurveTo(-thighLength*.30,5.4,-thighLength*.54,0);ctx.closePath();ctx.fill();ctx.restore();
+        ctx.save();ctx.translate(hip+thighDx*.28,rootY+thighDy*.30);ctx.rotate(thighAngle);
+        // Rounded haunch volume bridges the rump into the upper hind leg without a sharp wedge.
+        ctx.fillStyle=far?"#cbd3d4":"#f3f5f2";ctx.beginPath();ctx.moveTo(-thighLength*.66,0);
+        ctx.quadraticCurveTo(-thighLength*.60,-8.8,-thighLength*.39,-14.1);
+        ctx.quadraticCurveTo(-thighLength*.17,-19.2,thighLength*.02,-16.5);
+        ctx.quadraticCurveTo(thighLength*.35,-12.6,thighLength*.57,-5.6);
+        ctx.quadraticCurveTo(thighLength*.72,-1.5,thighLength*.67,2);
+        ctx.quadraticCurveTo(thighLength*.59,7.2,thighLength*.32,10.2);
+        ctx.quadraticCurveTo(-thighLength*.12,11.6,-thighLength*.66,0);ctx.closePath();ctx.fill();
+        ctx.fillStyle=far?"rgba(96,111,116,.10)":"rgba(96,111,116,.08)";ctx.beginPath();
+        ctx.moveTo(-thighLength*.48,-.5);ctx.quadraticCurveTo(-thighLength*.23,-8.5,thighLength*.02,-11.2);
+        ctx.quadraticCurveTo(thighLength*.29,-8.6,thighLength*.43,-3.1);ctx.quadraticCurveTo(thighLength*.16,.9,-thighLength*.15,3.1);
+        ctx.closePath();ctx.fill();ctx.restore();
       }
       ctx.fillStyle=far?"#879498":"#aab5b8";ctx.beginPath();ctx.arc(jointX,jointY,front?(far?1.8:2.25):(far?2.1:2.7),0,Math.PI*2);ctx.arc(midX,midY,far?1.7:2.15,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=far?"#7d898d":"#aab5b8";ctx.beginPath();ctx.ellipse(pawX+1.7,pawY,4.9,2.75,0,0,Math.PI*2);ctx.fill();
@@ -404,10 +409,10 @@ function drawFox(now,dt=1/60){
     ctx.fillStyle="#fffefa";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     // Cool white-grey modeling defines integrated haunch and shoulder muscle planes.
-    ctx.fillStyle="rgba(111,130,137,.14)";ctx.beginPath();
-    ctx.moveTo(...spinePoint(-47,2));ctx.quadraticCurveTo(...spinePoint(-42,-9),...spinePoint(-33,-13));
-    ctx.quadraticCurveTo(...spinePoint(-24,-15),...spinePoint(-18,-8));ctx.quadraticCurveTo(...spinePoint(-17,-1),...spinePoint(-24,5));
-    ctx.quadraticCurveTo(...spinePoint(-37,7),...spinePoint(-47,2));ctx.closePath();ctx.fill();
+    ctx.fillStyle="rgba(111,130,137,.10)";ctx.beginPath();
+    ctx.moveTo(...spinePoint(-48,2));ctx.quadraticCurveTo(...spinePoint(-46,-8),...spinePoint(-37,-13));
+    ctx.quadraticCurveTo(...spinePoint(-28,-17),...spinePoint(-20,-11));ctx.quadraticCurveTo(...spinePoint(-15,-5),...spinePoint(-20,2));
+    ctx.quadraticCurveTo(...spinePoint(-26,7),...spinePoint(-37,8));ctx.quadraticCurveTo(...spinePoint(-44,7),...spinePoint(-48,2));ctx.closePath();ctx.fill();
     ctx.fillStyle="rgba(111,130,137,.10)";ctx.beginPath();
     ctx.moveTo(...spinePoint(4,-11));ctx.quadraticCurveTo(...spinePoint(12,-18),...spinePoint(22,-16));
     ctx.quadraticCurveTo(...spinePoint(29,-12),...spinePoint(30,-5));ctx.quadraticCurveTo(...spinePoint(20,-3),...spinePoint(10,-6));

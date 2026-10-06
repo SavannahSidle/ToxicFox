@@ -303,7 +303,7 @@ function drawFox(now,dt=1/60){
     const tailBaseX=-49+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
     const tailPts=[[tailBaseX,tailBaseY]],tailLens=[13,15,16,16,16,16,15,13];let tx=tailBaseX,ty=tailBaseY;
     for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i]+foxLabSpine.pelvisAngle;tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
-    const widths=[2.4,4.8,10.8,17,21,21,18,12,.55],upper=[],lower=[];
+    const widths=[1.5,3,6,9,11.5,11,9,5.5,.35],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#eef1ef";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();

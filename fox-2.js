@@ -461,7 +461,7 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
     ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
     // Near ear sits over the skull and retains the visible inner surface.
-    ear(23,34,.02-earBack*1.25+earFlickNear,{inner:true,outer:"#4b171b"});
+    ear(23,34,.32-earBack*1.15+earFlickNear,{inner:true,outer:"#4b171b"});
     const muzzleDip=investigate*3.5;
     // A shorter, broad, rounded fox muzzle with a soft bridge and squared nose end.
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);

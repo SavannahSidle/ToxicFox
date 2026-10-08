@@ -318,7 +318,7 @@ function drawFox(now,dt=1/60){
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#d95e48";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
     // The white brush starts on the distal tail itself so it follows every segment bend.
-    const whiteStart=5;ctx.fillStyle="#d95e48";ctx.beginPath();
+    const whiteStart=5;ctx.fillStyle="#f0dfc5";ctx.beginPath();
     ctx.moveTo(...upper[whiteStart]);
     for(let i=whiteStart;i<upper.length-1;i++){const a=upper[i],b=upper[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
     ctx.lineTo(...upper.at(-1));
@@ -446,7 +446,7 @@ function drawFox(now,dt=1/60){
     throatPatch.quadraticCurveTo(...spinePoint(34,-37),...spinePoint(37,-42+investigate*2));
     throatPatch.closePath();
     // Clip the cream chest marking cleanly to the connected body and neck.
-    ctx.save();ctx.clip(coatClip);ctx.fillStyle="#f0dfc5";ctx.fill(throatPatch);ctx.restore();
+    ctx.save();ctx.clip(coatClip);ctx.fillStyle="#e16b50";ctx.fill(throatPatch);ctx.restore();
     // Draw the near foreleg once, on top of the chest marking, so it stays visible.
     limb(3);
 
@@ -466,18 +466,19 @@ function drawFox(now,dt=1/60){
     ear(31,29,-.04-earBack*1.35+earFlickNear,{inner:true,outer:"#4b171b"});
     const idleSniff=player.grounded&&speed<9?Math.pow(Math.max(0,Math.sin(now*.0016)),10):0;
     const muzzleDip=investigate*3.5+idleSniff*1.15;
-    // A shorter, broad, rounded fox muzzle with a soft bridge and squared nose end.
+    // A compact fox muzzle: full at the cheek, tapering to the nose.
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);
-    ctx.quadraticCurveTo(53,-27+muzzleDip,64,-24+muzzleDip);
-    ctx.quadraticCurveTo(72,-23+muzzleDip,76,-20+muzzleDip);
-    ctx.quadraticCurveTo(77,-18+muzzleDip,74,-16+muzzleDip);
-    ctx.quadraticCurveTo(65,-14.5+muzzleDip,56,-16+muzzleDip);
-    ctx.quadraticCurveTo(47,-16,43,-19);ctx.closePath();ctx.fill();
-    // Small cream lower-muzzle marking sits under the bridge and ends beside the nose.
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(55,-17.6+muzzleDip);
-    ctx.quadraticCurveTo(62,-18.2+muzzleDip,72,-17.9+muzzleDip);
-    ctx.quadraticCurveTo(70.5,-16.2+muzzleDip,64,-15.8+muzzleDip);
-    ctx.quadraticCurveTo(58,-15.8+muzzleDip,55,-17.6+muzzleDip);ctx.closePath();ctx.fill();
+    ctx.quadraticCurveTo(50,-28+muzzleDip,61,-25+muzzleDip);
+    ctx.quadraticCurveTo(68,-23+muzzleDip,76,-20.5+muzzleDip);
+    ctx.quadraticCurveTo(77.5,-19.8+muzzleDip,78,-19.5+muzzleDip);
+    ctx.quadraticCurveTo(73,-17+muzzleDip,67,-15.5+muzzleDip);
+    ctx.quadraticCurveTo(59,-15.3+muzzleDip,52,-17+muzzleDip);
+    ctx.quadraticCurveTo(46,-17.8+muzzleDip,43,-21+muzzleDip);ctx.closePath();ctx.fill();
+    // Small cream lower muzzle, tucked under the tapered bridge and aligned toward the nose.
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(55,-17.8+muzzleDip);
+    ctx.quadraticCurveTo(63,-18.5+muzzleDip,73.5,-17.9+muzzleDip);
+    ctx.quadraticCurveTo(71.5,-16.3+muzzleDip,65,-16+muzzleDip);
+    ctx.quadraticCurveTo(59,-16.1+muzzleDip,55,-17.8+muzzleDip);ctx.closePath();ctx.fill();
     // Small pointed black nose follows the muzzle tip instead of reading as an oval.
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(78,-20.5+muzzleDip);
     ctx.quadraticCurveTo(80.1,-21.7+muzzleDip,82,-19.8+muzzleDip);

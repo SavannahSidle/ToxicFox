@@ -407,20 +407,22 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-51,-2],[-49,-10],[-43,-16],[-35,-18],[-27,-17],[-19,-15],[-10,-16],[-2,-18],[7,-18],[16,-16],[25,-13],[34,-9],[40,-4],[42,0],[39,5],[34,9],[27,12],[18,12],[9,10],[0,8],[-10,7],[-19,8],[-27,10],[-34,9],[-41,7],[-48,2]].map(([x,y])=>spinePoint(x*1.18,y*.92));
+    const spineOutline=[[-49,-2],[-47,-8],[-41,-13],[-34,-14],[-27,-14],[-19,-14],[-10,-16],[-2,-18],[7,-18],[16,-16],[25,-13],[34,-9],[40,-4],[42,0],[39,5],[34,8],[27,10],[18,11],[9,10],[0,8],[-10,7],[-19,8],[-27,9],[-33,8],[-39,6],[-45,2]].map(([x,y])=>spinePoint(x*1.18,y*.92));
     ctx.fillStyle="#e16b50";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     limb(2);
 
-    // The neck rises higher and more vertically from a broader chest connection.
+    // A long, slim neck rises cleanly from the chest toward the head.
     const neckPath=new Path2D();
     neckPath.moveTo(...spinePoint(18,-5));
-    neckPath.quadraticCurveTo(...spinePoint(23,-22),...spinePoint(32,-32));
-    neckPath.quadraticCurveTo(...spinePoint(36,-39),...spinePoint(42,-39));
-    neckPath.quadraticCurveTo(...spinePoint(48,-38),...spinePoint(50,-31));
-    neckPath.quadraticCurveTo(...spinePoint(52,-21),...spinePoint(49,-12));
-    neckPath.quadraticCurveTo(...spinePoint(46,-5),...spinePoint(41,-2));
-    neckPath.quadraticCurveTo(...spinePoint(34,0),...spinePoint(28,-4));
+    neckPath.quadraticCurveTo(...spinePoint(25,-21),...spinePoint(32,-32));
+    neckPath.quadraticCurveTo(...spinePoint(35,-41),...spinePoint(37,-49));
+    neckPath.quadraticCurveTo(...spinePoint(38,-54),...spinePoint(41,-55));
+    neckPath.quadraticCurveTo(...spinePoint(45,-55),...spinePoint(47,-51));
+    neckPath.quadraticCurveTo(...spinePoint(49,-43),...spinePoint(48,-34));
+    neckPath.quadraticCurveTo(...spinePoint(48,-22),...spinePoint(49,-12));
+    neckPath.quadraticCurveTo(...spinePoint(46,-4),...spinePoint(41,-2));
+    neckPath.quadraticCurveTo(...spinePoint(33,0),...spinePoint(27,-4));
     neckPath.quadraticCurveTo(...spinePoint(22,-5),...spinePoint(18,-5));
     neckPath.closePath();
     ctx.fillStyle="#e16b50";ctx.fill(neckPath);
@@ -431,14 +433,15 @@ function drawFox(now,dt=1/60){
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];coatClip.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}
     coatClip.closePath();coatClip.addPath(neckPath);
     const throatPatch=new Path2D();
-    throatPatch.moveTo(...spinePoint(40,-39+investigate*2));
-    throatPatch.quadraticCurveTo(...spinePoint(50,-34+investigate*2),...spinePoint(51,-22));
-    throatPatch.quadraticCurveTo(...spinePoint(52,-8),...spinePoint(47,5));
-    throatPatch.quadraticCurveTo(...spinePoint(43,15),...spinePoint(35,18));
-    throatPatch.quadraticCurveTo(...spinePoint(23,16),...spinePoint(10,11));
-    throatPatch.quadraticCurveTo(...spinePoint(9,4),...spinePoint(17,-6));
-    throatPatch.quadraticCurveTo(...spinePoint(23,-20),...spinePoint(31,-32));
-    throatPatch.quadraticCurveTo(...spinePoint(35,-37),...spinePoint(40,-39+investigate*2));
+    throatPatch.moveTo(...spinePoint(38,-54+investigate*2));
+    throatPatch.quadraticCurveTo(...spinePoint(43,-54+investigate*2),...spinePoint(46,-49));
+    throatPatch.quadraticCurveTo(...spinePoint(48,-39),...spinePoint(47,-28));
+    throatPatch.quadraticCurveTo(...spinePoint(48,-14),...spinePoint(47,1));
+    throatPatch.quadraticCurveTo(...spinePoint(45,11),...spinePoint(38,15));
+    throatPatch.quadraticCurveTo(...spinePoint(27,14),...spinePoint(12,10));
+    throatPatch.quadraticCurveTo(...spinePoint(10,3),...spinePoint(17,-6));
+    throatPatch.quadraticCurveTo(...spinePoint(24,-21),...spinePoint(32,-35));
+    throatPatch.quadraticCurveTo(...spinePoint(35,-47),...spinePoint(38,-54+investigate*2));
     throatPatch.closePath();
     // Clip the cream chest marking cleanly to the connected body and neck.
     ctx.save();ctx.clip(coatClip);ctx.fillStyle="#f0dfc5";ctx.fill(throatPatch);ctx.restore();

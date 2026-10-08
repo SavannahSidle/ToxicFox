@@ -456,12 +456,12 @@ function drawFox(now,dt=1/60){
     ear(24,30,-.28-earBack*1.35-earFlickFar,{outer:"#351317"});
     // One compact skull/cheek mass creates a readable facial plane behind the projecting muzzle.
     ctx.fillStyle="#e27455";ctx.beginPath();
-    ctx.moveTo(25,-18);ctx.quadraticCurveTo(26,-26,34,-29);
+    ctx.moveTo(23,-18);ctx.quadraticCurveTo(24,-26,34,-29);
     ctx.quadraticCurveTo(42,-32,49,-27);ctx.quadraticCurveTo(54,-23,53,-18);
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
     ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
     // Near ear sits over the skull and retains the visible inner surface.
-    ear(40,34,.02-earBack*1.25+earFlickNear,{inner:true,outer:"#4b171b"});
+    ear(23,34,.02-earBack*1.25+earFlickNear,{inner:true,outer:"#4b171b"});
     const muzzleDip=investigate*3.5;
     // A shorter, broad, rounded fox muzzle with a soft bridge and squared nose end.
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);

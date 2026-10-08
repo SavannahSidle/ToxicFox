@@ -317,7 +317,7 @@ function drawFox(now,dt=1/60){
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#d95e48";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
     // The white brush starts on the distal tail itself so it follows every segment bend.
-    const whiteStart=7;ctx.fillStyle="#f0dfc5";ctx.beginPath();
+    const whiteStart=7;ctx.fillStyle="#d95e48";ctx.beginPath();
     ctx.moveTo(...upper[whiteStart]);
     for(let i=whiteStart;i<upper.length-1;i++){const a=upper[i],b=upper[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
     ctx.lineTo(...upper.at(-1));
@@ -436,13 +436,13 @@ function drawFox(now,dt=1/60){
     throatPatch.moveTo(...spinePoint(37,-42+investigate*2));
     throatPatch.quadraticCurveTo(...spinePoint(43,-45+investigate*2),...spinePoint(46,-41));
     throatPatch.quadraticCurveTo(...spinePoint(49,-34),...spinePoint(48,-24));
-    throatPatch.quadraticCurveTo(...spinePoint(49,-11),...spinePoint(47,0));
-    throatPatch.quadraticCurveTo(...spinePoint(45,10),...spinePoint(40,15));
-    throatPatch.quadraticCurveTo(...spinePoint(31,19),...spinePoint(21,15));
-    throatPatch.quadraticCurveTo(...spinePoint(13,12),...spinePoint(10,7));
-    throatPatch.quadraticCurveTo(...spinePoint(9,3),...spinePoint(14,-5));
-    throatPatch.quadraticCurveTo(...spinePoint(21,-17),...spinePoint(29,-29));
-    throatPatch.quadraticCurveTo(...spinePoint(33,-37),...spinePoint(37,-42+investigate*2));
+    throatPatch.quadraticCurveTo(...spinePoint(49,-10),...spinePoint(47,1));
+    throatPatch.quadraticCurveTo(...spinePoint(45,11),...spinePoint(40,16));
+    throatPatch.quadraticCurveTo(...spinePoint(31,20),...spinePoint(21,17));
+    throatPatch.quadraticCurveTo(...spinePoint(12,14),...spinePoint(9,8));
+    throatPatch.quadraticCurveTo(...spinePoint(8,4),...spinePoint(13,-4));
+    throatPatch.quadraticCurveTo(...spinePoint(20,-17),...spinePoint(29,-30));
+    throatPatch.quadraticCurveTo(...spinePoint(33,-38),...spinePoint(37,-42+investigate*2));
     throatPatch.closePath();
     // Clip the cream chest marking cleanly to the connected body and neck.
     ctx.save();ctx.clip(coatClip);ctx.fillStyle="#f0dfc5";ctx.fill(throatPatch);ctx.restore();
@@ -454,7 +454,7 @@ function drawFox(now,dt=1/60){
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),7)*.29:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),7)*.25:0;
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-4.2,3);ctx.quadraticCurveTo(-5.6+tipLagX*.35,-len*.56,-.6+tipLagX,-len);ctx.quadraticCurveTo(4.1+tipLagX*.65,-len*.72,4.8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // Far ear is drawn first so the raised skull naturally occludes its inner side.
-    ear(24,30,-.28-earBack*1.35-earFlickFar,{outer:"#351317"});
+    ear(27,29,-.42-earBack*1.15-earFlickFar,{outer:"#351317"});
     // One compact skull/cheek mass creates a readable facial plane behind the projecting muzzle.
     ctx.fillStyle="#e27455";ctx.beginPath();
     ctx.moveTo(25,-18);ctx.quadraticCurveTo(26,-26,34,-29);
@@ -462,7 +462,7 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
     ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
     // Near ear sits over the skull and retains the visible inner surface.
-    ear(40,34,.02-earBack*1.25+earFlickNear,{inner:true,outer:"#4b171b"});
+    ear(38,32,-.02-earBack*1.1+earFlickNear,{inner:true,outer:"#4b171b"});
     const muzzleDip=investigate*3.5;
     // A shorter, broad, rounded fox muzzle with a soft bridge and squared nose end.
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);
@@ -471,11 +471,11 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(77,-18+muzzleDip,74,-16+muzzleDip);
     ctx.quadraticCurveTo(65,-14.5+muzzleDip,56,-16+muzzleDip);
     ctx.quadraticCurveTo(47,-16,43,-19);ctx.closePath();ctx.fill();
-    // Cream lower muzzle is a quiet jaw plane with a nearly level edge, not a smile stroke.
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-18+muzzleDip);
-    ctx.quadraticCurveTo(60,-19+muzzleDip,73,-18+muzzleDip);
-    ctx.quadraticCurveTo(70,-15+muzzleDip,61,-15+muzzleDip);
-    ctx.quadraticCurveTo(53,-15+muzzleDip,49,-17+muzzleDip);ctx.closePath();ctx.fill();
+    // Compact cream lower muzzle kept fully inside the orange muzzle.
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(50,-17.3+muzzleDip);
+    ctx.quadraticCurveTo(59,-18.2+muzzleDip,70.5,-17.5+muzzleDip);
+    ctx.quadraticCurveTo(68.5,-15.7+muzzleDip,60.5,-15.4+muzzleDip);
+    ctx.quadraticCurveTo(53.5,-15.3+muzzleDip,50,-17.3+muzzleDip);ctx.closePath();ctx.fill();
     // Small pointed black nose follows the muzzle tip instead of reading as an oval.
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(78,-20.5+muzzleDip);
     ctx.quadraticCurveTo(80.1,-21.7+muzzleDip,82,-19.8+muzzleDip);

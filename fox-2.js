@@ -11,6 +11,7 @@
   let foxLabStridePhase = 0;
   const foxLabTailAngles = Array(8).fill(0), foxLabTailVelocities = Array(8).fill(0);
   let foxLabLandingImpact = 0, foxLabTakeoffUntil = 0;
+  let foxLabBlinkTimer = 2.8, foxLabBlinkRemaining = 0;
   let foxLabTurnTo = 1, foxLabTurnFrom = 1, foxLabTurnProgress = 1, foxLabTurnDuration = .21;
   let foxLabInvestigation = 0, foxLabIdleTime = 0, foxLabJumpHoldBlend = 0;
   let foxLabStrideLength = 22, foxLabTrotBlend = 0, foxLabRunBlend = 0;
@@ -176,6 +177,8 @@
     springTo(foxLabRestPose,"lie",restReady&&foxLabRestTarget===2?1:0,6.5,.96,dt);
 
     foxLabIdleTime=player.grounded&&currentSpeed<9&&!input?foxLabIdleTime+dt:0;
+    if(foxLabBlinkRemaining>0)foxLabBlinkRemaining=Math.max(0,foxLabBlinkRemaining-dt);
+    else{foxLabBlinkTimer-=dt;if(foxLabBlinkTimer<=0){foxLabBlinkRemaining=.14;foxLabBlinkTimer=3.1+Math.random()*2.7;}}
     const investigateTarget=investigate&&player.grounded&&!input&&currentSpeed<18?1:0;
     foxLabInvestigation+=(investigateTarget-foxLabInvestigation)*(1-Math.exp(-5.5*dt));
     foxLabLandingImpact*=Math.exp(-8.5*dt);
@@ -250,8 +253,8 @@
 
     const turnSway=turnPulse(.2,.98)*turnDelta;
     const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.4,.09,tailActivity);
-    const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.055,.09,.035,-.025,-.075,-.035,.025])*tailActivity*(.7+foxLabTrotBlend+foxLabRunBlend);
-    const speedTrail=smooth(45,285,currentSpeed)*.105;
+    const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.095,.17,.07,-.035,-.14,-.08,.025])*tailActivity*(.75+foxLabTrotBlend*.7+foxLabRunBlend*.85);
+    const speedTrail=-smooth(45,285,currentSpeed)*.105;
     const airborne=player.grounded?0:1,ballistic=clamp(Math.max(airborne,foxLabLandingRecovery),0,1);
     const jumpVelocity=airborne*clamp(-player.vy/545,-1,1)*.58;
     const jumpAcceleration=airborne*clamp(-foxLabVerticalAcceleration/2400,-1,1)*.24;
@@ -266,7 +269,7 @@
       const idleTailTwitch=(1-tailActivity)*(foxLabIdleTime>1.2?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.86-i*.29)),7)*.32*distal:0);
       const segmentTarget=clamp(tailTarget+idleTailSag+idleTailTwitch,-1.05,.9);
       const prior=i?foxLabTailAngles[i-1]:segmentTarget;
-      const target=i?segmentTarget+(prior-segmentTarget)*mix(.43,.72,ballistic):segmentTarget;
+      const target=i?segmentTarget+(prior-segmentTarget)*mix(.55,.8,ballistic):segmentTarget;
       const stiffness=29-i*2.15,damping=(5.8-i*.36)*(1-.34*ballistic);
       foxLabTailVelocities[i]+=(target-foxLabTailAngles[i])*stiffness*dt;
       foxLabTailVelocities[i]*=Math.exp(-damping*dt);
@@ -373,9 +376,9 @@ function drawFox(now,dt=1/60){
       bone(hip,rootY,jointX,jointY,front?(far?3.15:4.2):(far?4.2:5.4),front?(far?2.4:3.1):(far?3.1:4.1),.55);
       ctx.fillStyle="#542729";
       ctx.fillStyle=far?"#351317":"#4b171b";
-      bone(jointX,jointY,midX,midY,front?(far?3.05:4.05):(far?3.35:4.3),front?(far?2.35:3):(far?2.55:3.1),1.45);
+      bone(jointX,jointY,midX,midY,front?(far?3.05:4.05):(far?3.35:4.3),front?(far?2.35:3):(far?2.55:3.1),0);
       ctx.fillStyle=far?"#351317":"#4b171b";
-      bone(midX,midY,pawX,pawY,far?2.05:2.35,far?1.6:1.85,.95);
+      bone(midX,midY,pawX,pawY,far?2.05:2.35,far?1.6:1.85,0);
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
         ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
@@ -477,7 +480,8 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(80.8,-17.4+muzzleDip,77.2,-17.6+muzzleDip);
     ctx.quadraticCurveTo(78.4,-18.5+muzzleDip,78,-20.5+muzzleDip);ctx.closePath();ctx.fill();
     // Reduce the eye as one unit around its center; keep its gold iris and remove the lashes.
-    ctx.save();ctx.translate(46.1,-23.5);ctx.scale(.82,.82);ctx.translate(-46.1,23.5);
+    const blinkAmount=foxLabBlinkRemaining>0?Math.sin(Math.PI*(1-foxLabBlinkRemaining/.14)):0;
+    ctx.save();ctx.translate(46.1,-23.5);ctx.scale(.82,.82*(1-blinkAmount*.96));ctx.translate(-46.1,23.5);
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(40.8,-23.6);
     ctx.quadraticCurveTo(45.1,-28,50,-24.8);ctx.quadraticCurveTo(50.6,-23,47.8,-20.8);
     ctx.quadraticCurveTo(43.4,-20,41,-22);ctx.closePath();ctx.fill();
@@ -487,6 +491,7 @@ function drawFox(now,dt=1/60){
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(46.65,-23.5,.9,1.68,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="#fff1d3";ctx.beginPath();ctx.ellipse(44.7,-24.65,.75,.88,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
+    if(blinkAmount>.48){ctx.strokeStyle="#3b1e1e";ctx.lineWidth=1.1;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(41.5,-23.5);ctx.quadraticCurveTo(46,-21.3,50,-23.5);ctx.stroke();}
     ctx.restore();
     ctx.restore();
   }

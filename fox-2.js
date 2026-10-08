@@ -200,6 +200,7 @@
     const jumpAge=!player.grounded?Math.max(0,now-(foxLabTakeoffUntil-145)):0;
     const jumpDrive=!player.grounded?smooth(0,65,jumpAge)*(1-smooth(175,315,jumpAge)):0;
     const jumpApex=!player.grounded?clamp(1-Math.abs(player.vy)/125,0,1):0;
+    const jumpArch=!player.grounded?Math.max(jumpStretch*.82,jumpApex*.58):0;
     /*
      * Reference study translated into ToxicFox poses (principles only, no traced coordinates):
      * alert stand = lifted head over quiet, weight-bearing limbs; walk = sequential four-beat contacts;
@@ -236,9 +237,9 @@
       -pose.runGather*.7+pose.runDrive*1.2+pose.runExtension*.5-pose.jumpLoad*.5+pose.jumpDrive*1+pose.jumpExtension*.55;
     const ribX=foreLoad*(trot*.34+run*1.56)+turnShoulder*1.05-clamp(foxLabBodyAcceleration/1100,-1,1)*.32+jumpStretch*.6+jumpDrive*1.9+jumpApex*.4-jumpDescend*.35
       +pose.runContact*.3+pose.runExtension*.8+pose.jumpDrive*.65+pose.jumpExtension*.8-pose.jumpLanding*.45;
-    const waistY=(ribY-pelvisY)*.38+lumbarWave*(trot*.58+run*2.05)*moveBlend+foxLabJumpAnticipation*.72-jumpStretch*2.1-jumpDrive*1.1+jumpApex*.85+jumpDescend*1.15+foxLabLandingImpact*.94
+    const waistY=(ribY-pelvisY)*.38+lumbarWave*(trot*.58+run*2.05)*moveBlend+foxLabJumpAnticipation*.72-jumpStretch*2.1-jumpDrive*1.1+jumpApex*.85+jumpDescend*1.15-jumpArch*5.5+foxLabLandingImpact*.94
       +pose.runGather*.8-pose.runExtension*.55+pose.jumpLoad*.7-pose.jumpDrive*.45+pose.jumpApex*.3+pose.jumpLanding*.8+foxLabRestPose.sit*2+foxLabRestPose.lie*4;
-    const waistAngle=(ribAngle-pelvisAngle)*.5+lumbarWave*(trot*.017+run*.071)*moveBlend+foxLabJumpAnticipation*.038-jumpStretch*.135-jumpDrive*.06+jumpApex*.075+jumpDescend*.095+foxLabLandingImpact*.05
+    const waistAngle=(ribAngle-pelvisAngle)*.5+lumbarWave*(trot*.017+run*.071)*moveBlend+foxLabJumpAnticipation*.038-jumpStretch*.135-jumpDrive*.06+jumpApex*.075+jumpDescend*.095-jumpArch*.11+foxLabLandingImpact*.05
       +pose.runGather*.07-pose.runExtension*.085+pose.jumpLoad*.075-pose.jumpDrive*.07+pose.jumpApex*.035+pose.jumpLanding*.07+foxLabRestPose.sit*.025-foxLabRestPose.lie*.03;
     springTo(foxLabSpine,"pelvisX",pelvisX,12,.88,dt);springTo(foxLabSpine,"pelvisY",pelvisY,13,.9,dt);springTo(foxLabSpine,"pelvisAngle",pelvisAngle,11,.9,dt);
     springTo(foxLabSpine,"ribX",ribX,10,.92,dt);springTo(foxLabSpine,"ribY",ribY,11,.95,dt);springTo(foxLabSpine,"ribAngle",ribAngle,10,.92,dt);
@@ -317,7 +318,7 @@ function drawFox(now,dt=1/60){
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#d95e48";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
     // The white brush starts on the distal tail itself so it follows every segment bend.
-    const whiteStart=5;ctx.fillStyle="#f0dfc5";ctx.beginPath();
+    const whiteStart=5;ctx.fillStyle="#d95e48";ctx.beginPath();
     ctx.moveTo(...upper[whiteStart]);
     for(let i=whiteStart;i<upper.length-1;i++){const a=upper[i],b=upper[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
     ctx.lineTo(...upper.at(-1));
@@ -396,6 +397,7 @@ function drawFox(now,dt=1/60){
     };
     // Four-beat walk: each paw lands in sequence. The faster gait blends toward diagonal-pair trot timing.
     limb(0);
+    limb(1);
 
     // Deform each trunk region around its own delayed anchor so the back line bends continuously.
     const spinePoint=(x,y)=>{
@@ -407,7 +409,7 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-49,-2],[-47,-8],[-41,-13],[-34,-14],[-27,-14],[-19,-14],[-10,-16],[-2,-18],[7,-18],[16,-16],[25,-13],[34,-9],[40,-4],[42,0],[39,5],[34,8],[27,10],[18,11],[9,10],[0,8],[-10,7],[-19,8],[-27,9],[-33,8],[-39,6],[-45,2]].map(([x,y])=>spinePoint(x*1.18,y*.92));
+    const spineOutline=[[-46,-2],[-44,-8],[-39,-12],[-33,-13],[-27,-13],[-19,-14],[-10,-16],[-2,-18],[7,-18],[16,-16],[25,-13],[34,-9],[40,-4],[42,0],[39,5],[34,8],[27,10],[18,11],[9,10],[0,8],[-10,7],[-19,8],[-27,9],[-32,8],[-37,6],[-43,2]].map(([x,y])=>spinePoint(x*1.18,y*.92));
     ctx.fillStyle="#e16b50";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     limb(2);
@@ -451,9 +453,9 @@ function drawFox(now,dt=1/60){
     ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-34+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+Math.sin(phase*.5)*move*.1+Math.sin(now*.0011)*.025+idleTwitch*.09+foxLabEar.angle;
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),7)*.29:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),7)*.25:0;
-    const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-4.2,3);ctx.quadraticCurveTo(-5.6+tipLagX*.35,-len*.56,-.6+tipLagX,-len);ctx.quadraticCurveTo(4.1+tipLagX*.65,-len*.72,4.8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
+    const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // Far ear is drawn first so the raised skull naturally occludes its inner side.
-    ear(24,30,-.28-earBack*1.35-earFlickFar,{outer:"#351317"});
+    ear(24,24,-.25-earBack*1.45-earFlickFar,{outer:"#351317"});
     // One compact skull/cheek mass creates a readable facial plane behind the projecting muzzle.
     ctx.fillStyle="#e27455";ctx.beginPath();
     ctx.moveTo(23,-18);ctx.quadraticCurveTo(24,-26,34,-29);
@@ -461,8 +463,9 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
     ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
     // Near ear sits over the skull and retains the visible inner surface.
-    ear(23,34,.32-earBack*1.15+earFlickNear,{inner:true,outer:"#4b171b"});
-    const muzzleDip=investigate*3.5;
+    ear(31,29,-.04-earBack*1.35+earFlickNear,{inner:true,outer:"#4b171b"});
+    const idleSniff=player.grounded&&speed<9?Math.pow(Math.max(0,Math.sin(now*.0016)),10):0;
+    const muzzleDip=investigate*3.5+idleSniff*1.15;
     // A shorter, broad, rounded fox muzzle with a soft bridge and squared nose end.
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);
     ctx.quadraticCurveTo(53,-27+muzzleDip,64,-24+muzzleDip);
@@ -470,11 +473,11 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(77,-18+muzzleDip,74,-16+muzzleDip);
     ctx.quadraticCurveTo(65,-14.5+muzzleDip,56,-16+muzzleDip);
     ctx.quadraticCurveTo(47,-16,43,-19);ctx.closePath();ctx.fill();
-    // Cream lower muzzle is a quiet jaw plane with a nearly level edge, not a smile stroke.
-    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(49,-18+muzzleDip);
-    ctx.quadraticCurveTo(60,-19+muzzleDip,73,-18+muzzleDip);
-    ctx.quadraticCurveTo(70,-15+muzzleDip,61,-15+muzzleDip);
-    ctx.quadraticCurveTo(53,-15+muzzleDip,49,-17+muzzleDip);ctx.closePath();ctx.fill();
+    // Small cream lower-muzzle marking sits under the bridge and ends beside the nose.
+    ctx.fillStyle="#f0dfc5";ctx.beginPath();ctx.moveTo(55,-17.6+muzzleDip);
+    ctx.quadraticCurveTo(62,-18.2+muzzleDip,72,-17.9+muzzleDip);
+    ctx.quadraticCurveTo(70.5,-16.2+muzzleDip,64,-15.8+muzzleDip);
+    ctx.quadraticCurveTo(58,-15.8+muzzleDip,55,-17.6+muzzleDip);ctx.closePath();ctx.fill();
     // Small pointed black nose follows the muzzle tip instead of reading as an oval.
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(78,-20.5+muzzleDip);
     ctx.quadraticCurveTo(80.1,-21.7+muzzleDip,82,-19.8+muzzleDip);
@@ -482,15 +485,17 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(78.4,-18.5+muzzleDip,78,-20.5+muzzleDip);ctx.closePath();ctx.fill();
     // Reduce the eye as one unit around its center; keep its gold iris and remove the lashes.
     const blinkAmount=foxLabBlinkRemaining>0?Math.sin(Math.PI*(1-foxLabBlinkRemaining/.14)):0;
+    const idleGazeX=player.grounded&&speed<9?Math.sin(now*.00045)*1.05+Math.sin(now*.0009+1.1)*.35:0;
+    const idleGazeY=player.grounded&&speed<9?Math.sin(now*.00033+2.2)*.42:0;
     ctx.save();ctx.translate(46.1,-23.5);ctx.scale(.82,.82*(1-blinkAmount*.96));ctx.translate(-46.1,23.5);
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(40.8,-23.6);
     ctx.quadraticCurveTo(45.1,-28,50,-24.8);ctx.quadraticCurveTo(50.6,-23,47.8,-20.8);
     ctx.quadraticCurveTo(43.4,-20,41,-22);ctx.closePath();ctx.fill();
     ctx.strokeStyle="#40221d";ctx.lineWidth=1;ctx.lineCap="round";ctx.beginPath();
     ctx.moveTo(41.3,-24.5);ctx.quadraticCurveTo(45.4,-27.8,49.8,-25);ctx.stroke();
-    ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(46.1,-23.5,2.35,2.65,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(46.65,-23.5,.9,1.68,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#fff1d3";ctx.beginPath();ctx.ellipse(44.7,-24.65,.75,.88,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#e3ad47";ctx.beginPath();ctx.ellipse(46.1+idleGazeX,-23.5+idleGazeY,2.35,2.65,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#251a17";ctx.beginPath();ctx.ellipse(46.65+idleGazeX,-23.5+idleGazeY,.9,1.68,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#fff1d3";ctx.beginPath();ctx.ellipse(44.7+idleGazeX,-24.65+idleGazeY,.75,.88,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
     if(blinkAmount>.48){ctx.strokeStyle="#3b1e1e";ctx.lineWidth=1.1;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(41.5,-23.5);ctx.quadraticCurveTo(46,-21.3,50,-23.5);ctx.stroke();}
     ctx.restore();

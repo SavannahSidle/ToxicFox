@@ -492,9 +492,9 @@ function drawFox(now,dt=1/60){
   }
 
 function drawFoxLabArena(){
-    ctx.fillStyle="#202a30";ctx.fillRect(0,0,W,H);
-    for(const s of foxLabSurfaces){ctx.fillStyle=s.ground?"#39443d":"#4a514b";ctx.fillRect(s.x,s.y,s.w,s.ground?s.h:14);ctx.fillStyle="#82906d";ctx.fillRect(s.x,s.y,s.w,2);}
-    ctx.fillStyle="rgba(233,237,228,.66)";ctx.font="700 12px system-ui";ctx.textAlign="left";ctx.fillText("TOXICFOX · WALK  /  RUN  /  TURN  /  JUMP  /  LAND",22,30);
+    ctx.fillStyle="#171920";ctx.fillRect(0,0,W,H);
+    for(const s of foxLabSurfaces){ctx.fillStyle=s.ground?"#34343d":"#484650";ctx.fillRect(s.x,s.y,s.w,s.ground?s.h:14);ctx.fillStyle="#b77962";ctx.fillRect(s.x,s.y,s.w,2);}
+    ctx.fillStyle="rgba(230,224,220,.62)";ctx.font="700 12px system-ui";ctx.textAlign="left";ctx.fillText("TOXICFOX · WALK  /  RUN  /  TURN  /  JUMP  /  LAND",22,30);
   }
 
   function frame(now) {

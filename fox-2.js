@@ -253,7 +253,8 @@
 
     const turnSway=turnPulse(.2,.98)*turnDelta;
     const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.4,.09,tailActivity);
-    const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.095,.17,.07,-.035,-.14,-.08,.025])*tailActivity*(.75+foxLabTrotBlend*.7+foxLabRunBlend*.85);
+    const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.11,.2,.08,-.04,-.16,-.09,.03])*tailActivity*(.75+foxLabTrotBlend*.7+foxLabRunBlend*.85);
+    const idleTailDrift=(1-tailActivity)*(Math.sin(foxLabIdleTime*.48)*.16+Math.sin(foxLabIdleTime*.21+1.3)*.055);
     const speedTrail=-smooth(45,285,currentSpeed)*.105;
     const airborne=player.grounded?0:1,ballistic=clamp(Math.max(airborne,foxLabLandingRecovery),0,1);
     const jumpVelocity=airborne*clamp(-player.vy/545,-1,1)*.58;
@@ -261,7 +262,7 @@
     const bodyFollow=-(foxLabSpine.pelvisAngleV*.06+foxLabSpine.waistAngleV*.035)*(1+airborne*1.5);
     const tailTarget=clamp(idleTailAngle+speedTrail+foxLabBodyAcceleration*.00024-player.vy*.0004-foxLabVerticalAcceleration*.000009
       +foxLabTailLaunch*(airborne?.78:.31)+jumpVelocity+jumpAcceleration+foxLabJumpAnticipation*.18+(airborne?.48:0)
-      +turnSway*.22+bodyFollow+gaitTail+foxLabInvestigation*.16-foxLabLandingRecovery*.24,-1.05,1.18);
+      +turnSway*.22+bodyFollow+gaitTail+idleTailDrift+foxLabInvestigation*.16-foxLabLandingRecovery*.24,-1.05,1.18);
     for(let i=0;i<foxLabTailAngles.length;i++){
       const distal=i/(foxLabTailAngles.length-1);
       // At rest, gravity adds a smooth base-to-tip droop; a rare damped pulse gives the tip life without wagging.
@@ -384,11 +385,11 @@ function drawFox(now,dt=1/60){
         ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
         ctx.fillStyle=far?"#71372f":"#ad4935";ctx.beginPath();ctx.moveTo(-thighLength*.54,0);
         // A narrow muscular wedge tapers from the hip toward the stifle.
-        ctx.quadraticCurveTo(-thighLength*.32,-7.5,-thighLength*.08,-10.5);
-        ctx.quadraticCurveTo(thighLength*.24,-8.1,thighLength*.52,-3.4);
+        ctx.quadraticCurveTo(-thighLength*.32,-8.4,-thighLength*.08,-11.5);
+        ctx.quadraticCurveTo(thighLength*.24,-8.8,thighLength*.52,-3.4);
         ctx.quadraticCurveTo(thighLength*.63,-1.2,thighLength*.64,0);
-        ctx.quadraticCurveTo(thighLength*.40,4.4,thighLength*.08,7.8);
-        ctx.quadraticCurveTo(-thighLength*.30,5.4,-thighLength*.54,0);ctx.closePath();ctx.fill();ctx.restore();
+        ctx.quadraticCurveTo(thighLength*.40,4.8,thighLength*.08,8.6);
+        ctx.quadraticCurveTo(-thighLength*.30,5.8,-thighLength*.54,0);ctx.closePath();ctx.fill();ctx.restore();
       }
       // No circular joint markers: limb segments meet with a continuous fur silhouette.
       ctx.fillStyle=far?"#281014":"#3c1318";ctx.beginPath();ctx.ellipse(pawX+1.5,pawY,3.65,1.95,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
@@ -406,7 +407,7 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-51,-2],[-49,-10],[-43,-16],[-35,-18],[-27,-17],[-19,-15],[-10,-16],[-2,-18],[7,-18],[16,-16],[25,-13],[34,-9],[40,-4],[42,0],[39,5],[34,9],[27,12],[18,12],[9,10],[0,8],[-10,7],[-19,9],[-28,13],[-37,13],[-45,9],[-50,4]].map(([x,y])=>spinePoint(x*1.18,y*.92));
+    const spineOutline=[[-51,-2],[-49,-10],[-43,-16],[-35,-18],[-27,-17],[-19,-15],[-10,-16],[-2,-18],[7,-18],[16,-16],[25,-13],[34,-9],[40,-4],[42,0],[39,5],[34,9],[27,12],[18,12],[9,10],[0,8],[-10,7],[-19,8],[-27,10],[-34,9],[-41,7],[-48,2]].map(([x,y])=>spinePoint(x*1.18,y*.92));
     ctx.fillStyle="#e16b50";ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     limb(2);
@@ -449,7 +450,7 @@ function drawFox(now,dt=1/60){
 
     ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-27.5+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+idleTwitch*.09+foxLabEar.angle;
-    const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),7)*.19:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),7)*.16:0;
+    const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),7)*.29:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),7)*.25:0;
     const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // Far ear is drawn first so the raised skull naturally occludes its inner side.
     ear(27,30,-.22-earBack*1.55-earFlickFar,{outer:"#351317"});

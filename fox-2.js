@@ -504,7 +504,7 @@ function drawFox(now,dt=1/60){
   }
 
 function drawFoxLabArena(){
-    ctx.fillStyle="#dce4df";ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#cbd4ce";ctx.fillRect(0,0,W,H);
     for(const s of foxLabSurfaces){ctx.fillStyle=s.ground?"#64716a":"#77827c";ctx.fillRect(s.x,s.y,s.w,s.ground?s.h:14);ctx.fillStyle="#a7b39e";ctx.fillRect(s.x,s.y,s.w,2);}
     ctx.fillStyle="rgba(35,47,43,.78)";ctx.font="700 12px system-ui";ctx.textAlign="left";ctx.fillText("TOXICFOX · WALK  /  RUN  /  TURN  /  JUMP  /  LAND",22,30);
   }

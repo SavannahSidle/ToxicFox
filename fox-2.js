@@ -412,18 +412,18 @@ function drawFox(now,dt=1/60){
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     limb(2);
 
-    // A long, slim neck rises cleanly from the chest toward the head.
+    // A long, slim neck meets the raised head at its underside without extending behind the skull.
     const neckPath=new Path2D();
     neckPath.moveTo(...spinePoint(18,-5));
     neckPath.quadraticCurveTo(...spinePoint(25,-21),...spinePoint(32,-32));
-    neckPath.quadraticCurveTo(...spinePoint(35,-41),...spinePoint(37,-49));
-    neckPath.quadraticCurveTo(...spinePoint(38,-54),...spinePoint(41,-55));
-    neckPath.quadraticCurveTo(...spinePoint(45,-55),...spinePoint(47,-51));
-    neckPath.quadraticCurveTo(...spinePoint(49,-43),...spinePoint(48,-34));
-    neckPath.quadraticCurveTo(...spinePoint(48,-22),...spinePoint(49,-12));
-    neckPath.quadraticCurveTo(...spinePoint(46,-4),...spinePoint(41,-2));
-    neckPath.quadraticCurveTo(...spinePoint(33,0),...spinePoint(27,-4));
-    neckPath.quadraticCurveTo(...spinePoint(22,-5),...spinePoint(18,-5));
+    neckPath.quadraticCurveTo(...spinePoint(35,-38),...spinePoint(38,-42));
+    neckPath.quadraticCurveTo(...spinePoint(40,-45),...spinePoint(43,-44));
+    neckPath.quadraticCurveTo(...spinePoint(46,-42),...spinePoint(47,-38));
+    neckPath.quadraticCurveTo(...spinePoint(48,-30),...spinePoint(48,-22));
+    neckPath.quadraticCurveTo(...spinePoint(49,-12),...spinePoint(46,-4));
+    neckPath.quadraticCurveTo(...spinePoint(41,-2),...spinePoint(33,0));
+    neckPath.quadraticCurveTo(...spinePoint(27,-4),...spinePoint(22,-5));
+    neckPath.quadraticCurveTo(...spinePoint(18,-5),...spinePoint(18,-5));
     neckPath.closePath();
     ctx.fillStyle="#e16b50";ctx.fill(neckPath);
 
@@ -433,27 +433,27 @@ function drawFox(now,dt=1/60){
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];coatClip.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}
     coatClip.closePath();coatClip.addPath(neckPath);
     const throatPatch=new Path2D();
-    throatPatch.moveTo(...spinePoint(38,-54+investigate*2));
-    throatPatch.quadraticCurveTo(...spinePoint(43,-54+investigate*2),...spinePoint(46,-49));
-    throatPatch.quadraticCurveTo(...spinePoint(48,-39),...spinePoint(47,-28));
-    throatPatch.quadraticCurveTo(...spinePoint(48,-14),...spinePoint(47,1));
+    throatPatch.moveTo(...spinePoint(37,-42+investigate*2));
+    throatPatch.quadraticCurveTo(...spinePoint(41,-44+investigate*2),...spinePoint(45,-42));
+    throatPatch.quadraticCurveTo(...spinePoint(47,-37),...spinePoint(46,-29));
+    throatPatch.quadraticCurveTo(...spinePoint(47,-14),...spinePoint(47,1));
     throatPatch.quadraticCurveTo(...spinePoint(45,11),...spinePoint(38,15));
     throatPatch.quadraticCurveTo(...spinePoint(27,14),...spinePoint(12,10));
     throatPatch.quadraticCurveTo(...spinePoint(10,3),...spinePoint(17,-6));
-    throatPatch.quadraticCurveTo(...spinePoint(24,-21),...spinePoint(32,-35));
-    throatPatch.quadraticCurveTo(...spinePoint(35,-47),...spinePoint(38,-54+investigate*2));
+    throatPatch.quadraticCurveTo(...spinePoint(24,-21),...spinePoint(32,-32));
+    throatPatch.quadraticCurveTo(...spinePoint(34,-37),...spinePoint(37,-42+investigate*2));
     throatPatch.closePath();
     // Clip the cream chest marking cleanly to the connected body and neck.
     ctx.save();ctx.clip(coatClip);ctx.fillStyle="#f0dfc5";ctx.fill(throatPatch);ctx.restore();
     // Draw the near foreleg once, on top of the chest marking, so it stays visible.
     limb(3);
 
-    ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-27.5+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch);ctx.translate(-34,16);
+    ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-34+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+Math.sin(phase*.5)*move*.1+Math.sin(now*.0011)*.025+idleTwitch*.09+foxLabEar.angle;
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),7)*.29:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),7)*.25:0;
-    const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
+    const ear=(x,len,angle,{inner=false,outer="#dc6d50"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-4.2,3);ctx.quadraticCurveTo(-5.6+tipLagX*.35,-len*.56,-.6+tipLagX,-len);ctx.quadraticCurveTo(4.1+tipLagX*.65,-len*.72,4.8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // Far ear is drawn first so the raised skull naturally occludes its inner side.
-    ear(27,30,-.22-earBack*1.55-earFlickFar,{outer:"#351317"});
+    ear(24,30,-.28-earBack*1.35-earFlickFar,{outer:"#351317"});
     // One compact skull/cheek mass creates a readable facial plane behind the projecting muzzle.
     ctx.fillStyle="#e27455";ctx.beginPath();
     ctx.moveTo(25,-18);ctx.quadraticCurveTo(26,-26,34,-29);
@@ -461,7 +461,7 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
     ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
     // Near ear sits over the skull and retains the visible inner surface.
-    ear(36,34,-.04-earBack*1.45+earFlickNear,{inner:true,outer:"#4b171b"});
+    ear(40,34,.02-earBack*1.25+earFlickNear,{inner:true,outer:"#4b171b"});
     const muzzleDip=investigate*3.5;
     // A shorter, broad, rounded fox muzzle with a soft bridge and squared nose end.
     ctx.fillStyle="#e27455";ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);

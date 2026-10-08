@@ -1,12 +1,13 @@
 # ToxicFox
 
-A standalone browser-based canid locomotion test. `/` contains the preserved ToxicFox fox; `/wolf.html` contains an independent Arctic white wolf with its own renderer and movement controller. `/wolf-2.html` is an independent editable duplicate of the Arctic Wolf. All three run without Gecko Escape code, levels, or external assets.
+A standalone browser-based canid locomotion test. The root page contains the preserved Fox One, `/fox-2.html` contains the independent Fox Two, and `/wolf.html` contains the Arctic Wolf. These pages use separate renderers and movement controllers.
 
 ## Controls
 
 - Walk/run: A/D or left/right arrows
 - Jump: Space or Up
 - Investigate: hold I while still
-- White wolf: open `/wolf.html` or use the link in the fox test
+- Sit: X
+- Lie down: Z
 
-The flat test area includes low steps and platforms for checking stride, turning, jumps, and landings. The fox implementation and checkpoint are retained independently from the white wolf.
+Use the character picker to switch between Fox One, Fox Two, and the Arctic Wolf. The flat test area includes low steps and platforms for checking stride, turning, jumps, and landings.

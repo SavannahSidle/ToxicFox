@@ -282,7 +282,8 @@
 function drawHorse(now,dt=1/60){
     const speed=Math.abs(player.vx),move=smooth(5,64,speed),run=foxLabRunBlend;
     const airborne=!player.grounded,phase=foxLabStridePhase,tau=Math.PI*2;
-    const bounce=player.grounded?(Math.sin(phase*2-.45)*1.25+Math.max(0,Math.cos(phase-.25))*4.2*run)*move:0;
+    const suspension=player.grounded?Math.pow(Math.max(0,Math.sin(phase-.3)),8)*run:0;
+    const bounce=player.grounded?(Math.sin(phase*2-.45)*1.25+Math.max(0,Math.cos(phase-.25))*4.2*run)*move+suspension*6:0;
     const bodyPitch=airborne?clamp(player.vy*.00012,-.1,.1):Math.sin(phase-.2)*run*.018;
     const originX=player.x+player.w/2,groundY=player.y+player.h-2;
     const scale=1.18,coat="#744329",coatMid="#8f5532",coatLight="#b2764d",coatShade="#56301f";
@@ -301,6 +302,8 @@ function drawHorse(now,dt=1/60){
       const stanceLimit=mix(.68,.39,run);
       let stepX=0,lift=0,kneeFold=0;
       const stride=move*(8+18*run);
+      // The gallop has a brief shared suspension beat, with all four limbs tucked.
+      if(suspension>0){lift+=suspension*(front?18:15);kneeFold+=suspension*(front?.42:.35);stepX+=suspension*(front?7:-5);}
       if(move>.015){
         if(cycle<stanceLimit){
           const t=cycle/stanceLimit;

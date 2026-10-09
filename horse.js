@@ -280,114 +280,162 @@
   }
 
 function drawHorse(now,dt=1/60){
-    const speed=Math.abs(player.vx),move=smooth(3,42,speed),run=foxLabRunBlend;
-    const airborne=!player.grounded,phase=foxLabStridePhase;
-    const bounce=player.grounded?Math.sin(phase*2)*move*(.3+run*.8):0;
-    const pitch=airborne?clamp(player.vy*.0001,-.09,.09):Math.sin(phase)*run*.025;
-    const originX=player.x+player.w/2;
-    const groundY=player.y+player.h-3;
-    ctx.save();
-    ctx.translate(originX,groundY+bounce);
-    ctx.scale(player.facing,1);
-    ctx.rotate(pitch);
+    const speed=Math.abs(player.vx),move=smooth(5,64,speed),run=foxLabRunBlend;
+    const airborne=!player.grounded,phase=foxLabStridePhase,tau=Math.PI*2;
+    const bounce=player.grounded?(Math.sin(phase*2-.45)*1.25+Math.max(0,Math.cos(phase-.25))*4.2*run)*move:0;
+    const bodyPitch=airborne?clamp(player.vy*.00012,-.1,.1):Math.sin(phase-.2)*run*.018;
+    const originX=player.x+player.w/2,groundY=player.y+player.h-2;
+    const scale=1.18,coat="#744329",coatMid="#8f5532",coatLight="#b2764d",coatShade="#56301f";
+    const mane="#281d19",maneMid="#3a2820",hoof="#282320";
+    ctx.save();ctx.translate(originX,groundY+bounce);ctx.scale(player.facing*scale,scale);ctx.rotate(bodyPitch);
 
-    const coat="#9a5b35",coatLight="#b97748",coatShade="#754126",mane="#33241f",maneLight="#4a3025",hoof="#2c2522";
-    const gallop=run;
-    const gait=(front,far)=>{
-      const walkOffset=front?(far?Math.PI:0):(far?Math.PI*1.5:Math.PI*.5);
-      const gallopOffset=front?(far?.48:0):(far?2.1:1.55);
-      const off=walkOffset+(Math.atan2(Math.sin(gallopOffset-walkOffset),Math.cos(gallopOffset-walkOffset))*gallop);
-      const ph=phase+off;
-      const swing=Math.sin(ph),lift=Math.max(0,Math.cos(ph));
-      const stride=(4+gallop*11)*move;
-      let footX=(front?25:-31)+swing*stride;
-      let footLift=lift*(3+gallop*9)*move;
-      if(airborne){footLift+=5+Math.max(0,-player.vy)*.008+(front?2:0);footX+=(front?1:-1)*Math.sin(ph)*5;}
-      const rootX=front?24:-31,rootY=front?-41:-42;
+    const walkOrder={hindNear:0,foreNear:Math.PI*.5,hindFar:Math.PI,foreFar:Math.PI*1.5};
+    const canterOrder={hindNear:0,hindFar:.42,foreFar:1.45,foreNear:2.05};
+    const ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+    const unit=(x)=>((x%tau)+tau)%tau/tau;
+
+    // A real four-beat walk blends into a three-beat canter, then a suspended gallop.
+    const leg=(name,front,far)=>{
+      const walk=walkOrder[name],gallop=canterOrder[name];
+      const offset=walk+(gallop-walk)*run,cycle=unit(phase+offset);
+      const stanceLimit=mix(.68,.39,run);
+      let stepX=0,lift=0,kneeFold=0;
+      const stride=move*(8+18*run);
+      if(move>.015){
+        if(cycle<stanceLimit){
+          const t=cycle/stanceLimit;
+          stepX=stride*(.52-1.08*t);
+        }else{
+          const t=(cycle-stanceLimit)/(1-stanceLimit),s=ease(t);
+          stepX=stride*(-.56+1.08*s);
+          lift=Math.sin(Math.PI*t)*move*(front?8+run*17:7+run*14);
+          kneeFold=Math.sin(Math.PI*t)*(front?.23:.30)*(1+run*.65);
+        }
+      }
+      if(airborne){
+        const tuck=clamp(1-Math.abs(player.vy)/560,0,1);
+        lift+=5+tuck*5+(front?2:0);
+        stepX+=(front?1:-1)*(4+tuck*5);
+        kneeFold+=tuck*.26;
+      }
+      const hipX=front?27:-34,hipY=front?-57:-58;
+      const ankleX=hipX+stepX+(front?0:-2);
+      const ankleY=-3-lift;
+      const legBase=far?"#563d30":coatMid;
+      const legShade=far?"#3f2e25":coatShade;
       let kneeX,kneeY,hockX,hockY;
       if(front){
-        kneeX=rootX+3+swing*stride*.38;kneeY=-20-footLift*.2;
-        hockX=footX+1;hockY=-4-footLift;
+        kneeX=hipX+4+stepX*.38+(far?-1:1)*2;
+        kneeY=-28-lift*.2-kneeFold*8;
+        hockX=ankleX+1;
+        hockY=-8-lift*.78;
       }else{
-        kneeX=-23+swing*stride*.35;kneeY=-21-footLift*.18;
-        hockX=-30+swing*stride*.72;hockY=-8-footLift*.72;
+        kneeX=-23+stepX*.3+(far?-1:1)*1.4;
+        kneeY=-30-lift*.18-kneeFold*7;
+        hockX=-39+stepX*.68+kneeFold*6;
+        hockY=-18-lift*.68;
       }
-      const base=far?"#67442f":coat,shadow=far?"#4c3529":coatShade;
-      ctx.save();ctx.globalAlpha=far?.78:1;
-      ctx.lineCap="round";ctx.lineJoin="round";
-      // Broad upper limb and tapering cannon read as a connected horse leg.
-      ctx.strokeStyle=base;ctx.lineWidth=front?11:13;
-      ctx.beginPath();ctx.moveTo(rootX,rootY);ctx.quadraticCurveTo((rootX+kneeX)/2-2,(rootY+kneeY)/2-1,kneeX,kneeY);ctx.stroke();
+      ctx.save();ctx.globalAlpha=far?.82:1;ctx.lineCap="round";ctx.lineJoin="round";
+      // Muscular upper limb with a clear elbow/stifle and narrow cannon.
+      ctx.strokeStyle=legBase;ctx.lineWidth=front?12.6:15.5;
+      ctx.beginPath();ctx.moveTo(hipX,hipY);
+      if(front)ctx.quadraticCurveTo(hipX-2,kneeY+7,kneeX,kneeY);
+      else ctx.quadraticCurveTo(hipX+1,kneeY+4,kneeX,kneeY);
+      ctx.stroke();
       if(!front){
-        ctx.strokeStyle=shadow;ctx.lineWidth=7.2;ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.lineTo(hockX,hockY);ctx.stroke();
-        ctx.strokeStyle=base;ctx.lineWidth=4.3;ctx.beginPath();ctx.moveTo(hockX,hockY);ctx.lineTo(footX, -2-footLift);ctx.stroke();
+        ctx.strokeStyle=legShade;ctx.lineWidth=7.4;
+        ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.quadraticCurveTo(kneeX-3,hockY+5,hockX,hockY);ctx.stroke();
       }else{
-        ctx.strokeStyle=shadow;ctx.lineWidth=5.2;ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.quadraticCurveTo(kneeX+2,(kneeY+hockY)/2,hockX,hockY);ctx.stroke();
-        ctx.strokeStyle=base;ctx.lineWidth=4.1;ctx.beginPath();ctx.moveTo(hockX,hockY);ctx.lineTo(footX,-2-footLift);ctx.stroke();
+        ctx.strokeStyle=legShade;ctx.lineWidth=5.8;
+        ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.quadraticCurveTo(kneeX+1,(kneeY+hockY)*.5,hockX,hockY);ctx.stroke();
       }
-      // Fetlock and solid, squared hoof.
-      ctx.fillStyle=base;ctx.beginPath();ctx.ellipse(footX,-3-footLift,3.1,4,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=hoof;ctx.beginPath();ctx.moveTo(footX-4.4,-2-footLift);ctx.lineTo(footX+4.2,-2-footLift);
-      ctx.lineTo(footX+3.1,2-footLift);ctx.quadraticCurveTo(footX,3.2-footLift,footX-3.4,2-footLift);ctx.closePath();ctx.fill();
+      ctx.strokeStyle=legBase;ctx.lineWidth=4.9;
+      ctx.beginPath();ctx.moveTo(hockX,hockY);ctx.quadraticCurveTo((hockX+ankleX)*.5,-5-lift*.32,ankleX,ankleY);ctx.stroke();
+      // Fetlock and broad, hard hoof; the toe points forward.
+      ctx.fillStyle=legBase;ctx.beginPath();ctx.ellipse(ankleX,ankleY+1,3.7,5,0,0,tau);ctx.fill();
+      ctx.fillStyle=hoof;ctx.beginPath();ctx.moveTo(ankleX-4.2,ankleY+1);
+      ctx.quadraticCurveTo(ankleX,ankleY-1,ankleX+5,ankleY+.5);
+      ctx.lineTo(ankleX+6,ankleY+5);ctx.quadraticCurveTo(ankleX+1,ankleY+7,ankleX-4,ankleY+5);
+      ctx.closePath();ctx.fill();
+      if(!far&&front){ctx.fillStyle="#ead8c4";ctx.beginPath();ctx.moveTo(ankleX-3,ankleY+3);ctx.lineTo(ankleX+4,ankleY+3);ctx.lineTo(ankleX+4.5,ankleY+1);ctx.lineTo(ankleX-3,ankleY+1);ctx.closePath();ctx.fill();}
       ctx.restore();
     };
 
-    // Tail and distant legs sit behind the barrel.
-    ctx.save();ctx.strokeStyle=mane;ctx.lineCap="round";ctx.lineWidth=5.5;
-    ctx.beginPath();ctx.moveTo(-39,-47);ctx.quadraticCurveTo(-52,-37+Math.sin(now*.004)*2,-56,-22+Math.sin(now*.003)*2);ctx.stroke();
-    ctx.strokeStyle=maneLight;ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(-42,-44);ctx.quadraticCurveTo(-50,-36+Math.sin(now*.004)*2,-54,-25);ctx.stroke();
-    ctx.fillStyle=mane;ctx.beginPath();ctx.moveTo(-56,-24);ctx.quadraticCurveTo(-66,-14,-61,-5);ctx.quadraticCurveTo(-53,-10,-51,-21);ctx.closePath();ctx.fill();
+    // Tail, then far-side limbs.
+    const tailWave=Math.sin(now*.0035+phase*.35)*5+Math.sin(phase*.8)*run*3;
+    ctx.strokeStyle=mane;ctx.lineWidth=7;ctx.lineCap="round";
+    ctx.beginPath();ctx.moveTo(-43,-60);ctx.bezierCurveTo(-55,-49,-57+tailWave,-31,-63+tailWave,-15);ctx.stroke();
+    ctx.strokeStyle=maneMid;ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(-46,-56);ctx.quadraticCurveTo(-58+tailWave,-35,-60+tailWave,-19);ctx.stroke();
+    ctx.fillStyle=mane;ctx.beginPath();ctx.moveTo(-63+tailWave,-18);
+    ctx.quadraticCurveTo(-72+tailWave,-7,-68+tailWave,1);ctx.quadraticCurveTo(-60+tailWave,-3,-57+tailWave,-14);ctx.closePath();ctx.fill();
+    leg("hindFar",false,true);leg("foreFar",true,true);
+
+    // Deep barrel, rounded croup, withers, and shoulder. The back line stays horse-shaped through the gait.
+    ctx.fillStyle=coat;ctx.beginPath();ctx.moveTo(-51,-64);
+    ctx.quadraticCurveTo(-55,-79,-42,-84);ctx.quadraticCurveTo(-31,-90,-15,-84);
+    ctx.quadraticCurveTo(1,-81,15,-79);ctx.quadraticCurveTo(25,-80,33,-70);
+    ctx.quadraticCurveTo(41,-61,39,-51);ctx.quadraticCurveTo(36,-40,24,-36);
+    ctx.quadraticCurveTo(7,-31,-13,-35);ctx.quadraticCurveTo(-34,-35,-47,-47);
+    ctx.quadraticCurveTo(-55,-54,-51,-64);ctx.closePath();ctx.fill();
+    // Croup and shoulder planes give the torso depth instead of the fox-like narrow tube.
+    ctx.fillStyle=coatMid;ctx.beginPath();ctx.moveTo(-49,-65);ctx.quadraticCurveTo(-44,-82,-32,-82);
+    ctx.quadraticCurveTo(-23,-80,-21,-66);ctx.quadraticCurveTo(-20,-52,-30,-40);
+    ctx.quadraticCurveTo(-43,-41,-49,-54);ctx.closePath();ctx.fill();
+    ctx.fillStyle=coatLight;ctx.beginPath();ctx.moveTo(9,-75);ctx.quadraticCurveTo(23,-77,32,-67);
+    ctx.quadraticCurveTo(39,-59,34,-47);ctx.quadraticCurveTo(28,-39,18,-39);
+    ctx.quadraticCurveTo(23,-56,9,-75);ctx.closePath();ctx.fill();
+    ctx.fillStyle="rgba(48,27,18,.28)";ctx.beginPath();ctx.moveTo(-38,-40);
+    ctx.quadraticCurveTo(-8,-33,22,-43);ctx.quadraticCurveTo(3,-36,-15,-39);ctx.closePath();ctx.fill();
+
+    // Long sloped neck joins the chest to a high poll, with a curved equine crest.
+    ctx.fillStyle=coat;ctx.beginPath();ctx.moveTo(17,-75);ctx.quadraticCurveTo(31,-91,43,-111);
+    ctx.quadraticCurveTo(49,-122,59,-117);ctx.quadraticCurveTo(64,-109,59,-94);
+    ctx.quadraticCurveTo(54,-75,45,-61);ctx.quadraticCurveTo(39,-51,30,-48);
+    ctx.quadraticCurveTo(19,-52,14,-62);ctx.closePath();ctx.fill();
+    ctx.fillStyle=coatLight;ctx.beginPath();ctx.moveTo(26,-72);ctx.quadraticCurveTo(40,-94,51,-113);
+    ctx.quadraticCurveTo(56,-117,58,-109);ctx.quadraticCurveTo(52,-89,42,-69);
+    ctx.quadraticCurveTo(36,-59,28,-57);ctx.closePath();ctx.fill();
+
+    // Mane forms one continuous dark crest and individual locks that stream during a canter.
+    ctx.fillStyle=mane;ctx.beginPath();ctx.moveTo(34,-89);ctx.quadraticCurveTo(43,-106,48,-121);
+    ctx.quadraticCurveTo(57,-127,61,-117);ctx.quadraticCurveTo(64,-107,58,-98);
+    ctx.quadraticCurveTo(64,-91,56,-83);ctx.quadraticCurveTo(58,-73,49,-68);
+    ctx.quadraticCurveTo(43,-77,34,-89);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=maneMid;ctx.lineWidth=2.5;ctx.lineCap="round";
+    for(let i=0;i<5;i++){
+      const x=42+i*2.3,wave=Math.sin(now*.004+i*.8+phase*.3)*(1+run*2);
+      ctx.beginPath();ctx.moveTo(x,-105+i*2);ctx.quadraticCurveTo(x+5+wave,-91+i*4,x+wave,-75+i*2);ctx.stroke();
+    }
+
+    // Compact head, long tapered face, broad muzzle, nostril, and alert horse eye.
+    const headNod=Math.sin(phase*.8-.8)*move*.035+(airborne?clamp(player.vy*.00008,-.06,.06):0);
+    ctx.save();ctx.translate(0,0);ctx.rotate(headNod);
+    ctx.fillStyle=coat;ctx.beginPath();ctx.moveTo(51,-116);
+    ctx.quadraticCurveTo(59,-125,68,-118);ctx.quadraticCurveTo(76,-111,75,-101);
+    ctx.quadraticCurveTo(76,-90,85,-77);ctx.quadraticCurveTo(96,-74,102,-68);
+    ctx.quadraticCurveTo(103,-63,96,-61);ctx.quadraticCurveTo(85,-61,77,-68);
+    ctx.quadraticCurveTo(66,-75,63,-88);ctx.quadraticCurveTo(55,-99,51,-116);ctx.closePath();ctx.fill();
+    // Slender upright ears and a forward forelock break the canine silhouette.
+    ctx.fillStyle=coatShade;ctx.beginPath();ctx.moveTo(55,-116);ctx.quadraticCurveTo(51,-130,55,-139);
+    ctx.quadraticCurveTo(62,-131,63,-119);ctx.closePath();ctx.fill();
+    ctx.fillStyle=coatMid;ctx.beginPath();ctx.moveTo(62,-116);ctx.quadraticCurveTo(64,-130,72,-136);
+    ctx.quadraticCurveTo(75,-126,70,-115);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#d3a58d";ctx.beginPath();ctx.moveTo(66,-119);ctx.lineTo(71,-131);ctx.lineTo(69,-118);ctx.closePath();ctx.fill();
+    ctx.fillStyle=mane;ctx.beginPath();ctx.moveTo(50,-118);ctx.quadraticCurveTo(56,-128,67,-121);
+    ctx.quadraticCurveTo(65,-113,60,-108);ctx.quadraticCurveTo(54,-111,50,-118);ctx.closePath();ctx.fill();
+    // Narrow blaze from forehead toward the nose, a soft muzzle, and small nostril.
+    ctx.fillStyle="#e9d7c0";ctx.beginPath();ctx.moveTo(66,-116);ctx.quadraticCurveTo(70,-103,77,-86);
+    ctx.quadraticCurveTo(79,-78,84,-72);ctx.quadraticCurveTo(80,-71,76,-78);
+    ctx.quadraticCurveTo(68,-93,64,-110);ctx.closePath();ctx.fill();
+    ctx.fillStyle=coatLight;ctx.beginPath();ctx.ellipse(96,-66,7.2,4.4,-.08,0,tau);ctx.fill();
+    ctx.fillStyle="#201816";ctx.beginPath();ctx.ellipse(99,-67,2.1,1.6,0,0,tau);ctx.fill();
+    ctx.fillStyle="#241915";ctx.beginPath();ctx.ellipse(68,-107,1.8,2.1,0,0,tau);ctx.fill();
+    ctx.fillStyle="#f3dfc7";ctx.beginPath();ctx.ellipse(68.6,-107.8,.65,.7,0,0,tau);ctx.fill();
     ctx.restore();
-    gait(false,true);gait(true,true);
 
-    // Barrel, rounded croup, chest, and a sloping neck give the horse its silhouette.
-    ctx.fillStyle=coat;ctx.beginPath();
-    ctx.moveTo(-48,-47);ctx.quadraticCurveTo(-47,-61,-33,-63);ctx.quadraticCurveTo(-18,-67,1,-61);
-    ctx.quadraticCurveTo(15,-58,26,-52);ctx.quadraticCurveTo(37,-49,37,-39);
-    ctx.quadraticCurveTo(34,-27,20,-24);ctx.quadraticCurveTo(2,-20,-18,-24);
-    ctx.quadraticCurveTo(-38,-26,-46,-34);ctx.quadraticCurveTo(-52,-39,-48,-47);ctx.closePath();ctx.fill();
-    // Shoulder and hindquarter muscle planes, kept subtle rather than balloon-like.
-    ctx.fillStyle=coatLight;ctx.beginPath();ctx.ellipse(-34,-43,13,17,-.22,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=coat;ctx.beginPath();ctx.ellipse(22,-42,11,16,.2,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="rgba(74,37,23,.23)";ctx.beginPath();ctx.moveTo(-33,-28);ctx.quadraticCurveTo(-8,-21,19,-28);ctx.quadraticCurveTo(2,-24,-13,-26);ctx.closePath();ctx.fill();
-
-    // Neck rises from the chest to the poll; the dark crest becomes the mane.
-    ctx.fillStyle=coat;ctx.beginPath();ctx.moveTo(16,-51);ctx.quadraticCurveTo(29,-68,40,-86);
-    ctx.quadraticCurveTo(46,-92,55,-86);ctx.quadraticCurveTo(55,-72,49,-57);
-    ctx.quadraticCurveTo(44,-43,34,-34);ctx.quadraticCurveTo(23,-32,16,-39);ctx.closePath();ctx.fill();
-    ctx.fillStyle=coatLight;ctx.beginPath();ctx.moveTo(25,-54);ctx.quadraticCurveTo(35,-70,43,-85);
-    ctx.quadraticCurveTo(47,-88,50,-83);ctx.quadraticCurveTo(46,-67,39,-53);ctx.quadraticCurveTo(33,-45,27,-43);ctx.closePath();ctx.fill();
-
-    // Mane follows the neck crest and moves with the stride.
-    ctx.fillStyle=mane;ctx.beginPath();ctx.moveTo(31,-65);
-    ctx.quadraticCurveTo(37,-79,40,-91);ctx.quadraticCurveTo(47,-87,49,-78);
-    ctx.quadraticCurveTo(55,-73,50,-66);ctx.quadraticCurveTo(55,-59,46,-53);
-    ctx.quadraticCurveTo(47,-44,38,-42);ctx.quadraticCurveTo(35,-51,31,-65);ctx.closePath();ctx.fill();
-    ctx.strokeStyle=maneLight;ctx.lineWidth=2.4;ctx.lineCap="round";
-    for(let i=0;i<4;i++){const x=37+i*3;ctx.beginPath();ctx.moveTo(x,-77+i*3);ctx.quadraticCurveTo(x+4,-65+i*2,x+1+Math.sin(now*.004+i)*1.5,-53+i*2);ctx.stroke();}
-
-    // Head with long tapering face, upright ears, soft blaze, and an alert horse eye.
-    ctx.fillStyle=coat;ctx.beginPath();ctx.moveTo(43,-86);ctx.quadraticCurveTo(51,-94,59,-87);
-    ctx.quadraticCurveTo(64,-80,67,-70);ctx.quadraticCurveTo(75,-68,83,-62);
-    ctx.quadraticCurveTo(84,-57,78,-56);ctx.quadraticCurveTo(69,-58,60,-62);
-    ctx.quadraticCurveTo(54,-66,51,-75);ctx.quadraticCurveTo(44,-77,43,-86);ctx.closePath();ctx.fill();
-    // Two pointed ears, with the far ear behind the poll.
-    ctx.fillStyle=coatShade;ctx.beginPath();ctx.moveTo(47,-88);ctx.quadraticCurveTo(45,-101,49,-108);
-    ctx.quadraticCurveTo(56,-101,56,-91);ctx.closePath();ctx.fill();
-    ctx.fillStyle=coat;ctx.beginPath();ctx.moveTo(53,-88);ctx.quadraticCurveTo(53,-102,59,-108);
-    ctx.quadraticCurveTo(64,-100,61,-88);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#d49a76";ctx.beginPath();ctx.moveTo(56,-91);ctx.lineTo(59,-103);ctx.lineTo(60,-91);ctx.closePath();ctx.fill();
-    // Narrow white star/blaze, broad muzzle, nostril, and readable eye.
-    ctx.fillStyle="#ead6ba";ctx.beginPath();ctx.moveTo(53,-87);ctx.quadraticCurveTo(59,-78,65,-68);
-    ctx.quadraticCurveTo(61,-67,58,-72);ctx.quadraticCurveTo(54,-80,52,-85);ctx.closePath();ctx.fill();
-    ctx.fillStyle=coatLight;ctx.beginPath();ctx.ellipse(77,-61,7,4,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#211a17";ctx.beginPath();ctx.ellipse(81,-62,2.7,2.1,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#211a17";ctx.beginPath();ctx.ellipse(58,-81,1.5,1.8,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#f7e5cc";ctx.beginPath();ctx.ellipse(58.5,-81.7,.55,.6,0,0,Math.PI*2);ctx.fill();
-
-    // Forelegs in front of the chest complete the four-beat cycle.
-    gait(false,false);gait(true,false);
+    // Near-side limbs overlap the barrel at their shoulders and complete the four-beat gait.
+    leg("hindNear",false,false);leg("foreNear",true,false);
     ctx.restore();
   }
 

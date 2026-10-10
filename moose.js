@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  // Moose: a separate silhouette study duplicated from Fox Three; its fox source remains preserved.
+  // Moose: heavier shoulder hump, long ungulate legs, blunt muzzle, dewlap, palmate antlers, and short tail. Fox Three remains preserved.
   const canvas = document.querySelector("#field");
   const ctx = canvas.getContext("2d");
   const status = document.querySelector("#status");
@@ -34,10 +34,10 @@
   const foxLabFootContacts=Array.from({length:4},()=>({planted:false,released:false,weight:0,x:0,y:0}));
   // Walk order stays four-beat; the fast gait gathers the hind limbs then drives through the forelimbs.
   const foxLabLegConfigs=[
-    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:34.5,lower:23.5,toeX:2,toeY:22.5,bend:-1},
-    {hip:20,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:31,lower:26.5,toeX:1.4,toeY:8.5,bend:1},
-    {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:32.5,lower:22,toeX:2,toeY:22.5,bend:-1},
-    {hip:33,front:true,far:false,walk:Math.PI*.5,trot:0,upper:29,lower:25,toeX:1.4,toeY:8.5,bend:1}
+    {hip:-47,front:false,far:true,walk:Math.PI,trot:0,upper:40,lower:29,toeX:2,toeY:22.5,bend:-1},
+    {hip:17,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:38,lower:31,toeX:1.4,toeY:8.5,bend:1},
+    {hip:-48,front:false,far:false,walk:0,trot:Math.PI,upper:40,lower:29,toeX:2,toeY:22.5,bend:-1},
+    {hip:31,front:true,far:false,walk:Math.PI*.5,trot:0,upper:38,lower:31,toeX:1.4,toeY:8.5,bend:1}
   ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
@@ -402,14 +402,14 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       return mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));
     };
-    const spineOutline=[[-46,-2],[-44,-8],[-39,-12],[-33,-13],[-27,-13],[-19,-14],[-10,-16],[-2,-18],[7,-18],[16,-21],[25,-26],[34,-28],[40,-23],[44,-12],[42,0],[39,5],[34,8],[27,10],[18,11],[9,10],[0,8],[-10,7],[-19,8],[-27,9],[-32,8],[-37,6],[-43,2]].map(([x,y])=>spinePoint(x*1.2,y*.98));
+    const spineOutline=[[-46,-2],[-44,-8],[-39,-12],[-33,-13],[-27,-13],[-19,-14],[-10,-16],[-2,-18],[7,-18],[16,-21],[25,-26],[34,-28],[40,-23],[44,-12],[42,0],[39,5],[34,8],[27,10],[18,11],[9,10],[0,8],[-10,7],[-19,8],[-27,9],[-32,8],[-37,6],[-43,2]].map(([x,y])=>spinePoint(x*1.32,y*1.42));
     const foxThreeCoat=ctx.createLinearGradient(-52,-20,55,18);
     foxThreeCoat.addColorStop(0,"#715840");foxThreeCoat.addColorStop(.48,"#594130");foxThreeCoat.addColorStop(1,"#3e3028");
     ctx.fillStyle=foxThreeCoat;ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
     limb(2);
 
-    // A long, slim neck meets the raised head at its underside without extending behind the skull.
+    // A thick sloped neck flows into the moose shoulder and blunt head.
     const neckPath=new Path2D();
     neckPath.moveTo(...spinePoint(18,-5));
     neckPath.quadraticCurveTo(...spinePoint(25,-21),...spinePoint(32,-32));
@@ -442,10 +442,22 @@ function drawFox(now,dt=1/60){
     throatPatch.closePath();
     // Clip the cream chest marking cleanly to the connected body and neck.
     ctx.save();ctx.clip(coatClip);ctx.fillStyle="#8a7157";ctx.fill(throatPatch);ctx.restore();
+    // The hanging throat bell (dewlap) breaks the fox-like neck line.
+    const dewlap=new Path2D();
+    dewlap.moveTo(...spinePoint(39,3));
+    dewlap.quadraticCurveTo(...spinePoint(46,8),...spinePoint(47,17));
+    dewlap.quadraticCurveTo(...spinePoint(47,28),...spinePoint(42,31));
+    dewlap.quadraticCurveTo(...spinePoint(38,27),...spinePoint(37,17));
+    dewlap.quadraticCurveTo(...spinePoint(35,9),...spinePoint(33,7));
+    dewlap.closePath();ctx.fillStyle="#49372b";ctx.fill(dewlap);
+    ctx.strokeStyle="rgba(162,132,96,.62)";ctx.lineWidth=1;ctx.beginPath();
+    ctx.moveTo(...spinePoint(42,13));ctx.quadraticCurveTo(...spinePoint(45,22),...spinePoint(42,27));ctx.stroke();
     // Draw the near foreleg once, on top of the chest marking, so it stays visible.
     limb(3);
 
     ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-34+foxLabSpine.headY+shoulderMotion*.12);ctx.rotate(-pitch*.48-foxLabSpine.ribAngle*.45-foxLabSpine.waistAngle*.28+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch);ctx.translate(-34,16);
+    // Moose proportions: enlarge the skull, ears, muzzle, and eyes while keeping the antlers broad.
+    ctx.save();ctx.translate(43,-20);ctx.scale(1.22,1.24);ctx.translate(-43,20);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+Math.sin(phase*.5)*move*.1+Math.sin(now*.0011)*.025+idleTwitch*.09+foxLabEar.angle;
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),7)*.29:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),7)*.25:0;
     const ear=(x,len,angle,{inner=false,outer="#7f6248"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-8+tipLagX*.35,-len*.54,-5+tipLagX,-len*.82);ctx.quadraticCurveTo(-2+tipLagX*.4,-len,4+tipLagX,-len*.82);ctx.quadraticCurveTo(10+tipLagX*.65,-len*.54,8,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#332820";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
@@ -477,7 +489,7 @@ function drawFox(now,dt=1/60){
     drawPaddleAntler(-1,.78,"#514334");
     drawPaddleAntler(1,1,"#69543b");
     // Far ear is drawn first so the raised skull naturally occludes its inner side.
-    ear(24,31,-.25-earBack*1.45-earFlickFar,{outer:"#2a201c"});
+    ear(24,37,-.25-earBack*1.45-earFlickFar,{outer:"#2a201c"});
     // One compact skull/cheek mass creates a readable facial plane behind the projecting muzzle.
     ctx.fillStyle="#94765a";ctx.beginPath();
     ctx.moveTo(23,-18);ctx.quadraticCurveTo(24,-26,34,-29);
@@ -485,23 +497,23 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
     ctx.quadraticCurveTo(28,-13,25,-18);ctx.closePath();ctx.fill();
     // Near ear sits over the skull and retains the visible inner surface.
-    ear(31,35,-.04-earBack*1.35+earFlickNear,{inner:true,outer:"#342820"});
+    ear(31,41,-.04-earBack*1.35+earFlickNear,{inner:true,outer:"#342820"});
     const idleSniff=player.grounded&&speed<9?Math.pow(Math.max(0,Math.sin(now*.0016)),10):0;
     const muzzleDip=investigate*3.5+idleSniff*1.15;
-    // A deep, softly drooping moose muzzle with a broad, dark nose.
-    ctx.fillStyle="#806247";ctx.beginPath();ctx.moveTo(42,-21+muzzleDip);
-    ctx.quadraticCurveTo(49,-29+muzzleDip,59,-27+muzzleDip);
-    ctx.quadraticCurveTo(72,-25+muzzleDip,82,-19+muzzleDip);
-    ctx.quadraticCurveTo(86,-17+muzzleDip,84,-13+muzzleDip);
-    ctx.quadraticCurveTo(79,-10+muzzleDip,70,-12+muzzleDip);
-    ctx.quadraticCurveTo(56,-12+muzzleDip,49,-16+muzzleDip);
-    ctx.quadraticCurveTo(44,-18+muzzleDip,42,-21+muzzleDip);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#a78d70";ctx.beginPath();ctx.moveTo(53,-15+muzzleDip);
-    ctx.quadraticCurveTo(65,-18+muzzleDip,81,-14+muzzleDip);
-    ctx.quadraticCurveTo(75,-10+muzzleDip,64,-11+muzzleDip);
-    ctx.quadraticCurveTo(57,-12+muzzleDip,53,-15+muzzleDip);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#211a17";ctx.beginPath();ctx.ellipse(83,-16.5+muzzleDip,3.8,3.1,.08,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#0f1110";ctx.beginPath();ctx.ellipse(84,-17+muzzleDip,1.05,.72,0,0,Math.PI*2);ctx.fill();
+    // A long, deep, blunt moose muzzle with a broad, soft upper lip.
+    ctx.fillStyle="#806247";ctx.beginPath();ctx.moveTo(42,-20+muzzleDip);
+    ctx.quadraticCurveTo(50,-31+muzzleDip,63,-29+muzzleDip);
+    ctx.quadraticCurveTo(79,-27+muzzleDip,91,-17+muzzleDip);
+    ctx.quadraticCurveTo(97,-12+muzzleDip,92,-7+muzzleDip);
+    ctx.quadraticCurveTo(86,-3+muzzleDip,76,-7+muzzleDip);
+    ctx.quadraticCurveTo(61,-8+muzzleDip,51,-14+muzzleDip);
+    ctx.quadraticCurveTo(44,-16+muzzleDip,42,-20+muzzleDip);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#a78d70";ctx.beginPath();ctx.moveTo(54,-13+muzzleDip);
+    ctx.quadraticCurveTo(69,-17+muzzleDip,90,-9+muzzleDip);
+    ctx.quadraticCurveTo(83,-2+muzzleDip,70,-5+muzzleDip);
+    ctx.quadraticCurveTo(59,-7+muzzleDip,54,-13+muzzleDip);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#211a17";ctx.beginPath();ctx.ellipse(92,-12+muzzleDip,5.8,4.3,.08,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#0f1110";ctx.beginPath();ctx.ellipse(93,-13+muzzleDip,1.8,1.2,0,0,Math.PI*2);ctx.fill();
     // Reduce the eye as one unit around its center; keep its gold iris and remove the lashes.
     const blinkAmount=foxLabBlinkRemaining>0?Math.sin(Math.PI*(1-foxLabBlinkRemaining/.14)):0;
     const idleGazeX=player.grounded&&speed<9?Math.sin(now*.00045)*1.05+Math.sin(now*.0009+1.1)*.35:0;
@@ -517,6 +529,7 @@ function drawFox(now,dt=1/60){
     ctx.fillStyle="#fff1d3";ctx.beginPath();ctx.ellipse(44.7+idleGazeX,-24.65+idleGazeY,.75,.88,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
     if(blinkAmount>.48){ctx.strokeStyle="#352a20";ctx.lineWidth=1.1;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(41.5,-23.5);ctx.quadraticCurveTo(46,-21.3,50,-23.5);ctx.stroke();}
+    ctx.restore();
     ctx.restore();
     ctx.restore();
   }

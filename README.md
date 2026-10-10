@@ -1,6 +1,6 @@
 # ToxicFox
 
-A standalone browser-based canid locomotion test. The root page contains the preserved Fox One, `/fox-2.html` contains the preserved Fox Two, `/fox-3.html` contains the new Endling-inspired Fox Three, and `/horse.html` and `/wolf.html` contain their independent movement studies. Each page uses its own character renderer and movement controller.
+A standalone browser-based canid and ungulate locomotion test. The root page contains preserved Fox One, `/fox-2.html` contains preserved Fox Two, `/fox-3.html` contains Fox Three, `/moose.html` contains the moose variant, and `/horse.html` and `/wolf.html` contain their movement studies. Each page uses an independent renderer and movement controller.
 
 ## Controls
 

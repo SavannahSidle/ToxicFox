@@ -256,9 +256,9 @@
     springTo(foxLabEarTip,"angle",foxLabEar.angle,9,.98,dt);
 
     const turnSway=turnPulse(.2,.98)*turnDelta;
-    const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.4,.09,tailActivity);
+    const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.08,.03,tailActivity);
     const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.11,.2,.08,-.04,-.16,-.09,.03])*tailActivity*(.75+foxLabTrotBlend*.7+foxLabRunBlend*.85);
-    const idleTailDrift=(1-tailActivity)*(Math.sin(foxLabIdleTime*.48)*.16+Math.sin(foxLabIdleTime*.21+1.3)*.055);
+    const idleTailDrift=(1-tailActivity)*(Math.sin(foxLabIdleTime*.48)*.09+Math.sin(foxLabIdleTime*.21+1.3)*.035);
     const speedTrail=-smooth(45,285,currentSpeed)*.105;
     const airborne=player.grounded?0:1,ballistic=clamp(Math.max(airborne,foxLabLandingRecovery),0,1);
     const jumpVelocity=airborne*clamp(-player.vy/545,-1,1)*.58;
@@ -270,7 +270,7 @@
     for(let i=0;i<foxLabTailAngles.length;i++){
       const distal=i/(foxLabTailAngles.length-1);
       // At rest, gravity adds a smooth base-to-tip droop; a rare damped pulse gives the tip life without wagging.
-      const idleTailSag=(1-tailActivity)*(.11+distal*.5)+((1-tailActivity)*Math.sin(foxLabIdleTime*.62)*.025);
+      const idleTailSag=(1-tailActivity)*(.035+distal*.13)+((1-tailActivity)*Math.sin(foxLabIdleTime*.62)*.018);
       const idleTailTwitch=(1-tailActivity)*(foxLabIdleTime>1.2?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.86-i*.29)),7)*.32*distal:0);
       const segmentTarget=clamp(tailTarget+idleTailSag+idleTailTwitch,-1.05,.9);
       const prior=i?foxLabTailAngles[i-1]:segmentTarget;
@@ -316,12 +316,12 @@ function drawFox(now,dt=1/60){
     const tailBaseX=-54+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
     const tailPts=[[tailBaseX,tailBaseY]],tailLens=[12,14,15,15,15,15,14,12];let tx=tailBaseX,ty=tailBaseY;
     for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i]+foxLabSpine.pelvisAngle;tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
-    const widths=[2.1,4.2,9.2,14.5,17.5,18.5,15.5,9.5,1.2],upper=[],lower=[];
+    const widths=[2,3.8,8.2,12.8,15.3,15.8,13.5,8.2,1.2],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#a94e36";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
     // The white brush starts on the distal tail itself so it follows every segment bend.
-    const whiteStart=6;ctx.fillStyle="#efe4ca";ctx.beginPath();
+    const whiteStart=7;ctx.fillStyle="#efe4ca";ctx.beginPath();
     ctx.moveTo(...upper[whiteStart]);
     for(let i=whiteStart;i<upper.length-1;i++){const a=upper[i],b=upper[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
     ctx.lineTo(...upper.at(-1));

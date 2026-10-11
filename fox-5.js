@@ -112,7 +112,7 @@
 
   function updateFox(dt, now, left, right, up, investigate) {
     const walkModifier=keys.ShiftLeft||keys.ShiftRight,stalkModifier=keys.KeyC;
-    foxLabStealth+=(Number(stalkModifier)-foxLabStealth)*(1-Math.exp(-5.8*dt));
+    foxLabStealth+=((stalkModifier?1:0)-foxLabStealth)*(1-Math.exp(-5.8*dt));
     const input=(left?-1:0)+(right?1:0),oldVx=player.vx,oldVy=player.vy;
     if(input)foxLabRestTarget=0;
     const speed=Math.abs(player.vx),reversing=input&&speed>8&&Math.sign(player.vx)!==input;
@@ -551,7 +551,7 @@ function drawFoxLabArena(){
     status.textContent = `${motion} · ${player.grounded ? "GROUNDED" : "AIRBORNE"}`;
     speedReadout.textContent = `${Math.round(velocity)} px/s`;
     drawFoxLabArena();
-    try{drawFox(now,dt);}catch(error){console.error('Fox Four render error',error);status.textContent=`RENDER ERROR · ${error.message}`;}
+    drawFox(now,dt);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

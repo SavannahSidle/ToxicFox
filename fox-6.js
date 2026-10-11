@@ -310,7 +310,7 @@ function drawFox(now,dt=1/60){
     const breathGate=(1-move)*(1-sit*.65)*(1-lie*.4);
     const breathInhale=Math.max(0,Math.sin(foxFiveBreathPhase));
     const breathe=player.grounded&&speed<9?Math.sin(foxFiveBreathPhase)*.24:0;
-    const bodyLift=8+foxFourStalkPose*5;
+    const bodyLift=8+foxFiveStalkPose*5;
     const rise=8+bodyLift+compress*.8+launch*1.2-investigate*1.5+breathe+foxFiveWeightShift*breathGate-sit*4.5-lie*7;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-anticipation*3+recovery*2.6;
     const turnDelta=foxLabTurnTo-foxLabTurnFrom,turnWave=turnPulse(.03,.98)*turnDelta;
@@ -425,7 +425,7 @@ function drawFox(now,dt=1/60){
       const waist=transform(-4,(foxLabSpine.pelvisX+foxLabSpine.ribX)*.18,foxLabSpine.waistY,foxLabSpine.waistAngle);
       const rib=transform(20,foxLabSpine.ribX,foxLabSpine.ribY,foxLabSpine.ribAngle);
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
-      const point=mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));return [point[0],point[1]+foxFourStalkPose*3.8];
+      const point=mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));return [point[0],point[1]+foxFiveStalkPose*3.8];
     };
     const spineOutline=[[-46,-2],[-44,-8],[-39,-12],[-33,-13],[-27,-13],[-19,-14],[-10,-16],[-2,-18],[7,-17],[16,-15],[25,-12],[34,-8],[40,-3],[42,0],[39,5],[34,8],[27,9],[18,9.5],[9,9],[0,7.5],[-10,7],[-19,8],[-27,9],[-32,8],[-37,6],[-43,2]].map(([x,y])=>spinePoint(x*1.16,y*.93));
     const foxThreeCoat=ctx.createLinearGradient(-52,-20,55,18);
@@ -470,8 +470,8 @@ function drawFox(now,dt=1/60){
     // Draw the near foreleg once, on top of the chest marking, so it stays visible.
     limb(3);
 
-    ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-34+foxLabSpine.headY+shoulderMotion*.12+foxFourStalkPose*8);ctx.rotate(-pitch*.42-foxLabSpine.ribAngle*.38-foxLabSpine.waistAngle*.24+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch+foxFourStalkPose*.18);ctx.translate(-34,16);
-    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+Math.sin(phase*.5)*move*.1+Math.sin(now*.0011)*.025+idleTwitch*.09+foxLabEar.angle+foxFourStalkPose*.58;
+    ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-34+foxLabSpine.headY+shoulderMotion*.12+foxFiveStalkPose*8);ctx.rotate(-pitch*.42-foxLabSpine.ribAngle*.38-foxLabSpine.waistAngle*.24+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch+foxFiveStalkPose*.18);ctx.translate(-34,16);
+    const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+Math.sin(phase*.5)*move*.1+Math.sin(now*.0011)*.025+idleTwitch*.09+foxLabEar.angle+foxFiveStalkPose*.58;
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),8)*.22:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),8)*.2:0;
     const ear=(x,len,angle,{inner=false,outer="#ce7954"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
     // Far ear is drawn first so the raised skull naturally occludes its inner side.
@@ -485,7 +485,7 @@ function drawFox(now,dt=1/60){
     // Near ear sits over the skull and retains the visible inner surface.
     ear(31,29,-.04-earBack*1.35+earFlickNear,{inner:true,outer:"#45251e"});
     const idleSniff=player.grounded&&speed<9?Math.pow(Math.max(0,Math.sin(now*.00115+1.2)),12):0;
-    const muzzleDip=investigate*3.5+idleSniff*1.15+foxFourStalkPose*3.5;
+    const muzzleDip=investigate*3.5+idleSniff*1.15+foxFiveStalkPose*3.5;
     // A compact fox muzzle: full at the cheek, tapering to the nose.
     ctx.fillStyle="#d8895d";ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);
     ctx.quadraticCurveTo(50,-28+muzzleDip,61,-25+muzzleDip);
@@ -513,9 +513,9 @@ function drawFox(now,dt=1/60){
     ctx.quadraticCurveTo(80.4,-18.5+muzzleDip,80,-20.5+muzzleDip);ctx.closePath();ctx.fill();
     // Reduce the eye as one unit around its center; keep its gold iris and remove the lashes.
     const blinkAmount=foxLabBlinkRemaining>0?Math.sin(Math.PI*(1-foxLabBlinkRemaining/.14))**.72:0;
-    const idleGazeX=(player.grounded&&speed<9?Math.sin(now*.00045)*1.05+Math.sin(now*.0009+1.1)*.35:0)-foxFourStalkPose*.45;
-    const idleGazeY=(player.grounded&&speed<9?Math.sin(now*.00033+2.2)*.42:0)+foxFourStalkPose*.45;
-    ctx.save();ctx.translate(46.1,-23.5);ctx.scale(.78,.78*(1-blinkAmount*.96-foxFourStalkPose*.17));ctx.translate(-46.1,23.5);
+    const idleGazeX=(player.grounded&&speed<9?Math.sin(now*.00045)*1.05+Math.sin(now*.0009+1.1)*.35:0)-foxFiveStalkPose*.45;
+    const idleGazeY=(player.grounded&&speed<9?Math.sin(now*.00033+2.2)*.42:0)+foxFiveStalkPose*.45;
+    ctx.save();ctx.translate(46.1,-23.5);ctx.scale(.78,.78*(1-blinkAmount*.96-foxFiveStalkPose*.17));ctx.translate(-46.1,23.5);
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(40.8,-23.6);
     ctx.quadraticCurveTo(45.1,-28,50,-24.8);ctx.quadraticCurveTo(50.6,-23,47.8,-20.8);
     ctx.quadraticCurveTo(43.4,-20,41,-22);ctx.closePath();ctx.fill();

@@ -6,6 +6,9 @@
   const status = document.querySelector("#status");
   const speedReadout = document.querySelector("#speed");
   const W = canvas.width, H = canvas.height;
+  const FOX_COAT = "#b65436";
+  const FIXED_STEP = 1/120;
+  let foxLabAccumulator = 0, foxLabSimulationTime = 0;
   const keys = Object.create(null);
   const player = { x: 150, y: 380, w: 120, h: 100, vx: 0, vy: 0, facing: 1, grounded: false };
   let foxLabStridePhase = 0;
@@ -325,13 +328,13 @@ function drawFox(now,dt=1/60){
     ctx.save();ctx.translate(originX,originY);ctx.scale(scaleX,scaleY);ctx.rotate(bodyAngle);
 
     // A weighted brush tail whose bend travels from pelvis to tip.
-    const tailBaseX=-50+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY;
+    const tailBaseX=-40+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY+1.2;
     const tailPts=[[tailBaseX,tailBaseY]],tailLens=[12,14,15,15,15,15,14,12];let tx=tailBaseX,ty=tailBaseY;
     for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i]+foxLabSpine.pelvisAngle;tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
     const widths=[3.1,6.2,10.8,14.5,16.8,16.6,13.2,7.4,1.05],upper=[],lower=[];
     for(let i=0;i<tailPts.length;i++){const p=tailPts[i],before=tailPts[Math.max(0,i-1)],after=tailPts[Math.min(tailPts.length-1,i+1)],dx=after[0]-before[0],dy=after[1]-before[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;upper.push([p[0]+nx*widths[i],p[1]+ny*widths[i]]);lower.push([p[0]-nx*widths[i],p[1]-ny*widths[i]]);}
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
-    ctx.fillStyle="#a94e36";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
+    ctx.fillStyle=FOX_COAT;ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
     // The white brush starts on the distal tail itself so it follows every segment bend.
     const whiteStart=6;ctx.fillStyle="#efe4ca";ctx.beginPath();
     ctx.moveTo(...upper[whiteStart]);
@@ -340,7 +343,7 @@ function drawFox(now,dt=1/60){
     for(let i=lower.length-1;i>whiteStart;i--){const a=lower[i],b=lower[i-1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
     ctx.lineTo(...lower[whiteStart]);ctx.lineTo(...upper[whiteStart]);ctx.closePath();ctx.fill();
     // Keep the red shaft visually solid and leave the cream distal tip intact.
-    ctx.strokeStyle="#a94e36";ctx.lineWidth=2;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(...tailPts[0]);
+    ctx.strokeStyle=FOX_COAT;ctx.lineWidth=2;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(...tailPts[0]);
     for(let i=0;i<whiteStart;i++){const a=tailPts[i],b=tailPts[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}
     ctx.lineTo(...tailPts[whiteStart]);ctx.stroke();
     // The white tip follows the tapered tail contour; no separate spike or crosswise cap is drawn.
@@ -499,7 +502,7 @@ function drawFox(now,dt=1/60){
     // Far ear is drawn first so the raised skull naturally occludes its inner side.
     ear(24,24,-.25-earBack*1.45-earFlickFar,{outer:"#2a201c"});
     // One compact skull/cheek mass creates a readable facial plane behind the projecting muzzle.
-    ctx.fillStyle="#d8895d";ctx.beginPath();
+    ctx.fillStyle=FOX_COAT;ctx.beginPath();
     ctx.moveTo(23,-18);ctx.quadraticCurveTo(24,-26,34,-29);
     ctx.quadraticCurveTo(42,-32,49,-27);ctx.quadraticCurveTo(54,-23,53,-18);
     ctx.quadraticCurveTo(52,-13,46,-11);ctx.quadraticCurveTo(39,-9,34,-12);
@@ -511,7 +514,7 @@ function drawFox(now,dt=1/60){
     // Shorten the snout slightly while keeping its fox wedge and forward direction.
     ctx.save();ctx.translate(43,0);ctx.scale(.92,1);ctx.translate(-43,0);
     // A compact fox muzzle: full at the cheek, tapering to the nose.
-    ctx.fillStyle="#d8895d";ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);
+    ctx.fillStyle=FOX_COAT;ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);
     ctx.quadraticCurveTo(50,-28+muzzleDip,61,-25+muzzleDip);
     ctx.quadraticCurveTo(69,-23+muzzleDip,78,-20.5+muzzleDip);
     ctx.quadraticCurveTo(79,-19.8+muzzleDip,80,-19.5+muzzleDip);
@@ -579,12 +582,18 @@ function drawFoxLabArena(){
   }
 
   function frame(now) {
-    const dt = frame.last ? Math.min((now - frame.last) / 1000, .032) : 0;
+    const dt = frame.last ? clamp((now - frame.last) / 1000, 0, .05) : 0;
     frame.last = now;
     const left = keys.ArrowLeft || keys.KeyA;
     const right = keys.ArrowRight || keys.KeyD;
     const up = keys.ArrowUp || keys.KeyW || keys.Space;
-    updateFox(dt, now, left, right, up, keys.KeyI);
+    if(!foxLabSimulationTime)foxLabSimulationTime=now;
+    foxLabAccumulator=Math.min(.05,foxLabAccumulator+dt);
+    while(foxLabAccumulator>=FIXED_STEP){
+      foxLabSimulationTime+=FIXED_STEP*1000;
+      updateFox(FIXED_STEP,foxLabSimulationTime,left,right,up,keys.KeyI);
+      foxLabAccumulator-=FIXED_STEP;
+    }
     const velocity = Math.abs(player.vx);
     const motion = !player.grounded ? (player.vy < 0 ? "AIRBORNE · ASCENDING" : "AIRBORNE · DESCENDING")
       : foxLabRestPose.lie>.55 ? "LYING DOWN" : foxLabRestPose.sit>.55 ? "SITTING" : foxLabInvestigation > .55 ? "INVESTIGATING" : foxLabStealth>.45&&velocity>3 ? "STALKING" : velocity > 175 ? "RUNNING" : velocity > 8 ? "WALKING" : foxLabStealth>.45 ? "LOW / ALERT" : "IDLE";

@@ -333,7 +333,7 @@ function drawFox(now,dt=1/60){
     const traceSmooth=(points,reverse=false,move=true)=>{const ordered=reverse?points.slice().reverse():points;if(move)ctx.moveTo(...ordered[0]);else ctx.lineTo(...ordered[0]);for(let i=0;i<ordered.length-1;i++){const a=ordered[i],b=ordered[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}ctx.lineTo(...ordered.at(-1));};
     ctx.fillStyle="#a94e36";ctx.beginPath();traceSmooth(upper);traceSmooth(lower,true,false);ctx.closePath();ctx.fill();
     // The white brush starts on the distal tail itself so it follows every segment bend.
-    const whiteStart=7;ctx.fillStyle="#efe4ca";ctx.beginPath();
+    const whiteStart=6;ctx.fillStyle="#efe4ca";ctx.beginPath();
     ctx.moveTo(...upper[whiteStart]);
     for(let i=whiteStart;i<upper.length-1;i++){const a=upper[i],b=upper[i+1];ctx.quadraticCurveTo(...a,(a[0]+b[0])/2,(a[1]+b[1])/2);}
     ctx.lineTo(...upper.at(-1));
@@ -354,7 +354,7 @@ function drawFox(now,dt=1/60){
       const p=((forePhase%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stanceSpan=Math.PI*mix(1.17,.8,foxLabGallopBlend),swingSpan=Math.PI*2-stanceSpan,stance=p<stanceSpan;
       const t=stance?p/stanceSpan:(p-stanceSpan)/swingSpan;
       const swing=cubic(t),reach=mix(.34,.22,run)*(front?mix(1.16,1.04,run):1.22),hindSwing=-reach+2*reach*swing-.05*reach*Math.sin(2*Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?9.2:10.8)*Math.sin(Math.PI*t);
-      const restingOffset=front?(far?-1.1:1):(far?1.3:-1.1);
+      const restingOffset=front?(far?-1.5:1.2):(far?-7.2:1.6);
       let pawX=hip+travel*stride*move+restingOffset*(1-move),pawY=footLine-lift*(.95+run*.42)*move;
       if(!airborne){const restFold=Math.max(sit,lie),foldedX=front?hip+restingOffset:hip+10*sit+7*lie;pawX=mix(pawX,foldedX,restFold);}
       if(airborne){
@@ -393,12 +393,13 @@ function drawFox(now,dt=1/60){
       const color=far?"#784437":"#b65436",alpha=far?.74:1;
       const bone=(ax,ay,bx,by,wide,thin,fur=0)=>{const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;ctx.beginPath();ctx.moveTo(ax+nx*wide,ay+ny*wide);if(fur){for(const t of [.2,.34,.39,.48,.53,.63,.68,.82,1]){const w=wide*(1-t)+thin*t,tuft=t===.39?fur:t===.68?fur*.72:0;ctx.lineTo(ax+dx*t+nx*(w+tuft),ay+dy*t+ny*(w+tuft));}}else ctx.quadraticCurveTo((ax+bx)/2+nx*(wide+thin)*.24,(ay+by)/2+ny*(wide+thin)*.24,bx+nx*thin,by+ny*thin);ctx.lineTo(bx-nx*thin,by-ny*thin);ctx.quadraticCurveTo((ax+bx)/2-nx*(wide+thin)*.24,(ay+by)/2-ny*(wide+thin)*.24,ax-nx*wide,ay-ny*wide);ctx.closePath();ctx.fill();};
       ctx.globalAlpha=alpha;ctx.fillStyle=!front?(far?"#784437":"#b65436"):color;
-      bone(hip,rootY,jointX,jointY,front?(far?2.9:3.8):(far?3.8:4.8),front?(far?2.2:2.8):(far?2.8:3.6),.32);
+      bone(hip,rootY,jointX,jointY,front?(far?3.1:4.3):(far?3.8:4.8),front?(far?2.3:3.0):(far?2.8:3.6),front?.12:.32);
       ctx.fillStyle="#703329";
       ctx.fillStyle=far?"#2a201c":"#45251e";
       bone(jointX,jointY,midX,midY,front?(far?2.85:3.65):(far?3.1:3.8),front?(far?2.15:2.65):(far?2.3:2.75),0);
       ctx.fillStyle=far?"#2a201c":"#45251e";
       bone(midX,midY,pawX,pawY,far?1.8:2.05,far?1.45:1.7,0);
+      if(front&&!far){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(hip+1,rootY+1,4.2,5.1,-.12,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(jointX,jointY,2.7,2.8,0,0,Math.PI*2);ctx.fill();}
       if(!front){
         const thighDx=jointX-hip,thighDy=jointY-rootY,thighLength=Math.hypot(thighDx,thighDy),thighAngle=Math.atan2(thighDy,thighDx);
         ctx.save();ctx.translate(hip+thighDx*.34,rootY+thighDy*.34);ctx.rotate(thighAngle);
@@ -412,16 +413,17 @@ function drawFox(now,dt=1/60){
       }
       // No circular joint markers: limb segments meet with a continuous fur silhouette.
       ctx.fillStyle=far?"#30231f":"#3b241e";ctx.beginPath();
-       ctx.moveTo(pawX-4.2,pawY+.1);ctx.quadraticCurveTo(pawX-4.4,pawY-2.3,pawX-2.4,pawY-2.7);
-       ctx.quadraticCurveTo(pawX-1.1,pawY-3.6,pawX-.1,pawY-2.55);
-       ctx.quadraticCurveTo(pawX+1.1,pawY-3.7,pawX+2.2,pawY-2.25);
-       ctx.quadraticCurveTo(pawX+4.3,pawY-1.35,pawX+3.8,pawY+.5);
-       ctx.quadraticCurveTo(pawX+2.8,pawY+2.1,pawX-.2,pawY+2.0);
-       ctx.quadraticCurveTo(pawX-3.3,pawY+1.9,pawX-4.2,pawY+.1);ctx.closePath();ctx.fill();
+       ctx.moveTo(pawX-4.6,pawY+.15);ctx.quadraticCurveTo(pawX-4.5,pawY-2.15,pawX-2.3,pawY-2.45);
+       ctx.quadraticCurveTo(pawX-.8,pawY-3.3,pawX+.4,pawY-2.35);
+       ctx.quadraticCurveTo(pawX+1.7,pawY-3.55,pawX+2.8,pawY-2.1);
+       ctx.quadraticCurveTo(pawX+4.2,pawY-3.0,pawX+5.2,pawY-1.25);
+       ctx.quadraticCurveTo(pawX+6.1,pawY-.1,pawX+5.2,pawY+1.05);
+       ctx.quadraticCurveTo(pawX+2.4,pawY+2.25,pawX-.8,pawY+2.0);
+       ctx.quadraticCurveTo(pawX-3.8,pawY+1.7,pawX-4.6,pawY+.15);ctx.closePath();ctx.fill();
        ctx.strokeStyle=far?"rgba(20,17,16,.38)":"rgba(24,18,16,.5)";ctx.lineWidth=.42;ctx.lineCap="round";ctx.beginPath();
-       ctx.moveTo(pawX-1.5,pawY-.45);ctx.quadraticCurveTo(pawX-1.1,pawY+.25,pawX-.85,pawY+.7);
-       ctx.moveTo(pawX+.55,pawY-.45);ctx.quadraticCurveTo(pawX+.75,pawY+.2,pawX+.8,pawY+.7);
-       ctx.moveTo(pawX+2.1,pawY-.35);ctx.lineTo(pawX+2.05,pawY+.45);ctx.stroke();ctx.globalAlpha=1;
+       ctx.moveTo(pawX+.1,pawY-.65);ctx.quadraticCurveTo(pawX+1.1,pawY+.05,pawX+2.8,pawY+.75);
+       ctx.moveTo(pawX+1.8,pawY-.65);ctx.quadraticCurveTo(pawX+2.7,pawY+.05,pawX+4.0,pawY+.65);
+       ctx.moveTo(pawX+3.4,pawY-.45);ctx.quadraticCurveTo(pawX+4.1,pawY+.05,pawX+4.8,pawY+.35);ctx.stroke();ctx.globalAlpha=1;
     };
     // Walk blends into a bounding gallop: hind limbs drive together, forelimbs reach, and a brief flight phase opens.
     limb(0);
@@ -437,7 +439,7 @@ function drawFox(now,dt=1/60){
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
       const point=mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));return [point[0],point[1]+foxSevenStalkPose*5.2];
     };
-    const spineOutline=[[-42,-2],[-41,-9],[-38,-13],[-33,-15],[-27,-16],[-18,-16],[-9,-17],[-2,-19],[7,-19],[15,-17],[23,-14],[31,-10],[38,-5],[42,-1],[41,4],[36,9],[29,12],[19,13],[9,12],[0,10],[-9,8],[-18,9],[-27,10],[-34,9],[-39,6],[-42,3]].map(([x,y])=>spinePoint(x*1.16,y*.93));
+    const spineOutline=[[-39,-2],[-39,-9],[-36,-13],[-32,-15],[-27,-16],[-18,-16],[-9,-17],[-2,-19],[7,-19],[15,-17],[23,-14],[31,-10],[38,-5],[42,-1],[41,4],[36,9],[29,12],[19,13],[9,12],[0,10],[-9,8],[-17,9],[-25,10],[-31,9],[-36,6],[-39,3]].map(([x,y])=>spinePoint(x*(x<0?1.07:1.16),y*.93));
     const foxThreeCoat=ctx.createLinearGradient(-52,-20,55,18);
     foxThreeCoat.addColorStop(0,"#d27d55");foxThreeCoat.addColorStop(.48,"#b65436");foxThreeCoat.addColorStop(1,"#87402e");
     ctx.fillStyle=foxThreeCoat;ctx.beginPath();ctx.moveTo(...spineOutline[0]);
@@ -478,9 +480,9 @@ function drawFox(now,dt=1/60){
     throatPatch.quadraticCurveTo(...spinePoint(31,5),...spinePoint(34,-3));
     throatPatch.quadraticCurveTo(...spinePoint(38,-14),...spinePoint(40,-24));
     throatPatch.quadraticCurveTo(...spinePoint(42,-31),...spinePoint(45,-34));
-    throatPatch.quadraticCurveTo(...spinePoint(46,-29),...spinePoint(45,-22));
-    throatPatch.quadraticCurveTo(...spinePoint(44,-11),...spinePoint(45,-2));
-    throatPatch.quadraticCurveTo(...spinePoint(46,5),...spinePoint(41,10));
+    throatPatch.quadraticCurveTo(...spinePoint(44,-29),...spinePoint(41,-22));
+    throatPatch.quadraticCurveTo(...spinePoint(42,-11),...spinePoint(42,-2));
+    throatPatch.quadraticCurveTo(...spinePoint(43,5),...spinePoint(41,10));
     throatPatch.quadraticCurveTo(...spinePoint(35,11),...spinePoint(29,9));
     throatPatch.quadraticCurveTo(...spinePoint(26,9),...spinePoint(25,7));
     throatPatch.closePath();
@@ -490,7 +492,7 @@ function drawFox(now,dt=1/60){
     // Draw the near foreleg once, on top of the chest marking, so it stays visible.
     limb(3);
 
-    ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-31+foxLabSpine.headY+shoulderMotion*.12+foxSevenStalkPose*11);ctx.rotate(-pitch*.42-foxLabSpine.ribAngle*.38-foxLabSpine.waistAngle*.24+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch+foxSevenStalkPose*.25);ctx.translate(-34,16);
+    ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-31+foxLabSpine.headY+shoulderMotion*.12+foxSevenStalkPose*11+run*3.1);ctx.rotate(-pitch*.42-foxLabSpine.ribAngle*.38-foxLabSpine.waistAngle*.24+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch+foxSevenStalkPose*.25+run*.075);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+Math.sin(phase*.5)*move*.1+Math.sin(now*.0011)*.025+idleTwitch*.09+foxLabEar.angle+foxSevenStalkPose*.78;
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),8)*.22:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),8)*.2:0;
     const ear=(x,len,angle,{inner=false,outer="#ce7954"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};
@@ -506,6 +508,8 @@ function drawFox(now,dt=1/60){
     ear(31,29,-.04-earBack*1.35+earFlickNear,{inner:true,outer:"#45251e"});
     const idleSniff=player.grounded&&speed<9?Math.pow(Math.max(0,Math.sin(now*.00115+1.2)),12):0;
     const muzzleDip=investigate*3.5+idleSniff*1.15+foxSevenStalkPose*5.2;
+    // Shorten the snout slightly while keeping its fox wedge and forward direction.
+    ctx.save();ctx.translate(43,0);ctx.scale(.92,1);ctx.translate(-43,0);
     // A compact fox muzzle: full at the cheek, tapering to the nose.
     ctx.fillStyle="#d8895d";ctx.beginPath();ctx.moveTo(43,-21+muzzleDip);
     ctx.quadraticCurveTo(50,-28+muzzleDip,61,-25+muzzleDip);
@@ -524,13 +528,13 @@ function drawFox(now,dt=1/60){
     // Fine whisker roots and short whiskers break the smooth muzzle plane at fox scale.
     ctx.fillStyle="rgba(76,43,33,.55)";for(const [wx,wy] of [[59,-18],[63,-17.5],[67,-17.8]]){ctx.beginPath();ctx.arc(wx,wy+muzzleDip,.42,0,Math.PI*2);ctx.fill();}
     ctx.strokeStyle="rgba(245,223,196,.62)";ctx.lineWidth=.45;ctx.beginPath();
-    ctx.moveTo(60,-18+muzzleDip);ctx.quadraticCurveTo(67,-22+muzzleDip,73,-23+muzzleDip);
-    ctx.moveTo(61,-17+muzzleDip);ctx.quadraticCurveTo(68,-18+muzzleDip,75,-18.2+muzzleDip);
-    ctx.moveTo(60,-16.5+muzzleDip);ctx.quadraticCurveTo(66,-13.8+muzzleDip,73,-13.5+muzzleDip);ctx.stroke();
+    ctx.moveTo(60,-18+muzzleDip);ctx.quadraticCurveTo(70,-20.2+muzzleDip,79,-20.4+muzzleDip);
+    ctx.moveTo(61,-17+muzzleDip);ctx.quadraticCurveTo(71,-17.1+muzzleDip,81,-17.2+muzzleDip);
+    ctx.moveTo(60,-16.5+muzzleDip);ctx.quadraticCurveTo(70,-14.2+muzzleDip,79,-13.6+muzzleDip);ctx.stroke();
     ctx.fillStyle="#251a17";ctx.beginPath();ctx.moveTo(80,-20.5+muzzleDip);
     ctx.quadraticCurveTo(82,-21.5+muzzleDip,83.5,-19.8+muzzleDip);
     ctx.quadraticCurveTo(82.2,-17.5+muzzleDip,79.4,-17.6+muzzleDip);
-    ctx.quadraticCurveTo(80.4,-18.5+muzzleDip,80,-20.5+muzzleDip);ctx.closePath();ctx.fill();
+    ctx.quadraticCurveTo(80.4,-18.5+muzzleDip,80,-20.5+muzzleDip);ctx.closePath();ctx.fill();ctx.restore();
     // Reduce the eye as one unit around its center; keep its gold iris and remove the lashes.
     const blinkAmount=foxLabBlinkRemaining>0?Math.sin(Math.PI*(1-foxLabBlinkRemaining/.14))**.72:0;
     const idleGazeX=(player.grounded&&speed<9?Math.sin(now*.00045)*1.05+Math.sin(now*.0009+1.1)*.35:0)-foxSevenStalkPose*.45;

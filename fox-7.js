@@ -353,7 +353,7 @@ function drawFox(now,dt=1/60){
       const hip=config.hip+(front?foxLabSpine.ribX+shoulderGlide:foxLabSpine.pelvisX+foxLabPose.runDrive*.22),rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3+bodyLift:foxLabSpine.pelvisY+foxLabPose.runGather*.32-6.5+bodyLift;
       const p=((forePhase%(Math.PI*2))+Math.PI*2)%(Math.PI*2),stanceSpan=Math.PI*mix(1.17,.8,foxLabGallopBlend),swingSpan=Math.PI*2-stanceSpan,stance=p<stanceSpan;
       const t=stance?p/stanceSpan:(p-stanceSpan)/swingSpan;
-      const swing=cubic(t),reach=mix(.34,.22,run)*(front?mix(1.16,1.04,run):1.22),hindSwing=-reach+2*reach*swing-.05*reach*Math.sin(2*Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?8:9)*Math.sin(Math.PI*t);
+      const swing=cubic(t),reach=mix(.34,.22,run)*(front?mix(1.16,1.04,run):1.22),hindSwing=-reach+2*reach*swing-.05*reach*Math.sin(2*Math.PI*t),travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing),lift=stance?0:(front?9.2:10.8)*Math.sin(Math.PI*t);
       const restingOffset=front?(far?-2.2:1.8):(far?2.4:-1.8);
       let pawX=hip+travel*stride*move+restingOffset*(1-move),pawY=footLine-lift*(.95+run*.42)*move;
       if(!airborne){const restFold=Math.max(sit,lie),foldedX=front?hip+restingOffset:hip+10*sit+7*lie;pawX=mix(pawX,foldedX,restFold);}
@@ -432,6 +432,14 @@ function drawFox(now,dt=1/60){
     foxThreeCoat.addColorStop(0,"#d27d55");foxThreeCoat.addColorStop(.48,"#b65436");foxThreeCoat.addColorStop(1,"#87402e");
     ctx.fillStyle=foxThreeCoat;ctx.beginPath();ctx.moveTo(...spineOutline[0]);
     for(let i=0;i<spineOutline.length;i++){const a=spineOutline[i],b=spineOutline[(i+1)%spineOutline.length];ctx.quadraticCurveTo(...a,(a[0]+b[0])*.5,(a[1]+b[1])*.5);}ctx.closePath();ctx.fill();
+    // Add the fox's rounded gluteal mass as a connected plane; the broad thigh stays full and the loin stays tucked.
+    ctx.save();ctx.globalAlpha=.22;ctx.fillStyle="#6c3028";ctx.beginPath();
+    ctx.moveTo(...spinePoint(-46,2));ctx.quadraticCurveTo(...spinePoint(-42,-9),...spinePoint(-33,-13));
+    ctx.quadraticCurveTo(...spinePoint(-24,-13),...spinePoint(-18,-6));ctx.quadraticCurveTo(...spinePoint(-15,4),...spinePoint(-24,12));
+    ctx.quadraticCurveTo(...spinePoint(-36,14),...spinePoint(-44,8));ctx.quadraticCurveTo(...spinePoint(-48,5),...spinePoint(-46,2));ctx.closePath();ctx.fill();ctx.restore();
+    // Scapular glide highlight ties shoulder placement to the mobile rib cage.
+    ctx.save();ctx.globalAlpha=.2;ctx.strokeStyle="#f2c49a";ctx.lineWidth=1.1;ctx.lineCap="round";ctx.beginPath();
+    ctx.moveTo(...spinePoint(5,-13));ctx.quadraticCurveTo(...spinePoint(16,-9),...spinePoint(26,-3));ctx.stroke();ctx.restore();
     limb(2);
 
     // A long, low neck meets the lowered head at its underside without extending behind the skull.

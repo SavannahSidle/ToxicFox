@@ -551,7 +551,7 @@ function drawFoxLabArena(){
     status.textContent = `${motion} · ${player.grounded ? "GROUNDED" : "AIRBORNE"}`;
     speedReadout.textContent = `${Math.round(velocity)} px/s`;
     drawFoxLabArena();
-    drawFox(now,dt);
+    try{drawFox(now,dt);}catch(error){console.error('Fox Four render error',error);status.textContent=`RENDER ERROR · ${error.message}`;}
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

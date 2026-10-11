@@ -265,7 +265,7 @@
     springTo(foxLabEarTip,"angle",foxLabEar.angle,9,.98,dt);
 
     const turnSway=turnPulse(.2,.98)*turnDelta;
-    const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.48,.055,tailActivity);
+    const tailActivity=smooth(5,90,currentSpeed),idleTailAngle=mix(.28,.055,tailActivity);
     const gaitTail=cycleSample(foxLabStridePhase-.14,[0,.11,.2,.08,-.04,-.16,-.09,.03])*tailActivity*(.75+foxLabTrotBlend*.7+foxLabRunBlend*.85);
     const idleTailDrift=(1-tailActivity)*(Math.sin(foxLabIdleTime*.42)*.045+Math.sin(foxLabIdleTime*.19+1.3)*.018);
     const speedTrail=-smooth(45,285,currentSpeed)*.105;
@@ -279,7 +279,7 @@
     for(let i=0;i<foxLabTailAngles.length;i++){
       const distal=i/(foxLabTailAngles.length-1);
       // At rest, gravity adds a smooth base-to-tip droop; a rare damped pulse gives the tip life without wagging.
-      const idleTailSag=(1-tailActivity)*(.065+distal*.28)+((1-tailActivity)*Math.sin(foxLabIdleTime*.52)*.012);
+      const idleTailSag=(1-tailActivity)*(.04+distal*.14)+((1-tailActivity)*Math.sin(foxLabIdleTime*.52)*.01);
       const idleTailTwitch=(1-tailActivity)*(foxLabIdleTime>1.2?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.79-i*.31+Math.sin(i*.7)*.18)),8)*.38*distal:0);
       const segmentTarget=clamp(tailTarget+idleTailSag+idleTailTwitch,-1.05,.9);
       const prior=i?foxLabTailAngles[i-1]:segmentTarget;

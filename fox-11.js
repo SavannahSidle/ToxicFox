@@ -321,6 +321,11 @@
   }
 
 function drawFoxSkeleton(now,dt=1/60){
+    // Begin each frame in the canonical canvas coordinate space. This guards
+    // the world renderer from any transform left by a previous draw path.
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.globalAlpha=1;
+    ctx.globalCompositeOperation="source-over";
     const speed=Math.abs(player.vx),move=smooth(4,58,speed),run=foxLabRunBlend;
     const airborne=!player.grounded,phase=foxLabStridePhase,impact=foxLabLandingImpact;
     const stalk=Math.max(foxLabStealth,(1-smooth(16,110,speed))*1.05);
@@ -436,6 +441,12 @@ function drawFoxSkeleton(now,dt=1/60){
   }
 
 function drawFoxLabArena(){
+    // The arena is the frame background, so it must never inherit character
+    // transforms or alpha from the preceding frame.
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.globalAlpha=1;
+    ctx.globalCompositeOperation="source-over";
+    ctx.clearRect(0,0,W,H);
     const sky=ctx.createLinearGradient(0,0,0,H);
     sky.addColorStop(0,foxEightNight?"#090f19":"#182321");sky.addColorStop(.58,foxEightNight?"#1c2b35":"#3d5148");sky.addColorStop(1,foxEightNight?"#37414a":"#a17653");
     ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);

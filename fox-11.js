@@ -346,7 +346,7 @@ function drawFoxSkeleton(now,dt=1/60){
     const fwd=player.facing;
     // Skeleton bones use compact anatomical units. Render them larger so Fox
     // Ten reads at the same screen scale as the skinned playable foxes.
-    const renderScale=2.15;
+    const renderScale=3;
     const renderOriginY=footLine-(footLine-originY)*renderScale;
     const localToWorld=(x,y)=>({x:originX+fwd*(x*Math.cos(bodyAngle)-y*Math.sin(bodyAngle)),y:originY+x*Math.sin(bodyAngle)+y*Math.cos(bodyAngle)});
     const worldToLocal=(x,y)=>{const dx=(x-originX)/fwd,dy=y-originY;return{x:dx*Math.cos(bodyAngle)+dy*Math.sin(bodyAngle),y:-dx*Math.sin(bodyAngle)+dy*Math.cos(bodyAngle)};};

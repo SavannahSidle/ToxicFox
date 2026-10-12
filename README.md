@@ -1,6 +1,6 @@
 # ToxicFox
 
-A standalone browser-based canid and ungulate locomotion test. The root page contains preserved Fox One, `/fox-2.html` contains preserved Fox Two, `/fox-3.html` contains Fox Three, `/moose.html` contains the moose variant, and `/horse.html` and `/wolf.html` contain their movement studies. Each page uses an independent renderer and movement controller.
+A standalone browser-based canid and ungulate locomotion study. The root page contains Fox One, `/fox-7.html` contains the preserved Fox Seven study, and `/moose.html`, `/horse.html`, and `/wolf.html` contain their movement studies. Each page uses an independent renderer and movement controller.
 
 ## Controls
 
@@ -11,4 +11,4 @@ A standalone browser-based canid and ungulate locomotion test. The root page con
 - Sit: X
 - Lie down: Z
 
-Use the character picker to switch between variants. The movement field includes low steps and platforms for checking stride, turns, jumps, and landings.
+Use the character picker to switch between the available studies. The movement field includes low steps and platforms for checking stride, turns, jumps, and landings.

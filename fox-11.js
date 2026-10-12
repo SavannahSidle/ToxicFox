@@ -344,11 +344,15 @@ function drawFoxSkeleton(now,dt=1/60){
     const originY=player.y+player.h/2+bounce+impact*5+verticalMotion+foxLabJumpAnticipation*3-foxLabLandingRecovery*2.6-rise;
     const bodyAngle=pitch*.34+turnLean*.5-stalk*.035+(player.grounded?Math.atan2(foxEightGroundY(player.x+player.w)-foxEightGroundY(player.x),player.w)*.42:0)-foxLabRestPose.sit*.035+foxLabRestPose.lie*.022;
     const fwd=player.facing;
+    // Skeleton bones use compact anatomical units. Render them larger so Fox
+    // Ten reads at the same screen scale as the skinned playable foxes.
+    const renderScale=2.15;
+    const renderOriginY=footLine-(footLine-originY)*renderScale;
     const localToWorld=(x,y)=>({x:originX+fwd*(x*Math.cos(bodyAngle)-y*Math.sin(bodyAngle)),y:originY+x*Math.sin(bodyAngle)+y*Math.cos(bodyAngle)});
     const worldToLocal=(x,y)=>{const dx=(x-originX)/fwd,dy=y-originY;return{x:dx*Math.cos(bodyAngle)+dy*Math.sin(bodyAngle),y:-dx*Math.sin(bodyAngle)+dy*Math.cos(bodyAngle)};};
     const shadowY=player.y+player.h-1,shadowScale=clamp(1-Math.max(0,480-shadowY)*.0024,.56,1);
-    ctx.save();ctx.globalAlpha=player.grounded?.19:.11*shadowScale;ctx.fillStyle="#0c1210";ctx.beginPath();ctx.ellipse(originX,shadowY+3,33*shadowScale,4.5*shadowScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
-    ctx.save();ctx.translate(originX,originY);ctx.scale(fwd,1);ctx.rotate(bodyAngle);
+    ctx.save();ctx.globalAlpha=player.grounded?.19:.11*shadowScale;ctx.fillStyle="#0c1210";ctx.beginPath();ctx.ellipse(originX,shadowY+3,33*renderScale*shadowScale,4.5*shadowScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.save();ctx.translate(originX,renderOriginY);ctx.scale(fwd*renderScale,renderScale);ctx.rotate(bodyAngle);
     const bone=(ax,ay,bx,by,rA,rB,shade="#e6d5aa",shine=true)=>{
       const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||.001,a=Math.atan2(dy,dx),shaft=Math.max(.7,(rA+rB)*.34);
       ctx.save();ctx.translate(ax,ay);ctx.rotate(a);

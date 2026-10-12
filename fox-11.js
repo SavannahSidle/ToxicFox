@@ -430,7 +430,7 @@ function drawFoxSkeleton(now,dt=1/60){
     ctx.fillStyle="#46534b";ctx.beginPath();ctx.ellipse(50.1,-18.7,1.6,.72,0,0,Math.PI*2);ctx.fill();
     pathBone([[31,-18],[34,-14.5],[42,-14.2],[47,-16]],1.05,"#c6b58d");joint(42,-17,1.5,1.5,skull);pathBone([[42,-16],[40,-12.7],[46,-13.2],[51,-15.5]],1.3,"#cdbb92");
     for(const x of [43.2,45.2,47.1,49])pathBone([[x,-15.4],[x+.3,-14]],.58,"#f2e4c3");for(const x of [40.5,47.8]){ctx.fillStyle="#f2e4c3";ctx.beginPath();ctx.moveTo(x,-17);ctx.lineTo(x+1.1,-17);ctx.lineTo(x+.55,-14.8);ctx.closePath();ctx.fill();}
-    const scapX=20+foxLabSpine.ribX*.35,scapY=-11+foxLabSpine.ribY*.25;bone(scapX+8,scapY-4,scapX-2,4,4.3,3.2,"#e9dab5");joint(scapX-2,4,2.7,3.1,"#e9dab5");
+    ctx.restore();
     legs.filter(p=>!p.far).forEach(drawLimb);
     ctx.restore();
   }

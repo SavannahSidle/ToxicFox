@@ -12,3 +12,7 @@ A standalone browser-based canid and ungulate locomotion study. The root page co
 - Lie down: Z
 
 Use the character picker to switch between the available studies. The movement field includes low steps and platforms for checking stride, turns, jumps, and landings.
+
+
+- [Fox Seven](fox-7.html): preserved Endling-inspired fox baseline.
+- [Fox Eight](fox-8.html): continued movement and environment refinement pass.

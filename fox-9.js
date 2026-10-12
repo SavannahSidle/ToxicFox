@@ -106,7 +106,7 @@
   addEventListener("keydown", event => {
     if (["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyX", "KeyZ"].includes(event.code)) event.preventDefault();
     if (keys[event.code]) return;
-    if(event.code==="KeyN"){foxEightNight=!foxEightNight;return;}
+    if(event.code==="KeyN"){keys[event.code]=true;foxEightNight=!foxEightNight;return;}
     keys[event.code] = true;
     if(event.code==="KeyX")foxLabRestTarget=foxLabRestTarget===1?0:1;
     if(event.code==="KeyZ")foxLabRestTarget=foxLabRestTarget===2?0:2;

@@ -118,6 +118,11 @@
   });
   addEventListener("keyup", event => { keys[event.code] = false; });
 
+  function foxEightGroundY(x){
+    const dx=x-150;
+    return 480+4*(Math.sin(dx/155)-Math.sin(0))+1.5*(Math.sin(dx/49)-Math.sin(0));
+  }
+
   function foxEightNearPlatformEdge(direction){
     if(!player.grounded||!direction)return false;
     const bottom=player.y+player.h;
@@ -160,7 +165,7 @@
       }else if(foxLabJumpPending===0)foxLabJumpAnticipation=0;
     }else foxLabJumpAnticipation*=Math.exp(-9*dt);
 
-    const oldBottom=player.y+player.h,fallSpeed=player.vy;
+    const oldBottom=player.y+player.h,wasGrounded=player.grounded,fallSpeed=player.vy;
     const jumpHeld=up&&player.vy<0?1:0;
     foxLabJumpHoldBlend+=(jumpHeld-foxLabJumpHoldBlend)*(1-Math.exp(-14*dt));
     player.vy=Math.min(880,player.vy+(1580-foxLabJumpHoldBlend*620)*dt);
@@ -169,7 +174,9 @@
     let landing=null;
     if(player.vy>=0){
       for(const surface of foxLabSurfaces){
-        if(oldBottom<=surface.y+1&&player.y+player.h>=surface.y&&player.x+player.w>surface.x&&player.x<surface.x+surface.w&&(!landing||surface.y<landing.y))landing=surface;
+        const surfaceY=surface.ground?foxEightGroundY(player.x+player.w*.5):surface.y;
+        const carried=surface.ground&&wasGrounded&&Math.abs(oldBottom-surfaceY)<13;
+        if((carried||oldBottom<=surfaceY+1)&&player.y+player.h>=surfaceY&&player.x+player.w>surface.x&&player.x<surface.x+surface.w&&(!landing||surfaceY<landing.y))landing={...surface,y:surfaceY};
       }
     }
     if(landing){
@@ -338,7 +345,7 @@ function drawFox(now,dt=1/60){
     const turnLean=turnPulse(.18,.84)*turnDelta*(.028+move*.045+run*.018);
     const originX=player.x+player.w/2,originY=player.y+player.h/2+bounce+impact*5+verticalMotion+anticipation*3-recovery*2.6-rise;
     // Flipping and rotation preserve segment lengths; gait squash must not scale the skeleton.
-    const scaleX=fwd,scaleY=1,bodyAngle=pitch*.34+turnLean*.5-foxSevenStalkPose*.035-sit*.035+lie*.022;
+    const scaleX=fwd,scaleY=1,bodyAngle=pitch*.34+turnLean*.5-foxSevenStalkPose*.035+(player.grounded?Math.atan2(foxEightGroundY(player.x+player.w)-foxEightGroundY(player.x),player.w)*.42:0)-sit*.035+lie*.022;
     const localToWorld=(x,y)=>({x:originX+scaleX*(x*Math.cos(bodyAngle)-y*Math.sin(bodyAngle)),y:originY+scaleY*(x*Math.sin(bodyAngle)+y*Math.cos(bodyAngle))});
     const worldToLocal=(x,y)=>{const dx=(x-originX)/scaleX,dy=(y-originY)/scaleY;return{x:dx*Math.cos(bodyAngle)+dy*Math.sin(bodyAngle),y:-dx*Math.sin(bodyAngle)+dy*Math.cos(bodyAngle)};};
     const shadowY=player.y+player.h-1;
@@ -597,7 +604,14 @@ function drawFoxLabArena(){
     const haze=ctx.createLinearGradient(0,330,0,480);
     haze.addColorStop(0,"rgba(196,172,131,0)");haze.addColorStop(1,"rgba(196,172,131,.18)");
     ctx.fillStyle=haze;ctx.fillRect(0,330,W,150);
-    for(const s of foxLabSurfaces){ctx.fillStyle=foxEightNight?(s.ground?"#29363a":"#39464a"):(s.ground?"#465449":"#5e6b5e");ctx.fillRect(s.x,s.y,s.w,s.ground?s.h:14);ctx.fillStyle=foxEightNight?"#677b7d":"#8e9a7d";ctx.fillRect(s.x,s.y,s.w,2);}
+    for(const s of foxLabSurfaces){
+      if(s.ground){
+        ctx.fillStyle=foxEightNight?"#29363a":"#465449";ctx.beginPath();ctx.moveTo(0,foxEightGroundY(0));
+        for(let x=16;x<=W;x+=16)ctx.lineTo(x,foxEightGroundY(x));
+        ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+        ctx.strokeStyle=foxEightNight?"#677b7d":"#8e9a7d";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,foxEightGroundY(0));for(let x=16;x<=W;x+=16)ctx.lineTo(x,foxEightGroundY(x));ctx.stroke();
+      }else{ctx.fillStyle=foxEightNight?"#39464a":"#5e6b5e";ctx.fillRect(s.x,s.y,s.w,14);ctx.fillStyle=foxEightNight?"#677b7d":"#8e9a7d";ctx.fillRect(s.x,s.y,s.w,2);}
+    }
     for(const p of foxEightDust){ctx.globalAlpha=clamp(p.life/p.max,0,1)*.55;ctx.fillStyle=foxEightNight?"#c1c8bd":"#d9c8aa";ctx.beginPath();ctx.ellipse(p.x,p.y,p.size,p.size*.58,0,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
     ctx.fillStyle=foxEightNight?"rgba(222,231,226,.9)":"rgba(229,226,203,.82)";ctx.font="700 12px system-ui";ctx.textAlign="left";ctx.fillText("FOX EIGHT · STALK  /  SNIFF  /  TURN  /  BOUND  /  LAND  ·  N: NIGHT",22,30);
   }

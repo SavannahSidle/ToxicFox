@@ -594,9 +594,11 @@ function drawFoxLabArena(){
     for(let layer=0;layer<3;layer++){
       const baseY=350+layer*31,step=115-layer*14;
       ctx.fillStyle=(foxEightNight?["#1d2d36","#17262d","#101d23"]:["#26352f","#202e29","#192520"])[layer];
-      const parallaxOffset=((player.x-150)*(layer+1)*.035)%step;
-      for(let x=-30+layer*37-parallaxOffset;x<W+step;x+=step){
-        const h=92+((x*17+layer*31)%65+65)%65;
+      const scroll=(player.x-150)*(layer+1)*.035;
+      const tileOffset=Math.floor(scroll/step),fraction=scroll-tileOffset*step;
+      for(let i=-2;i<Math.ceil(W/step)+2;i++){
+        const tile=tileOffset+i,x=layer*37+i*step-fraction;
+        const seed=((tile*17+layer*31)%65+65)%65,h=92+seed;
         ctx.beginPath();ctx.moveTo(x,baseY);ctx.lineTo(x+step*.47,baseY-h);ctx.lineTo(x+step*.94,baseY);ctx.closePath();ctx.fill();
         ctx.fillRect(x+step*.43,baseY,step*.08,37);
       }

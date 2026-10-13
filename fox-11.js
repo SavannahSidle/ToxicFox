@@ -337,7 +337,7 @@ function drawFoxSkeleton(now,dt=1/60){
     const pitch=airborne?clamp(player.vy*.00015,-.14,.14):(-.02*run+bodyWave*.008*foxLabTrotBlend+clamp(foxLabBodyAcceleration/1100,-1,1)*.035-clamp(-foxLabBodyAcceleration/1000,0,1)*.014-impact*.045+foxLabInvestigation*.018);
     const inhale=Math.sin(foxSevenBreathPhase)*.24*(1-move)*(1-foxLabRestPose.sit*.65);
     const bodyLift=2.6-stalk*4.8;
-    const rise=11+bodyLift+compress*.8+(airborne?smooth(0,145,now-(foxLabTakeoffUntil-145))*1.2:0)-foxLabInvestigation*1.5+inhale+foxSevenWeightShift-foxLabRestPose.sit*4.5-foxLabRestPose.lie*7;
+    const rise=22+bodyLift+compress*.8+(airborne?smooth(0,145,now-(foxLabTakeoffUntil-145))*1.2:0)-foxLabInvestigation*1.5+inhale+foxSevenWeightShift-foxLabRestPose.sit*4.5-foxLabRestPose.lie*7;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-foxLabJumpAnticipation*3+foxLabLandingRecovery*2.6;
     const turnDelta=foxLabTurnTo-foxLabTurnFrom,turnLean=turnPulse(.18,.84)*turnDelta*(.028+move*.045+run*.018);
     const originX=player.x+player.w/2;

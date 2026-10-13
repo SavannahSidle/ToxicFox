@@ -44,10 +44,10 @@
   const foxLabLegConfigs=[
     // Side-view canid rig, ordered far hind, far fore, near hind, near fore.
     // Toe offsets describe the small paw extension after the hock, never a second hidden limb.
-    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:41.5,lower:32,toeX:3.4,toeY:1.6,bend:-1,upperWidth:4.2,lowerWidth:2.65},
-    {hip:19,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:38.5,lower:35,toeX:3.6,toeY:1.5,bend:1,upperWidth:3.7,lowerWidth:2.35},
-    {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:42,lower:32.5,toeX:3.8,toeY:1.6,bend:-1,upperWidth:5.1,lowerWidth:2.85},
-    {hip:32,front:true,far:false,walk:Math.PI*.5,trot:0,upper:38,lower:34.5,toeX:4,toeY:1.5,bend:1,upperWidth:4.5,lowerWidth:2.55}
+    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:37.5,lower:28,toeX:3.4,toeY:1.6,bend:-1,upperWidth:4.2,lowerWidth:2.65},
+    {hip:19,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:34.5,lower:31,toeX:3.6,toeY:1.5,bend:1,upperWidth:3.7,lowerWidth:2.35},
+    {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:38,lower:28.5,toeX:3.8,toeY:1.6,bend:-1,upperWidth:5.1,lowerWidth:2.85},
+    {hip:32,front:true,far:false,walk:Math.PI*.5,trot:0,upper:34,lower:30.5,toeX:4,toeY:1.5,bend:1,upperWidth:4.5,lowerWidth:2.55}
   ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
@@ -337,7 +337,7 @@ function drawFoxSkeleton(now,dt=1/60){
     const pitch=airborne?clamp(player.vy*.00015,-.14,.14):(-.02*run+bodyWave*.008*foxLabTrotBlend+clamp(foxLabBodyAcceleration/1100,-1,1)*.035-clamp(-foxLabBodyAcceleration/1000,0,1)*.014-impact*.045+foxLabInvestigation*.018);
     const inhale=Math.sin(foxSevenBreathPhase)*.24*(1-move)*(1-foxLabRestPose.sit*.65);
     const bodyLift=2.6-stalk*4.8;
-    const rise=30+bodyLift+compress*.8+(airborne?smooth(0,145,now-(foxLabTakeoffUntil-145))*1.2:0)-foxLabInvestigation*1.5+inhale+foxSevenWeightShift-foxLabRestPose.sit*4.5-foxLabRestPose.lie*7;
+    const rise=11+bodyLift+compress*.8+(airborne?smooth(0,145,now-(foxLabTakeoffUntil-145))*1.2:0)-foxLabInvestigation*1.5+inhale+foxSevenWeightShift-foxLabRestPose.sit*4.5-foxLabRestPose.lie*7;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-foxLabJumpAnticipation*3+foxLabLandingRecovery*2.6;
     const turnDelta=foxLabTurnTo-foxLabTurnFrom,turnLean=turnPulse(.18,.84)*turnDelta*(.028+move*.045+run*.018);
     const originX=player.x+player.w/2;

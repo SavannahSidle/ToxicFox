@@ -44,10 +44,10 @@
   const foxLabLegConfigs=[
     // Side-view canid rig, ordered far hind, far fore, near hind, near fore.
     // Toe offsets describe the small paw extension after the hock, never a second hidden limb.
-    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:44.5,lower:35,toeX:3.4,toeY:1.6,bend:-1,upperWidth:4.2,lowerWidth:2.65},
-    {hip:19,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:41.5,lower:38,toeX:3.6,toeY:1.5,bend:1,upperWidth:3.7,lowerWidth:2.35},
-    {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:45,lower:35.5,toeX:3.8,toeY:1.6,bend:-1,upperWidth:5.1,lowerWidth:2.85},
-    {hip:32,front:true,far:false,walk:Math.PI*.5,trot:0,upper:41,lower:37.5,toeX:4,toeY:1.5,bend:1,upperWidth:4.5,lowerWidth:2.55}
+    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:35.5,lower:26,toeX:3.4,toeY:1.6,bend:-1,upperWidth:4.2,lowerWidth:2.65},
+    {hip:19,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:32.5,lower:29,toeX:3.6,toeY:1.5,bend:1,upperWidth:3.7,lowerWidth:2.35},
+    {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:36,lower:26.5,toeX:3.8,toeY:1.6,bend:-1,upperWidth:5.1,lowerWidth:2.85},
+    {hip:32,front:true,far:false,walk:Math.PI*.5,trot:0,upper:32,lower:28.5,toeX:4,toeY:1.5,bend:1,upperWidth:4.5,lowerWidth:2.55}
   ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
@@ -340,7 +340,7 @@ function drawFox(now,dt=1/60){
     const breathInhale=Math.max(0,Math.sin(foxSevenBreathPhase));
     const breathe=player.grounded&&speed<9?Math.sin(foxSevenBreathPhase)*.24:0;
     const bodyLift=2.6-foxSevenStalkPose*4.8;
-    const rise=25+bodyLift+compress*.8+launch*1.2-investigate*1.5+breathe+foxSevenWeightShift*breathGate-sit*4.5-lie*7;
+    const rise=7+bodyLift+compress*.8+launch*1.2-investigate*1.5+breathe+foxSevenWeightShift*breathGate-sit*4.5-lie*7;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-anticipation*3+recovery*2.6;
     const turnDelta=foxLabTurnTo-foxLabTurnFrom,turnWave=turnPulse(.03,.98)*turnDelta;
     // A 2D mirror is discrete. Interpolating its scale through zero collapses every bone mid-turn.
@@ -357,7 +357,7 @@ function drawFox(now,dt=1/60){
     ctx.save();ctx.translate(originX,originY);ctx.scale(scaleX,scaleY);ctx.rotate(bodyAngle);
 
     // A weighted brush tail whose bend travels from pelvis to tip.
-    const tailBaseX=-40+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY+1.2;
+    const tailBaseX=-40+foxLabSpine.pelvisX,tailBaseY=foxLabSpine.pelvisY+1.2-16;
     const tailPts=[[tailBaseX,tailBaseY]],tailLens=[12,14,15,15,15,15,14,12];let tx=tailBaseX,ty=tailBaseY;
     for(let i=0;i<tailLens.length;i++){const a=foxLabTailAngles[i]+foxLabSpine.pelvisAngle;tx-=Math.cos(a)*tailLens[i];ty+=Math.sin(a)*tailLens[i];tailPts.push([tx,ty]);}
     const widths=[3.1,6.2,10.8,14.5,16.8,16.6,13.2,7.4,1.05],upper=[],lower=[];
@@ -490,7 +490,7 @@ function drawFox(now,dt=1/60){
       const waist=transform(-4,(foxLabSpine.pelvisX+foxLabSpine.ribX)*.18,foxLabSpine.waistY,foxLabSpine.waistAngle);
       const rib=transform(20,foxLabSpine.ribX,foxLabSpine.ribY,foxLabSpine.ribAngle);
       const mixPoint=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t)];
-      const point=mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));return [point[0],point[1]+foxSevenStalkPose*5.2];
+      const point=mixPoint(mixPoint(pelvis,waist,smooth(-20,-8,x)),rib,smooth(6,18,x));return [point[0],point[1]+foxSevenStalkPose*5.2-16];
     };
     const spineOutline=[[-39,-2],[-39,-9],[-36,-13],[-32,-15],[-27,-16],[-18,-16],[-9,-17],[-2,-19],[7,-19],[15,-17],[23,-14],[31,-10],[38,-5],[42,-1],[41,4],[36,9],[29,12],[19,13],[9,12],[0,10],[-9,8],[-17,9],[-25,10],[-31,9],[-36,6],[-39,3]].map(([x,y])=>spinePoint(x*(x<0?1.07:1.16),y*.93));
     const foxThreeCoat=ctx.createLinearGradient(-52,-20,55,18);
@@ -545,7 +545,7 @@ function drawFox(now,dt=1/60){
     // Draw the near foreleg once, on top of the chest marking, so it stays visible.
     limb(3);
 
-    ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-31+foxLabSpine.headY+shoulderMotion*.12+foxSevenStalkPose*11+run*3.1);ctx.rotate(-pitch*.42-foxLabSpine.ribAngle*.38-foxLabSpine.waistAngle*.24+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch+foxSevenStalkPose*.25+run*.075);ctx.translate(-34,16);
+    ctx.save();ctx.translate(39+foxLabSpine.ribX*.55+turnWave*1.4,-47+foxLabSpine.headY+shoulderMotion*.12+foxSevenStalkPose*11+run*3.1);ctx.rotate(-pitch*.42-foxLabSpine.ribAngle*.38-foxLabSpine.waistAngle*.24+investigate*.18+Math.max(0,player.vy)*.000035+foxLabSpine.neckAngle+turnWave*.045+jumpHeadPitch+foxSevenStalkPose*.25+run*.075);ctx.translate(-34,16);
     const idleTwitch=foxLabIdleTime>2.5&&Math.sin(foxLabIdleTime*2.1)>.975?1:0,jumpEarBack=airborne?.1+foxLabPose.jumpDrive*.16+foxLabPose.jumpExtension*.06+foxLabPose.jumpLanding*.07:0,earBack=investigate*.75+run*.14+jumpEarBack+clamp(foxLabBodyAcceleration/1100,0,1)*.035+Math.sin(phase*.5)*move*.1+Math.sin(now*.0011)*.025+idleTwitch*.09+foxLabEar.angle+foxSevenStalkPose*.78;
     const earFlickFar=foxLabIdleTime>1?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.93)),8)*.22:0,earFlickNear=foxLabIdleTime>1.4?Math.pow(Math.max(0,Math.sin(foxLabIdleTime*.76+1.2)),8)*.2:0;
     const ear=(x,len,angle,{inner=false,outer="#ce7954"}={})=>{const tipLagX=clamp(foxLabEar.angle-foxLabEarTip.angle,-.12,.12)*len*.38;ctx.save();ctx.translate(x,-25);ctx.rotate(angle);ctx.fillStyle=outer;ctx.beginPath();ctx.moveTo(-5.5,3);ctx.quadraticCurveTo(-7.2+tipLagX*.35,-len*.56,-.8+tipLagX,-len);ctx.quadraticCurveTo(5.2+tipLagX*.65,-len*.72,6.5,3);ctx.closePath();ctx.fill();if(inner){ctx.fillStyle="#4d171d";ctx.beginPath();ctx.moveTo(-1.8,0);ctx.quadraticCurveTo(-2.5+tipLagX*.2,-len*.46,-.7+tipLagX*.7,-len*.76);ctx.quadraticCurveTo(2.7+tipLagX*.5,-len*.56,3.7,1);ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(241,177,135,.7)";ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(-.5,-3);ctx.quadraticCurveTo(.2,-len*.4,1.4,-len*.66);ctx.stroke();}ctx.restore();};

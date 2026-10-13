@@ -44,10 +44,10 @@
   const foxLabLegConfigs=[
     // Side-view canid rig, ordered far hind, far fore, near hind, near fore.
     // Toe offsets describe the small paw extension after the hock, never a second hidden limb.
-    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:35.5,lower:26,toeX:3.4,toeY:1.6,bend:-1,upperWidth:4.2,lowerWidth:2.65},
-    {hip:19,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:32.5,lower:29,toeX:3.6,toeY:1.5,bend:1,upperWidth:3.7,lowerWidth:2.35},
-    {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:36,lower:26.5,toeX:3.8,toeY:1.6,bend:-1,upperWidth:5.1,lowerWidth:2.85},
-    {hip:32,front:true,far:false,walk:Math.PI*.5,trot:0,upper:32,lower:28.5,toeX:4,toeY:1.5,bend:1,upperWidth:4.5,lowerWidth:2.55}
+    {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:44.5,lower:35,toeX:3.4,toeY:1.6,bend:-1,upperWidth:4.2,lowerWidth:2.65},
+    {hip:19,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:41.5,lower:38,toeX:3.6,toeY:1.5,bend:1,upperWidth:3.7,lowerWidth:2.35},
+    {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:45,lower:35.5,toeX:3.8,toeY:1.6,bend:-1,upperWidth:5.1,lowerWidth:2.85},
+    {hip:32,front:true,far:false,walk:Math.PI*.5,trot:0,upper:41,lower:37.5,toeX:4,toeY:1.5,bend:1,upperWidth:4.5,lowerWidth:2.55}
   ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
@@ -340,7 +340,7 @@ function drawFox(now,dt=1/60){
     const breathInhale=Math.max(0,Math.sin(foxSevenBreathPhase));
     const breathe=player.grounded&&speed<9?Math.sin(foxSevenBreathPhase)*.24:0;
     const bodyLift=2.6-foxSevenStalkPose*4.8;
-    const rise=7+bodyLift+compress*.8+launch*1.2-investigate*1.5+breathe+foxSevenWeightShift*breathGate-sit*4.5-lie*7;
+    const rise=25+bodyLift+compress*.8+launch*1.2-investigate*1.5+breathe+foxSevenWeightShift*breathGate-sit*4.5-lie*7;
     const footLine=player.h/2-2+rise-bounce-impact*5-verticalMotion-anticipation*3+recovery*2.6;
     const turnDelta=foxLabTurnTo-foxLabTurnFrom,turnWave=turnPulse(.03,.98)*turnDelta;
     // A 2D mirror is discrete. Interpolating its scale through zero collapses every bone mid-turn.

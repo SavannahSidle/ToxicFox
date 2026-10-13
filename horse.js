@@ -286,9 +286,9 @@ function drawHorse(now,dt=1/60){
     const bounce=player.grounded?(Math.sin(phase*2-.45)*1.25+Math.max(0,Math.cos(phase-.25))*4.2*run)*move+suspension*6:0;
     const bodyPitch=airborne?clamp(player.vy*.00012,-.1,.1):Math.sin(phase-.2)*run*.018;
     const originX=player.x+player.w/2,groundY=player.y+player.h-2;
-    const scale=1.18,coat="#744329",coatMid="#8f5532",coatLight="#b2764d",coatShade="#56301f";
+    const scaleX=1.18,scaleY=1.4,coat="#744329",coatMid="#8f5532",coatLight="#b2764d",coatShade="#56301f";
     const mane="#281d19",maneMid="#3a2820",hoof="#282320";
-    ctx.save();ctx.translate(originX,groundY+bounce);ctx.scale(player.facing*scale,scale);ctx.rotate(bodyPitch);
+    ctx.save();ctx.translate(originX,groundY+bounce);ctx.scale(player.facing*scaleX,scaleY);ctx.rotate(bodyPitch);
 
     const walkOrder={hindNear:0,foreNear:Math.PI*.5,hindFar:Math.PI,foreFar:Math.PI*1.5};
     const canterOrder={hindNear:0,hindFar:.42,foreFar:1.45,foreNear:2.05};

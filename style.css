@@ -164,3 +164,10 @@ body.large-stage-page .stage{
 @media(max-width:560px){
   body.large-stage-page .shell{width:100%}
 }
+
+/* The canvas must fill the enlarged play frame, not sit at intrinsic half-size. */
+body.large-stage-page .stage canvas{
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+}

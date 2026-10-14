@@ -146,3 +146,21 @@ body{min-height:100dvh;padding-left:env(safe-area-inset-left);padding-right:env(
 body{min-height:100svh}
 .shell{min-height:100svh}
 @media(max-height:520px) and (orientation:landscape){.stage{max-height:58svh}}
+
+
+/* Give the skeleton and horse studies a larger, more immersive play area. */
+body.large-stage-page .shell{
+  width:min(100% - 24px,1760px);
+  gap:10px;
+  padding:12px 0;
+}
+body.large-stage-page .stage{
+  width:100%;
+  max-width:none;
+}
+@media(max-height:520px) and (orientation:landscape){
+  body.large-stage-page .stage{max-height:78svh}
+}
+@media(max-width:560px){
+  body.large-stage-page .shell{width:100%}
+}

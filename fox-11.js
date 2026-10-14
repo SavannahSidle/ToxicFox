@@ -345,7 +345,7 @@ function drawFoxSkeleton(now,dt=1/60){
     const bodyAngle=pitch*.34+turnLean*.5-stalk*.035+(player.grounded?Math.atan2(foxEightGroundY(player.x+player.w)-foxEightGroundY(player.x),player.w)*.42:0)-foxLabRestPose.sit*.035+foxLabRestPose.lie*.022;
     const fwd=player.facing;
     // Keep the full skeletal silhouette comfortably inside the same full-size stage.
-    const renderScale=1.48;
+    const renderScale=1.05;
     const renderOriginY=originY+footLine-footLine*renderScale;
     const localToWorld=(x,y)=>({x:originX+fwd*(x*Math.cos(bodyAngle)-y*Math.sin(bodyAngle)),y:originY+x*Math.sin(bodyAngle)+y*Math.cos(bodyAngle)});
     const worldToLocal=(x,y)=>{const dx=(x-originX)/fwd,dy=y-originY;return{x:dx*Math.cos(bodyAngle)+dy*Math.sin(bodyAngle),y:-dx*Math.sin(bodyAngle)+dy*Math.cos(bodyAngle)};};

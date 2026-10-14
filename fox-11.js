@@ -45,9 +45,9 @@
     // Side-view canid rig, ordered far hind, far fore, near hind, near fore.
     // Toe offsets describe the small paw extension after the hock, never a second hidden limb.
     {hip:-39,front:false,far:true,walk:Math.PI,trot:0,upper:37.5,lower:28,toeX:3.4,toeY:1.6,bend:-1,upperWidth:4.2,lowerWidth:2.65},
-    {hip:19,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:34.5,lower:31,toeX:3.6,toeY:1.5,bend:1,upperWidth:3.7,lowerWidth:2.35},
+    {hip:10,front:true,far:true,walk:Math.PI*1.5,trot:Math.PI,upper:34.5,lower:31,toeX:3.6,toeY:1.5,bend:1,upperWidth:3.7,lowerWidth:2.35},
     {hip:-40,front:false,far:false,walk:0,trot:Math.PI,upper:38,lower:28.5,toeX:3.8,toeY:1.6,bend:-1,upperWidth:5.1,lowerWidth:2.85},
-    {hip:32,front:true,far:false,walk:Math.PI*.5,trot:0,upper:34,lower:30.5,toeX:4,toeY:1.5,bend:1,upperWidth:4.5,lowerWidth:2.55}
+    {hip:22,front:true,far:false,walk:Math.PI*.5,trot:0,upper:34,lower:30.5,toeX:4,toeY:1.5,bend:1,upperWidth:4.5,lowerWidth:2.55}
   ];
   const foxLabSurfaces = [
     {x:0,y:480,w:960,h:60,ground:true},
@@ -344,9 +344,8 @@ function drawFoxSkeleton(now,dt=1/60){
     const originY=player.y+player.h/2+bounce+impact*5+verticalMotion+foxLabJumpAnticipation*3-foxLabLandingRecovery*2.6-rise;
     const bodyAngle=pitch*.34+turnLean*.5-stalk*.035+(player.grounded?Math.atan2(foxEightGroundY(player.x+player.w)-foxEightGroundY(player.x),player.w)*.42:0)-foxLabRestPose.sit*.035+foxLabRestPose.lie*.022;
     const fwd=player.facing;
-    // Skeleton bones use compact anatomical units. Render them larger so Fox
-    // Ten reads at the same screen scale as the skinned playable foxes.
-    const renderScale=3;
+    // Keep the full skeletal silhouette comfortably inside the same full-size stage.
+    const renderScale=1.48;
     const renderOriginY=originY+footLine-footLine*renderScale;
     const localToWorld=(x,y)=>({x:originX+fwd*(x*Math.cos(bodyAngle)-y*Math.sin(bodyAngle)),y:originY+x*Math.sin(bodyAngle)+y*Math.cos(bodyAngle)});
     const worldToLocal=(x,y)=>{const dx=(x-originX)/fwd,dy=y-originY;return{x:dx*Math.cos(bodyAngle)+dy*Math.sin(bodyAngle),y:-dx*Math.sin(bodyAngle)+dy*Math.cos(bodyAngle)};};
@@ -387,8 +386,8 @@ function drawFoxSkeleton(now,dt=1/60){
       const travel=stance?reach-2*reach*t:(front?-reach+2*reach*swing:hindSwing);
       const lift=stance?0:(front?8.2:9.4)*Math.sin(Math.PI*t);
       let hip=config.hip+(front?foxLabSpine.ribX+foxLabPose.runContact*.55-foxLabPose.runExtension*.42+foxLabPose.jumpDrive*.38-foxLabPose.jumpLanding*.28:foxLabSpine.pelvisX+foxLabPose.runDrive*.22);
-      let rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38-3+bodyLift:foxLabSpine.pelvisY+foxLabPose.runGather*.32-6.5+bodyLift;
-      const rotated=rotateRoot(hip,rootY,front?20:-29,front?foxLabSpine.ribAngle:foxLabSpine.pelvisAngle);hip=rotated[0];rootY=rotated[1];
+      let rootY=front?foxLabSpine.ribY+foxLabPose.runContact*.32+foxLabPose.jumpLanding*.38+1+bodyLift:foxLabSpine.pelvisY+foxLabPose.runGather*.32-6.5+bodyLift;
+      const rotated=rotateRoot(hip,rootY,front?12:-29,front?foxLabSpine.ribAngle:foxLabSpine.pelvisAngle);hip=rotated[0];rootY=rotated[1];
       const resting=front?(far?-2.4:2.1):(far?-4.8:3.6);
       let pawX=hip+travel*foxLabStrideLength+resting*(1-move),pawY=footLine-lift*(.95+run*.42)*move;
       if(airborne){const desc=smooth(-80,430,player.vy),tuck=clamp(1-Math.abs(player.vy)/560,0,1);pawX=hip+(front?mix(16,13,desc)-tuck*10:mix(-17,-13,desc)+tuck*13);pawY=footLine-((1-desc)*(front?5:4)+tuck*4);}

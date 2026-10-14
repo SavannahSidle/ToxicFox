@@ -372,14 +372,15 @@ function drawHorse(now,dt=1/60){
     ctx.beginPath();ctx.moveTo(-46,-56);ctx.quadraticCurveTo(-58+tailWave,-35,-60+tailWave,-19);ctx.stroke();
     ctx.fillStyle=mane;ctx.beginPath();ctx.moveTo(-63+tailWave,-18);
     ctx.quadraticCurveTo(-72+tailWave,-7,-68+tailWave,1);ctx.quadraticCurveTo(-60+tailWave,-3,-57+tailWave,-14);ctx.closePath();ctx.fill();
+    ctx.strokeStyle="#493128";ctx.lineWidth=1.4;for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(-59+tailWave+i*1.4,-17);ctx.quadraticCurveTo(-67+tailWave+i,-8,-65+tailWave+i*1.6,0);ctx.stroke();}
     leg("hindFar",false,true);leg("foreFar",true,true);
 
     // Deep barrel, rounded croup, withers, and shoulder. The back line stays horse-shaped through the gait.
     ctx.fillStyle=coat;ctx.beginPath();ctx.moveTo(-51,-64);
     ctx.quadraticCurveTo(-55,-79,-42,-84);ctx.quadraticCurveTo(-31,-90,-15,-84);
     ctx.quadraticCurveTo(1,-81,15,-79);ctx.quadraticCurveTo(25,-80,33,-70);
-    ctx.quadraticCurveTo(41,-61,39,-51);ctx.quadraticCurveTo(36,-40,24,-36);
-    ctx.quadraticCurveTo(7,-31,-13,-35);ctx.quadraticCurveTo(-34,-35,-47,-47);
+    ctx.quadraticCurveTo(41,-61,39,-51);ctx.quadraticCurveTo(36,-44,24,-41);
+    ctx.quadraticCurveTo(7,-39,-13,-40);ctx.quadraticCurveTo(-34,-40,-47,-47);
     ctx.quadraticCurveTo(-55,-54,-51,-64);ctx.closePath();ctx.fill();
     // Croup and shoulder planes give the torso depth instead of the fox-like narrow tube.
     ctx.fillStyle=coatMid;ctx.beginPath();ctx.moveTo(-49,-65);ctx.quadraticCurveTo(-44,-82,-32,-82);
@@ -406,18 +407,18 @@ function drawHorse(now,dt=1/60){
     ctx.quadraticCurveTo(64,-91,56,-83);ctx.quadraticCurveTo(58,-73,49,-68);
     ctx.quadraticCurveTo(43,-77,34,-89);ctx.closePath();ctx.fill();
     ctx.strokeStyle=maneMid;ctx.lineWidth=2.5;ctx.lineCap="round";
-    for(let i=0;i<5;i++){
-      const x=42+i*2.3,wave=Math.sin(now*.004+i*.8+phase*.3)*(1+run*2);
+    for(let i=0;i<7;i++){
+      const x=41+i*2.5,wave=Math.sin(now*.004+i*.8+phase*.3)*(1+run*2);
       ctx.beginPath();ctx.moveTo(x,-105+i*2);ctx.quadraticCurveTo(x+5+wave,-91+i*4,x+wave,-75+i*2);ctx.stroke();
     }
 
-    // Compact head, long tapered face, broad muzzle, nostril, and alert horse eye.
+    // Shorter, compact equine face with a broad muzzle, nostril, and alert horse eye.
     const headNod=Math.sin(phase*.8-.8)*move*.035+(airborne?clamp(player.vy*.00008,-.06,.06):0);
     ctx.save();ctx.translate(0,0);ctx.rotate(headNod);
     ctx.fillStyle=coat;ctx.beginPath();ctx.moveTo(51,-116);
     ctx.quadraticCurveTo(59,-125,68,-118);ctx.quadraticCurveTo(76,-111,75,-101);
-    ctx.quadraticCurveTo(76,-90,85,-77);ctx.quadraticCurveTo(96,-74,102,-68);
-    ctx.quadraticCurveTo(103,-63,96,-61);ctx.quadraticCurveTo(85,-61,77,-68);
+    ctx.quadraticCurveTo(76,-90,85,-77);ctx.quadraticCurveTo(92,-74,95,-68);
+    ctx.quadraticCurveTo(96,-63,89,-61);ctx.quadraticCurveTo(82,-61,77,-68);
     ctx.quadraticCurveTo(66,-75,63,-88);ctx.quadraticCurveTo(55,-99,51,-116);ctx.closePath();ctx.fill();
     // Slender upright ears and a forward forelock break the canine silhouette.
     ctx.fillStyle=coatShade;ctx.beginPath();ctx.moveTo(55,-116);ctx.quadraticCurveTo(51,-130,55,-139);
@@ -431,8 +432,8 @@ function drawHorse(now,dt=1/60){
     ctx.fillStyle="#e9d7c0";ctx.beginPath();ctx.moveTo(66,-116);ctx.quadraticCurveTo(70,-103,77,-86);
     ctx.quadraticCurveTo(79,-78,84,-72);ctx.quadraticCurveTo(80,-71,76,-78);
     ctx.quadraticCurveTo(68,-93,64,-110);ctx.closePath();ctx.fill();
-    ctx.fillStyle=coatLight;ctx.beginPath();ctx.ellipse(96,-66,7.2,4.4,-.08,0,tau);ctx.fill();
-    ctx.fillStyle="#201816";ctx.beginPath();ctx.ellipse(99,-67,2.1,1.6,0,0,tau);ctx.fill();
+    ctx.fillStyle=coatLight;ctx.beginPath();ctx.ellipse(89,-66,6.2,4.1,-.08,0,tau);ctx.fill();
+    ctx.fillStyle="#201816";ctx.beginPath();ctx.ellipse(92,-67,1.9,1.5,0,0,tau);ctx.fill();
     ctx.fillStyle="#241915";ctx.beginPath();ctx.ellipse(68,-107,1.8,2.1,0,0,tau);ctx.fill();
     ctx.fillStyle="#f3dfc7";ctx.beginPath();ctx.ellipse(68.6,-107.8,.65,.7,0,0,tau);ctx.fill();
     ctx.restore();
